@@ -1,0 +1,70 @@
+name: apply
+# Runs after merge to main. Non-prod applies automatically; prod applies wait for the
+# protected "prod" GitHub environment (required reviewers) and run on the prod runner pool.
+on:
+  push:
+    branches: [main]
+    paths: ["config/**", "terraform/**"]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  matrix:
+    runs-on: [self-hosted, gh-runner-nonprod]
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - id: m
+        run: echo "matrix=$(python3 tools/changed_tenants.py HEAD~1)" >> "$GITHUB_OUTPUT"
+
+  tenant-base:
+    needs: matrix
+    if: fromJSON(needs.matrix.outputs.matrix).base[0] != null
+    strategy:
+      matrix:
+        include: ${{ fromJSON(needs.matrix.outputs.matrix).base }}
+    runs-on: [self-hosted, gh-runner-prod]
+    environment: prod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.TF_SA_PROD }}
+      - uses: hashicorp/setup-terraform@v3
+      - working-directory: terraform/stacks/5-tenant-base
+        run: |
+          terraform init -input=false -backend-config="bucket=${{ vars.STATE_BUCKET }}" -backend-config="prefix=tenants/${{ matrix.customer }}/base"
+          terraform apply -input=false -auto-approve -var customer=${{ matrix.customer }} \
+            -var terraform_sa=${{ vars.TF_SA_PROD }} -var billing_project=${{ vars.SEED_PROJECT }} -var state_bucket=${{ vars.STATE_BUCKET }}
+
+  tenant-env:
+    needs: [matrix, tenant-base]
+    if: always() && !failure() && fromJSON(needs.matrix.outputs.matrix).env[0] != null
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        include: ${{ fromJSON(needs.matrix.outputs.matrix).env }}
+    runs-on: ${{ matrix.env == 'prod' && fromJSON('["self-hosted","gh-runner-prod"]') || fromJSON('["self-hosted","gh-runner-nonprod"]') }}
+    environment: ${{ matrix.env == 'prod' && 'prod' || 'nonprod' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ matrix.env == 'prod' && vars.TF_SA_PROD || vars.TF_SA_NONPROD }}
+      - uses: hashicorp/setup-terraform@v3
+      - working-directory: terraform/stacks/6-tenant-env
+        env:
+          TF_SA: ${{ matrix.env == 'prod' && vars.TF_SA_PROD || vars.TF_SA_NONPROD }}
+        run: |
+          terraform init -input=false -backend-config="bucket=${{ vars.STATE_BUCKET }}" \
+            -backend-config="prefix=tenants/${{ matrix.customer }}/${{ matrix.env }}"
+          terraform plan -input=false -out=tfplan -var customer=${{ matrix.customer }} -var env=${{ matrix.env }} \
+            -var terraform_sa=$TF_SA -var billing_project=${{ vars.SEED_PROJECT }} -var state_bucket=${{ vars.STATE_BUCKET }}
+          terraform apply -input=false tfplan

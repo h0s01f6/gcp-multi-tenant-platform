@@ -1,0 +1,3 @@
+{{ .Values.product }} {{ .Values.version }} deployed for customer {{ .Values.customer }} ({{ .Values.env }})
+URL:       https://{{ include "ps.hostname" . }}
+Identity:  {{ include "ps.gsa" . }}

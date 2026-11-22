@@ -1,0 +1,8 @@
+apiVersion: v2
+name: tenant-namespace
+description: >
+  Onboards one customer onto a GKE cluster (pooled or dedicated): namespace,
+  quotas, limits, default-deny network isolation and support-team RBAC.
+type: application
+version: 1.1.0
+appVersion: "1.1.0"

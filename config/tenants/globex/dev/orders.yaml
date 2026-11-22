@@ -1,0 +1,19 @@
+# Release pin: globex / dev / orders. Promote by bumping 'version' via PR.
+customer: globex
+env: dev
+product: orders
+runtime: gke
+version: "3.2.0"
+cluster: gke-dev-pool-01
+chartVersion: "1.4.0"
+
+# Helm value overrides (highest precedence layer)
+replicaCount: 1
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+featureFlags:
+  legacyInvoiceFormat: true    # Globex-specific behaviour
+config:
+  INVOICE_TEMPLATE: globex-v1

@@ -1,0 +1,19 @@
+# Release pin: globex / stage / orders. Promote by bumping 'version' via PR.
+customer: globex
+env: stage
+product: orders
+runtime: gke
+version: "2.9.1-globex.2"
+cluster: gke-stage-pool-01
+chartVersion: "1.4.0"
+
+# Helm value overrides (highest precedence layer)
+replicaCount: 1
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+featureFlags:
+  legacyInvoiceFormat: true    # Globex-specific behaviour
+config:
+  INVOICE_TEMPLATE: globex-v1

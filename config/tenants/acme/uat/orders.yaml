@@ -1,0 +1,17 @@
+# Release pin: acme / uat / orders. Promote by bumping 'version' via PR.
+customer: acme
+env: uat
+product: orders
+runtime: gke
+version: "3.1.4"
+cluster: gke-uat-pool-01
+chartVersion: "1.4.0"
+
+# Helm value overrides (highest precedence layer)
+replicaCount: 1
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+featureFlags:
+  bulkImport: true

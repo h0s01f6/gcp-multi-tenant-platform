@@ -1,0 +1,45 @@
+# For every customer x env: onboard the customer namespace on the cluster chosen in tenant.yaml.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: tenant-namespaces
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - matrix:
+        generators:
+          - git:
+              repoURL: https://github.com/my-company/gcp-multi-tenant-platform.git
+              revision: main
+              files:
+                - path: "config/tenants/*/tenant.yaml"
+          - list:
+              elements:
+                - env: dev
+                - env: stage
+                - env: uat
+                - env: prod
+  template:
+    metadata:
+      name: "{{ .customer }}-{{ .env }}-namespace"
+    spec:
+      project: "{{ .env }}"
+      source:
+        repoURL: https://github.com/my-company/gcp-multi-tenant-platform.git
+        targetRevision: main
+        path: helm/charts/tenant-namespace
+        helm:
+          valuesObject:
+            customer: "{{ .customer }}"
+            env: "{{ .env }}"
+            mode: "{{ (index .gke .env).mode }}"
+            supportGroup: "{{ .access.support_group }}"
+      destination:
+        name: "{{ (index .gke .env).cluster }}"
+        namespace: "{{ .customer }}"
+      syncPolicy:
+        automated:
+          prune: false                     # never auto-delete a customer namespace
+          selfHeal: true

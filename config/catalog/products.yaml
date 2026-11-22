@@ -1,0 +1,28 @@
+# Product catalog: one entry per product (15-20 in production; 5 shown as examples).
+# 'supported' implements the N-2 support window; CI rejects pins outside it.
+# Customer patch builds use <version>-<customer>.<n> and must be based on a supported version.
+registry: asia-south1-docker.pkg.dev/mtp-artifacts/containers
+products:
+  orders:
+    runtime: gke
+    chart: product-service
+    port: 8080
+    supported: ["3.2.0", "3.1.4", "2.9.1"]
+  billing:
+    runtime: gke
+    chart: product-service
+    port: 8080
+    supported: ["5.1.0", "5.0.3"]
+  notify:
+    runtime: cloudrun
+    port: 8080
+    supported: ["1.9.0", "1.8.0"]
+  reports:
+    runtime: cloudrun
+    port: 8080
+    supported: ["4.2.1", "4.1.0"]
+  legacy-erp:
+    runtime: mig
+    port: 8080
+    health_path: /healthz
+    supported: ["7.3.0", "7.2.2"]

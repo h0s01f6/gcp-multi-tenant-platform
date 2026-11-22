@@ -1,0 +1,14 @@
+# Release pin: globex / prod / reports. Promote by bumping 'version' via PR.
+customer: globex
+env: prod
+product: reports
+runtime: cloudrun
+version: "4.1.0"
+
+cloudrun:
+  cpu: "1"
+  memory: 512Mi
+  minInstances: 1
+  maxInstances: 50
+config:
+  LOG_LEVEL: info

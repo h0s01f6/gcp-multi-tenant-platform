@@ -1,0 +1,25 @@
+flowchart LR
+  classDef env fill:#fce8e6,stroke:#c5221f,color:#5c0f0d
+  classDef data fill:#f3e8fd,stroke:#8430ce,color:#3a0d63
+  classDef ctl fill:#e8f0fe,stroke:#1a73e8,color:#0b2a5b
+
+  subgraph PERIM["VPC-SC perimeter: acme (BigQuery, GCS, Cloud SQL, KMS, Secret Manager restricted)"]
+    PROD["mtp-acme-prod<br/>operational stores"]:::env
+    UAT["mtp-acme-uat"]:::env
+    STG["mtp-acme-stage"]:::env
+    DEV["mtp-acme-dev"]:::env
+    subgraph DP["mtp-acme-data (CMEK key ring: acme)"]
+      RAW["raw_prod<br/>BQ dataset + GCS"]:::data
+      MSK["masked<br/>BQ dataset + GCS"]:::data
+      REF["shared_reference"]:::data
+      DLP["Scheduled de-identification<br/>(Sensitive Data Protection)"]:::ctl
+    end
+  end
+  OTHER["mtp-globex-*<br/>(other customer)"]:::env
+
+  PROD -- "export" --> RAW
+  RAW --> DLP --> MSK
+  MSK -- "read: dev, stage, uat" --> DEV & STG & UAT
+  RAW -. "opt-in read (raw_from_prod_to: [uat])" .-> UAT
+  REF -- "read: all envs" --> DEV & STG & UAT & PROD
+  OTHER x-- "BLOCKED: VPC-SC + IAM" --x DP

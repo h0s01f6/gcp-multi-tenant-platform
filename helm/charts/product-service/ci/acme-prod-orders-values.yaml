@@ -1,0 +1,9 @@
+# Used by CI (helm lint / template) as a representative release.
+customer: acme
+env: prod
+product: orders
+version: "3.1.4"
+replicaCount: 3
+autoscaling: { enabled: true, minReplicas: 3, maxReplicas: 12 }
+featureFlags: { bulkImport: true }
+config: { INVOICE_TEMPLATE: default }

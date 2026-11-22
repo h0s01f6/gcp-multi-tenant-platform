@@ -1,0 +1,17 @@
+# Release pin: acme / prod / orders. Promote by bumping 'version' via PR.
+customer: acme
+env: prod
+product: orders
+runtime: gke
+version: "3.1.4"
+cluster: acme-prod-dedicated
+chartVersion: "1.4.0"
+
+# Helm value overrides (highest precedence layer)
+replicaCount: 3
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 12
+featureFlags:
+  bulkImport: true

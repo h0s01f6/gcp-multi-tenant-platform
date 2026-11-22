@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: {{ .Values.customer }}-quota
+  namespace: {{ .Values.customer }}
+spec:
+  hard:
+    requests.cpu: {{ .Values.quota.requestsCpu | quote }}
+    requests.memory: {{ .Values.quota.requestsMemory }}
+    limits.memory: {{ .Values.quota.limitsMemory }}
+    pods: {{ .Values.quota.pods | quote }}
+    services: {{ .Values.quota.services | quote }}
+    services.loadbalancers: "0"     # all ingress goes through the shared Gateway
+    services.nodeports: "0"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: {{ .Values.customer }}-limits
+  namespace: {{ .Values.customer }}
+spec:
+  limits:
+    - type: Container
+      defaultRequest:
+        {{- toYaml .Values.limitRange.defaultRequest | nindent 8 }}
+      default:
+        {{- toYaml .Values.limitRange.default | nindent 8 }}

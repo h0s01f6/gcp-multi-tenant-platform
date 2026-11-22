@@ -1,0 +1,17 @@
+# Dynamic inventory of MIG instances across customer projects (run from the shared Ansible runners).
+# Usage: ansible-inventory -i inventory/gcp.yml --graph
+plugin: google.cloud.gcp_compute
+auth_kind: application          # runner SA via metadata server, no key files
+projects: []                    # filled by CI: the mtp-<customer>-<env> projects being targeted
+filters:
+  - labels.product:*
+keyed_groups:
+  - { key: labels.customer, prefix: customer }
+  - { key: labels.env, prefix: env }
+  - { key: labels.product, prefix: product }
+hostnames: [name]
+compose:
+  ansible_host: name
+  # SSH through IAP + OS Login; VMs have no external IPs.
+  ansible_ssh_common_args: >-
+    '-o ProxyCommand="gcloud compute start-iap-tunnel ' ~ name ~ ' 22 --listen-on-stdin --zone=' ~ zone ~ ' --project=' ~ project ~ '"'

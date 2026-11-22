@@ -1,0 +1,43 @@
+flowchart LR
+  classDef ext fill:#ffffff,stroke:#5f6368,color:#202124
+  classDef lb fill:#e8f0fe,stroke:#1a73e8,color:#0b2a5b
+  classDef run fill:#fce8e6,stroke:#c5221f,color:#5c0f0d
+  classDef data fill:#f3e8fd,stroke:#8430ce,color:#3a0d63
+  classDef net fill:#e6f4ea,stroke:#188038,color:#0d3b1e
+  classDef plat fill:#fef7e0,stroke:#e37400,color:#4a2800
+
+  USER["Customer users<br/>notify.acme.prod.example.com"]:::ext
+  DNS["Cloud DNS"]:::ext
+
+  subgraph TP["Customer project mtp-acme-prod, inside VPC-SC perimeter acme"]
+    ALB["Global external ALB<br/>Cloud Armor WAF<br/>managed certs, host routing"]:::lb
+    NEG1["Serverless NEG: notify"]:::lb
+    NEG2["Serverless NEG: reports"]:::lb
+    CR1["Cloud Run: notify<br/>rev v1.8.0 (90%)<br/>rev v1.9.0 (10% canary)<br/>SA: notify@mtp-acme-prod"]:::run
+    CR2["Cloud Run: reports<br/>v4.2.1<br/>SA: reports@mtp-acme-prod"]:::run
+    SM["Secret Manager"]:::data
+    SQL["Cloud SQL (private IP)"]:::data
+    GCS["GCS buckets (CMEK)"]:::data
+  end
+
+  subgraph HOST["Shared VPC host: mtp-net-prod"]
+    SUB["Subnet acme-prod 10.64.4.0/22<br/>Direct VPC egress"]:::net
+    NAT["Cloud NAT"]:::net
+  end
+
+  subgraph PLAT["Shared platform"]
+    AR["Artifact Registry<br/>mtp-artifacts"]:::plat
+    CI["CI runners (mtp-cicd-prod)<br/>WIF to deploy SA"]:::plat
+    DATA["mtp-acme-data<br/>BigQuery masked / raw_prod"]:::data
+  end
+
+  USER --> DNS --> ALB
+  ALB -- "notify.*" --> NEG1 --> CR1
+  ALB -- "reports.*" --> NEG2 --> CR2
+  CR1 & CR2 --> SUB --> SQL
+  SUB --> NAT
+  CR1 & CR2 --> SM
+  CR2 --> GCS
+  CR2 -- "read/write per tenant.yaml" --> DATA
+  AR -- "image pull by digest" --> TP
+  CI -- "terraform apply (6-tenant-env),<br/>canary via revision tags" --> TP

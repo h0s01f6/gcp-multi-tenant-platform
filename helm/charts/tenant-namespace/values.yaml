@@ -1,0 +1,23 @@
+customer: ""
+env: ""
+mode: pooled                # pooled | dedicated
+
+quota:                      # per customer namespace; larger for prod / dedicated
+  requestsCpu: "20"
+  requestsMemory: 64Gi
+  limitsMemory: 128Gi
+  pods: "200"
+  services: "50"
+
+limitRange:
+  defaultRequest: { cpu: 100m, memory: 128Mi }
+  default: { memory: 512Mi }
+
+network:
+  gatewayNamespace: gateway
+  # Google front-end / health-check ranges used by the GKE Gateway (container-native LB).
+  lbSourceRanges: ["35.191.0.0/16", "130.211.0.0/22"]
+  # Pod CIDR of the cluster: egress to other pods is limited to this namespace.
+  clusterPodCidr: 100.64.0.0/10
+
+supportGroup: ""            # Google group granted read-only access to this namespace

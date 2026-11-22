@@ -1,0 +1,42 @@
+flowchart LR
+  classDef ext fill:#ffffff,stroke:#5f6368,color:#202124
+  classDef lb fill:#e8f0fe,stroke:#1a73e8,color:#0b2a5b
+  classDef vm fill:#fce8e6,stroke:#c5221f,color:#5c0f0d
+  classDef data fill:#f3e8fd,stroke:#8430ce,color:#3a0d63
+  classDef plat fill:#e6f4ea,stroke:#188038,color:#0d3b1e
+
+  subgraph BUILD["Image pipeline (shared)"]
+    GH["CI runner<br/>(mtp-cicd-prod)"]:::plat
+    PK["Packer + Ansible runner<br/>playbook: legacy-erp"]:::plat
+    IMG["Golden image family<br/>legacy-erp-7-3-0<br/>(mtp-artifacts)"]:::plat
+  end
+
+  USERS["Customer users<br/>erp.acme.prod.example.com"]:::ext
+
+  subgraph TP["Customer project: mtp-acme-prod"]
+    ALB["Global external ALB<br/>Cloud Armor"]:::lb
+    BE["Backend service<br/>health check /healthz"]:::lb
+    subgraph MIG["Regional MIG: legacy-erp (3 zones)"]
+      V1["VM zone a"]:::vm
+      V2["VM zone b"]:::vm
+      V3["VM zone c"]:::vm
+    end
+    IT["Instance template<br/>image 7.3.0, SA legacy-erp@,<br/>Shielded VM, no external IP,<br/>metadata: customer=acme env=prod"]:::vm
+    AS["Autoscaler (CPU 60%)<br/>Autohealing<br/>Rolling update: surge 3, unavailable 0"]:::vm
+    SM["Secret Manager<br/>customer config"]:::data
+    SQL["Cloud SQL / Filestore"]:::data
+  end
+
+  subgraph NET["Shared VPC host: mtp-net-prod"]
+    SUB["Subnet acme-prod 10.64.4.0/22"]:::lb
+    IAP["IAP TCP forwarding<br/>35.235.240.0/20"]:::lb
+  end
+
+  ANS["Ansible runners (mtp-cicd-prod)<br/>day-2 config via IAP"]:::plat
+
+  GH --> PK --> IMG --> IT --> MIG
+  AS --- MIG
+  USERS --> ALB --> BE --> V1 & V2 & V3
+  MIG --- SUB
+  V1 & V2 & V3 --> SM & SQL
+  ANS --> IAP --> SUB

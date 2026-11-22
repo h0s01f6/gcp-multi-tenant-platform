@@ -1,0 +1,60 @@
+flowchart TB
+  classDef plat fill:#e8f0fe,stroke:#1a73e8,color:#0b2a5b
+  classDef net fill:#e6f4ea,stroke:#188038,color:#0d3b1e
+  classDef gke fill:#fef7e0,stroke:#e37400,color:#4a2800
+  classDef ten fill:#fce8e6,stroke:#c5221f,color:#5c0f0d
+  classDef data fill:#f3e8fd,stroke:#8430ce,color:#3a0d63
+  classDef org fill:#202124,stroke:#202124,color:#ffffff
+
+  ORG["Organization: example.com<br/>Org policies conditioned on env tag: dev / stage / uat / prod"]:::org
+
+  subgraph PLATFORM["fldr-platform: shared services"]
+    direction LR
+    SEED["mtp-seed<br/>Terraform state"]:::plat
+    CICD["mtp-cicd-nonprod / mtp-cicd-prod<br/>GitHub / Bitbucket + Ansible runners<br/>WIF, Argo CD mgmt cluster"]:::plat
+    ART["mtp-artifacts<br/>images, Helm OCI,<br/>golden VM images"]:::plat
+    OBS["mtp-observability<br/>logs, metrics, SLOs"]:::plat
+  end
+
+  subgraph NETWORK["fldr-network: one Shared VPC host per env"]
+    direction LR
+    NDEV["mtp-net-dev<br/>10.16.0.0/12"]:::net
+    NSTG["mtp-net-stage<br/>10.32.0.0/12"]:::net
+    NUAT["mtp-net-uat<br/>10.48.0.0/12"]:::net
+    NPRD["mtp-net-prod<br/>10.64.0.0/12"]:::net
+  end
+
+  subgraph COMPUTE["fldr-compute: pooled GKE clusters per env, sharded"]
+    direction LR
+    GDEV["mtp-gke-dev"]:::gke
+    GSTG["mtp-gke-stage"]:::gke
+    GUAT["mtp-gke-uat"]:::gke
+    GPRD["mtp-gke-prod"]:::gke
+  end
+
+  subgraph TENANTS["fldr-tenants: one folder + one VPC-SC perimeter per customer"]
+    direction LR
+    subgraph ACME["fldr-acme"]
+      direction TB
+      AD["mtp-acme-dev"]:::ten
+      AS["mtp-acme-stage"]:::ten
+      AU["mtp-acme-uat"]:::ten
+      AP["mtp-acme-prod"]:::ten
+      ADATA["mtp-acme-data<br/>CMEK, shared data"]:::data
+    end
+    subgraph GLOBEX["fldr-globex"]
+      direction TB
+      XD["mtp-globex-dev"]:::ten
+      XS["mtp-globex-stage"]:::ten
+      XU["mtp-globex-uat"]:::ten
+      XP["mtp-globex-prod"]:::ten
+      XDATA["mtp-globex-data"]:::data
+    end
+    MORE["... 200+ customers<br/>4 env projects + 1 data project each"]:::ten
+  end
+
+  ORG --> PLATFORM
+  PLATFORM --> NETWORK
+  NETWORK -- "env projects attach as service projects,<br/>each gets a /22 subnet" --> TENANTS
+  COMPUTE -- "pooled tier: namespace per customer,<br/>Workload Identity to customer project" --> TENANTS
+  NETWORK --- COMPUTE

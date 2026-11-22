@@ -1,0 +1,34 @@
+- name: Install runtime packages
+  ansible.builtin.apt:
+    name: [openjdk-21-jre-headless, google-cloud-cli, jq]
+    update_cache: true
+
+- name: Create service user
+  ansible.builtin.user:
+    name: product
+    system: true
+    shell: /usr/sbin/nologin
+
+- name: Fetch product artifact for this version
+  ansible.builtin.command: >-
+    gcloud artifacts generic download --repository=releases --location=asia-south1
+    --package={{ product }} --version={{ version }} --destination=/opt/{{ product }}
+  args:
+    creates: "/opt/{{ product }}"
+
+- name: Install boot-time config loader (reads metadata + Secret Manager)
+  ansible.builtin.template:
+    src: load-config.sh.j2
+    dest: /usr/local/bin/load-config.sh
+    mode: "0755"
+
+- name: Install systemd unit
+  ansible.builtin.template:
+    src: product.service.j2
+    dest: /etc/systemd/system/product.service
+    mode: "0644"
+
+- name: Enable service
+  ansible.builtin.systemd:
+    name: product.service
+    enabled: true

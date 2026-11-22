@@ -1,0 +1,13 @@
+# Release pin: acme / uat / legacy-erp. Promote by bumping 'version' via PR.
+customer: acme
+env: uat
+product: legacy-erp
+runtime: mig
+version: "7.3.0"
+
+mig:
+  machineType: e2-standard-2
+  minReplicas: 1
+  maxReplicas: 2
+config:
+  ERP_REGION: IN

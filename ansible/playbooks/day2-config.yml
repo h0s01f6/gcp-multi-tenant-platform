@@ -1,0 +1,10 @@
+# Day-2 operations on running MIG instances of one customer/env, e.g.
+#   ansible-playbook -i inventory/gcp.yml playbooks/day2-config.yml -l 'customer_acme:&env_prod'
+- name: Refresh runtime configuration from metadata / Secret Manager
+  hosts: all
+  become: true
+  tasks:
+    - name: Re-render config and restart service
+      ansible.builtin.systemd:
+        name: product.service
+        state: restarted

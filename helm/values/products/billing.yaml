@@ -1,0 +1,6 @@
+# Layer 2: product defaults for 'billing'.
+containerPort: 8080
+extraEnv:
+  - name: DB_PASSWORD
+    valueFrom:
+      secretKeyRef: { name: billing-db, key: password }   # synced from Secret Manager by External Secrets

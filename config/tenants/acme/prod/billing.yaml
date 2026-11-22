@@ -1,0 +1,15 @@
+# Release pin: acme / prod / billing. Promote by bumping 'version' via PR.
+customer: acme
+env: prod
+product: billing
+runtime: gke
+version: "5.1.0"
+cluster: acme-prod-dedicated
+chartVersion: "1.4.0"
+
+# Helm value overrides (highest precedence layer)
+replicaCount: 3
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 12

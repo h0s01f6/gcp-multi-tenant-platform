@@ -1,0 +1,56 @@
+# One Argo CD Application per GKE release file: config/tenants/<customer>/<env>/<product>.yaml
+# Adding a customer / product / version = adding or editing one YAML file.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: gke-products
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/my-company/gcp-multi-tenant-platform.git
+        revision: main
+        files:
+          - path: "config/tenants/*/*/*.yaml"
+      selector:
+        matchLabels:
+          runtime: gke                     # Cloud Run / MIG releases are applied by Terraform
+  template:
+    metadata:
+      name: "{{ .customer }}-{{ .env }}-{{ .product }}"
+      labels:
+        customer: "{{ .customer }}"
+        env: "{{ .env }}"
+        product: "{{ .product }}"
+    spec:
+      project: "{{ .env }}"                # Argo CD AppProject per env restricts destinations
+      sources:
+        # 1) the chart, pinned per release (chartVersion) from Artifact Registry (OCI)
+        - repoURL: asia-south1-docker.pkg.dev/mtp-artifacts/charts
+          chart: product-service
+          targetRevision: "{{ .chartVersion }}"
+          helm:
+            releaseName: "{{ .product }}"
+            ignoreMissingValueFiles: true
+            # Precedence (low -> high): chart defaults < product < env < customer/env/product
+            valueFiles:
+              - $values/helm/values/products/{{ .product }}.yaml
+              - $values/helm/values/env/{{ .env }}.yaml
+              - $values/config/tenants/{{ .customer }}/{{ .env }}/{{ .product }}.yaml
+        # 2) this repo, referenced as $values
+        - repoURL: https://github.com/my-company/gcp-multi-tenant-platform.git
+          targetRevision: main
+          ref: values
+      destination:
+        name: "{{ .cluster }}"             # pooled shard or the customer's dedicated cluster
+        namespace: "{{ .customer }}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=false          # namespaces come from tenant-namespaces ApplicationSet
+        retry:
+          limit: 3

@@ -1,0 +1,68 @@
+# ---- Identity of this release (set by config/tenants/<customer>/<env>/<product>.yaml) ----
+customer: ""          # namespace = customer
+env: ""               # dev | stage | uat | prod
+product: ""           # workload name, KSA name
+version: ""           # image tag; supports customer builds like 2.9.1-globex.2
+cluster: ""           # informational (used by Argo CD for the destination)
+runtime: gke
+chartVersion: ""
+
+image:
+  registry: asia-south1-docker.pkg.dev/mtp-artifacts/containers
+  digest: ""          # if set (sha256:...), deploy by digest instead of tag
+  pullPolicy: IfNotPresent
+
+gcp:
+  projectPrefix: mtp
+  # Defaults to <product>-sa@<prefix>-<customer>-<env>.iam.gserviceaccount.com (created by Terraform 6-tenant-env)
+  serviceAccountEmail: ""
+
+replicaCount: 1
+containerPort: 8080
+
+resources:
+  requests: { cpu: 250m, memory: 256Mi }
+  limits: { memory: 512Mi }
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Customer customization, lowest rung of the ladder: config + feature flags.
+config: {}            # -> ConfigMap -> env vars
+featureFlags: {}      # -> FF_<NAME>=<value>
+extraEnv: []          # raw EnvVar list, e.g. secret refs
+
+probes:
+  liveness: { path: /healthz, initialDelaySeconds: 10 }
+  readiness: { path: /readyz, initialDelaySeconds: 5 }
+
+route:
+  enabled: true
+  gatewayName: shared-gateway
+  gatewayNamespace: gateway
+  domain: example.com
+  hostname: ""        # default <product>.<customer>.<env>.<domain>
+  securityPolicy: tenant-waf   # Cloud Armor policy applied to this Service's LB backend
+
+# Dedicated node pool for this customer (tainted pool customer=<customer>).
+dedicatedNodes:
+  enabled: false
+
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile: { type: RuntimeDefault }
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities: { drop: ["ALL"] }
+
+nodeSelector: {}
+tolerations: []
+podAnnotations: {}

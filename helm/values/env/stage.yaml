@@ -1,0 +1,7 @@
+# Layer 3: environment defaults (stage). Spot nodes, small footprint.
+resources:
+  requests: { cpu: 100m, memory: 128Mi }
+  limits: { memory: 256Mi }
+podDisruptionBudget: { enabled: false }
+tolerations:
+  - { key: cloud.google.com/gke-spot, operator: Equal, value: "true", effect: NoSchedule }

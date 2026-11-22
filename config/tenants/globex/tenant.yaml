@@ -1,0 +1,16 @@
+customer: globex
+display_name: Globex Inc
+region: asia-south1
+network:
+  subnet_index: 2
+gke:
+  dev:   { mode: pooled, cluster: gke-dev-pool-01 }
+  stage: { mode: pooled, cluster: gke-stage-pool-01 }
+  uat:   { mode: pooled, cluster: gke-uat-pool-01 }
+  prod:  { mode: pooled, cluster: gke-prod-pool-02 }
+budgets_usd: { dev: 300, stage: 300, uat: 500, prod: 3000 }
+data_sharing:
+  masked_from_prod_to: [dev, uat]
+  raw_from_prod_to: []
+access:
+  support_group: globex-support@example.com

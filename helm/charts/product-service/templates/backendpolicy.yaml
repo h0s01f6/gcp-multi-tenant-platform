@@ -1,0 +1,19 @@
+{{- if and .Values.route.enabled .Values.route.securityPolicy }}
+# Cloud Armor WAF + request logging on this product's backend behind the shared Gateway.
+apiVersion: networking.gke.io/v1
+kind: GCPBackendPolicy
+metadata:
+  name: {{ include "ps.name" . }}
+  labels:
+    {{- include "ps.labels" . | nindent 4 }}
+spec:
+  default:
+    securityPolicy: {{ .Values.route.securityPolicy }}
+    logging:
+      enabled: true
+      sampleRate: 200000
+  targetRef:
+    group: ""
+    kind: Service
+    name: {{ include "ps.name" . }}
+{{- end }}

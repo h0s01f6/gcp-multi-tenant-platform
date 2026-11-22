@@ -1,0 +1,41 @@
+# Bitbucket equivalent of .github/workflows (same scripts; OIDC -> GCP Workload Identity Federation).
+image: hashicorp/terraform:1.9.8
+
+definitions:
+  steps:
+    - step: &validate
+        name: validate config + terraform + helm
+        runs-on: [self.hosted, linux, gcp-nonprod]
+        oidc: true
+        script:
+          - apk add --no-cache python3 py3-yaml helm
+          - python3 tools/validate_config.py
+          - terraform fmt -check -recursive terraform
+          - for d in terraform/modules/* terraform/stacks/*; do terraform -chdir=$d init -backend=false >/dev/null && terraform -chdir=$d validate; done
+          - helm lint helm/charts/product-service -f helm/charts/product-service/ci/acme-prod-orders-values.yaml
+
+pipelines:
+  pull-requests:
+    "**":
+      - step: *validate
+  branches:
+    main:
+      - step: *validate
+      - step:
+          name: apply changed tenants (non-prod)
+          runs-on: [self.hosted, linux, gcp-nonprod]
+          oidc: true
+          script:
+            - echo $BITBUCKET_STEP_OIDC_TOKEN > /tmp/oidc && export GOOGLE_APPLICATION_CREDENTIALS=$PWD/ci/bitbucket-wif-cred.json
+            - python3 tools/changed_tenants.py HEAD~1 > matrix.json
+            - ./ci/apply-matrix.sh matrix.json nonprod
+      - step:
+          name: apply changed tenants (prod)
+          trigger: manual
+          deployment: production
+          runs-on: [self.hosted, linux, gcp-prod]
+          oidc: true
+          script:
+            - echo $BITBUCKET_STEP_OIDC_TOKEN > /tmp/oidc && export GOOGLE_APPLICATION_CREDENTIALS=$PWD/ci/bitbucket-wif-cred.json
+            - python3 tools/changed_tenants.py HEAD~1 > matrix.json
+            - ./ci/apply-matrix.sh matrix.json prod

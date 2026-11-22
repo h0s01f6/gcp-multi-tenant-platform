@@ -1,0 +1,13 @@
+[Unit]
+Description={{ product }} {{ version }}
+After=network-online.target
+
+[Service]
+User=product
+ExecStartPre=+/usr/local/bin/load-config.sh
+EnvironmentFile=/etc/product/env
+ExecStart=/usr/bin/java -jar /opt/{{ product }}/app.jar
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,7 @@
+# Layer 2: product defaults, applied to every customer running 'orders'.
+containerPort: 8080
+probes:
+  liveness: { path: /actuator/health/liveness, initialDelaySeconds: 30 }
+  readiness: { path: /actuator/health/readiness, initialDelaySeconds: 15 }
+config:
+  JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75"

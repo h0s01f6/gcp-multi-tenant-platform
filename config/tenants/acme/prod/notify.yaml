@@ -1,0 +1,17 @@
+# Release pin: acme / prod / notify. Promote by bumping 'version' via PR.
+customer: acme
+env: prod
+product: notify
+runtime: cloudrun
+version: "1.8.0"
+
+cloudrun:
+  cpu: "1"
+  memory: 512Mi
+  minInstances: 1
+  maxInstances: 50
+  canary:                   # 10% of traffic to the next version
+    version: "1.9.0"
+    percent: 10
+config:
+  LOG_LEVEL: info

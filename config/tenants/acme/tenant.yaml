@@ -1,0 +1,16 @@
+customer: acme
+display_name: Acme Corp
+region: asia-south1
+network:
+  subnet_index: 1              # unique per customer; gives the same /22 slot in every env
+gke:                           # pooled = namespace on a shared cluster, dedicated = cluster in customer project
+  dev:   { mode: pooled,    cluster: gke-dev-pool-01 }
+  stage: { mode: pooled,    cluster: gke-stage-pool-01 }
+  uat:   { mode: pooled,    cluster: gke-uat-pool-01 }
+  prod:  { mode: dedicated, cluster: acme-prod-dedicated, dedicated_index: 0 }
+budgets_usd: { dev: 500, stage: 500, uat: 1000, prod: 8000 }
+data_sharing:
+  masked_from_prod_to: [dev, stage, uat]
+  raw_from_prod_to: [uat]      # opt-in, allowed by Acme's contract
+access:
+  support_group: acme-support@example.com

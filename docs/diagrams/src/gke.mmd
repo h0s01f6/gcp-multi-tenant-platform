@@ -1,0 +1,58 @@
+flowchart TB
+  classDef ext fill:#ffffff,stroke:#5f6368,color:#202124
+  classDef lb fill:#e8f0fe,stroke:#1a73e8,color:#0b2a5b
+  classDef k8s fill:#fef7e0,stroke:#e37400,color:#4a2800
+  classDef ten fill:#fce8e6,stroke:#c5221f,color:#5c0f0d
+  classDef data fill:#f3e8fd,stroke:#8430ce,color:#3a0d63
+  classDef plat fill:#e6f4ea,stroke:#188038,color:#0d3b1e
+
+  subgraph DELIVERY["Delivery (shared platform)"]
+    direction LR
+    GIT["Git: config/tenants/customer/env/product.yaml<br/>helm/charts/product-service"]:::plat
+    ARGO["Argo CD ApplicationSet<br/>one Application per customer x env x product"]:::plat
+    AR["Artifact Registry<br/>images by digest + Helm OCI"]:::plat
+    GIT --> ARGO
+  end
+
+  USERS["Customer users"]:::ext
+
+  subgraph POOL["POOLED: gke-prod-pool-01 in mtp-gke-prod (private, regional, Dataplane V2, Binary Authorization)"]
+    direction LR
+    GW["Gateway API + Cloud Armor<br/>HTTPRoute per customer hostname"]:::lb
+    subgraph NSG["ns globex: quota, limits, default-deny netpol"]
+      G1["orders 2.9.1-globex.2"]:::k8s
+      G2["billing 5.0.3"]:::k8s
+    end
+    subgraph NSI["ns initech"]
+      I1["orders 3.2.0"]:::k8s
+    end
+    GW --> G1
+    GW --> I1
+  end
+
+  subgraph DED["DEDICATED: acme-prod-dedicated in mtp-acme-prod"]
+    direction LR
+    GW2["Gateway API + Cloud Armor"]:::lb
+    subgraph NSA["ns acme"]
+      A1["orders 3.1.4"]:::k8s
+      A2["billing 5.1.0"]:::k8s
+    end
+    GW2 --> A1
+  end
+
+  subgraph CUST["Customer projects inside their own VPC-SC perimeter"]
+    direction LR
+    GSAG["mtp-globex-prod<br/>GSA orders-sa@ to Cloud SQL, Secrets, GCS"]:::ten
+    GSAA["mtp-acme-prod<br/>GSA orders-sa@ to Cloud SQL, Secrets"]:::ten
+    DATA["mtp-acme-data<br/>masked / raw_prod"]:::data
+    GSAA --> DATA
+  end
+
+  ARGO -- "sync" --> POOL
+  ARGO -- "sync" --> DED
+  AR -. "pull" .-> POOL
+  AR -. "pull" .-> DED
+  USERS --> GW
+  USERS --> GW2
+  G1 -- "WI: mtp-gke-prod.svc.id.goog[globex/orders]" --> GSAG
+  A1 -- "WI: mtp-acme-prod.svc.id.goog[acme/orders]" --> GSAA

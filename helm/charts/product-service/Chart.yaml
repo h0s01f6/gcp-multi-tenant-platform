@@ -1,0 +1,10 @@
+apiVersion: v2
+name: product-service
+description: >
+  Generic chart used by every GKE-hosted product. One release per
+  customer x environment x product; versions and customer customizations
+  come from layered values files, never from forked charts.
+type: application
+version: 1.4.0          # chart version (pinned per release file as chartVersion)
+appVersion: "0.0.0"     # real app version comes from .Values.version
+kubeVersion: ">=1.29.0-0"

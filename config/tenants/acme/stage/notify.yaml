@@ -1,0 +1,14 @@
+# Release pin: acme / stage / notify. Promote by bumping 'version' via PR.
+customer: acme
+env: stage
+product: notify
+runtime: cloudrun
+version: "1.9.0"
+
+cloudrun:
+  cpu: "1"
+  memory: 512Mi
+  minInstances: 0
+  maxInstances: 5
+config:
+  LOG_LEVEL: debug

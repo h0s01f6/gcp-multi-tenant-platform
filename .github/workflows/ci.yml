@@ -1,0 +1,111 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install pyyaml
+      - name: Validate tenants, versions, IP plan, data-sharing rules
+        run: python tools/validate_config.py
+
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with: { terraform_version: 1.9.8 }
+      - name: fmt
+        run: terraform fmt -check -recursive terraform
+      - name: validate every module and stack
+        run: |
+          set -e
+          for d in terraform/modules/* terraform/stacks/*; do
+            echo "::group::$d"
+            terraform -chdir="$d" init -backend=false -input=false >/dev/null
+            terraform -chdir="$d" validate
+            echo "::endgroup::"
+          done
+      - uses: terraform-linters/setup-tflint@v4
+      - run: tflint --recursive --chdir=terraform
+      - name: checkov (security misconfigurations)
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: terraform
+          framework: terraform
+          soft_fail: true
+
+  helm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - name: lint
+        run: |
+          helm lint helm/charts/product-service -f helm/charts/product-service/ci/acme-prod-orders-values.yaml
+          helm lint helm/charts/tenant-namespace --set customer=acme,env=prod
+      - name: render every GKE release exactly as Argo CD will
+        run: |
+          set -e
+          mkdir -p rendered
+          for f in $(grep -l '^runtime: gke' config/tenants/*/*/*.yaml); do
+            c=$(echo "$f" | cut -d/ -f3); e=$(echo "$f" | cut -d/ -f4); p=$(basename "$f" .yaml)
+            helm template "$p" helm/charts/product-service --namespace "$c" \
+              -f "helm/values/products/$p.yaml" -f "helm/values/env/$e.yaml" -f "$f" \
+              > "rendered/$c-$e-$p.yaml"
+          done
+      - name: kubeconform
+        run: |
+          curl -sL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
+          ./kubeconform -strict -summary -ignore-missing-schemas rendered/
+
+  # Non-prod plans on every PR. Prod is planned + applied in apply.yml inside the protected
+  # 'prod' environment (required reviewers), the only place the tf-prod identity is reachable.
+  plan:
+    if: github.event_name == 'pull_request'
+    needs: [config, terraform]
+    runs-on: [self-hosted, gh-runner-nonprod]     # shared runner pool in mtp-cicd-nonprod
+    permissions: { contents: read, id-token: write, pull-requests: write }
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - id: m
+        run: echo "matrix=$(python3 tools/changed_tenants.py origin/${{ github.base_ref }} --nonprod-only)" >> "$GITHUB_OUTPUT"
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+
+  plan-tenant-env:
+    needs: plan
+    if: needs.plan.outputs.matrix != '' && fromJSON(needs.plan.outputs.matrix).env[0] != null
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix).env }}
+    runs-on: [self-hosted, gh-runner-nonprod]
+    permissions: { contents: read, id-token: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.TF_SA_NONPROD }}
+      - uses: hashicorp/setup-terraform@v3
+      - name: plan ${{ matrix.customer }}/${{ matrix.env }}
+        working-directory: terraform/stacks/6-tenant-env
+        run: |
+          terraform init -input=false \
+            -backend-config="bucket=${{ vars.STATE_BUCKET }}" \
+            -backend-config="prefix=tenants/${{ matrix.customer }}/${{ matrix.env }}"
+          terraform plan -input=false -lock-timeout=5m \
+            -var customer=${{ matrix.customer }} -var env=${{ matrix.env }} \
+            -var terraform_sa=${{ vars.TF_SA_NONPROD }} -var billing_project=${{ vars.SEED_PROJECT }} \
+            -var state_bucket=${{ vars.STATE_BUCKET }}

@@ -1,0 +1,26 @@
+# Installed once per pooled / dedicated cluster by the platform team.
+# Customer HTTPRoutes may attach only from namespaces labelled as tenants.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gateway
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: shared-gateway
+  namespace: gateway
+  annotations:
+    networking.gke.io/certmap: tenant-certs        # Certificate Manager map with *.<customer>.<env>.example.com
+spec:
+  gatewayClassName: gke-l7-global-external-managed
+  listeners:
+    - name: https
+      protocol: HTTPS
+      port: 443
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              platform.example.com/tenant: "true"

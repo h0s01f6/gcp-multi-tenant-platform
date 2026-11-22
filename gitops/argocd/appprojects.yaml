@@ -1,0 +1,73 @@
+# One AppProject per environment: prod Applications can only target prod clusters.
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: dev
+  namespace: argocd
+spec:
+  description: All customer workloads in dev
+  sourceRepos:
+    - https://github.com/my-company/gcp-multi-tenant-platform.git
+    - asia-south1-docker.pkg.dev/mtp-artifacts/charts
+  destinations:
+    - name: "*-dev-*"
+      namespace: "*"
+  clusterResourceWhitelist:
+    - { group: "", kind: Namespace }
+  namespaceResourceBlacklist:
+    - { group: "", kind: ResourceQuota }   # quotas only via tenant-namespace chart review
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: stage
+  namespace: argocd
+spec:
+  description: All customer workloads in stage
+  sourceRepos:
+    - https://github.com/my-company/gcp-multi-tenant-platform.git
+    - asia-south1-docker.pkg.dev/mtp-artifacts/charts
+  destinations:
+    - name: "*-stage-*"
+      namespace: "*"
+  clusterResourceWhitelist:
+    - { group: "", kind: Namespace }
+  namespaceResourceBlacklist:
+    - { group: "", kind: ResourceQuota }   # quotas only via tenant-namespace chart review
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: uat
+  namespace: argocd
+spec:
+  description: All customer workloads in uat
+  sourceRepos:
+    - https://github.com/my-company/gcp-multi-tenant-platform.git
+    - asia-south1-docker.pkg.dev/mtp-artifacts/charts
+  destinations:
+    - name: "*-uat-*"
+      namespace: "*"
+  clusterResourceWhitelist:
+    - { group: "", kind: Namespace }
+  namespaceResourceBlacklist:
+    - { group: "", kind: ResourceQuota }   # quotas only via tenant-namespace chart review
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: prod
+  namespace: argocd
+spec:
+  description: All customer workloads in prod
+  sourceRepos:
+    - https://github.com/my-company/gcp-multi-tenant-platform.git
+    - asia-south1-docker.pkg.dev/mtp-artifacts/charts
+  destinations:
+    - name: "*-prod-*"
+      namespace: "*"
+  clusterResourceWhitelist:
+    - { group: "", kind: Namespace }
+  namespaceResourceBlacklist:
+    - { group: "", kind: ResourceQuota }   # quotas only via tenant-namespace chart review

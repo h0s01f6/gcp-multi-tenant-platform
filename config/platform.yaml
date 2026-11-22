@@ -1,0 +1,30 @@
+# Platform-wide settings shared by every Terraform stack and CI job.
+prefix: mtp                      # project ID prefix: mtp-<customer>-<env>
+org_id: "123456789012"           # replace
+billing_account: "000000-AAAAAA-BBBBBB"   # replace
+domain: example.com
+default_region: asia-south1
+allowed_locations: ["in:asia-south1-locations", "in:asia-south2-locations"]
+
+environments:
+  dev:   { tenant_supernet: 10.16.0.0/12, gke_pool_subnet: 10.0.0.0/20,  prod_like: false }
+  stage: { tenant_supernet: 10.32.0.0/12, gke_pool_subnet: 10.0.16.0/20, prod_like: false }
+  uat:   { tenant_supernet: 10.48.0.0/12, gke_pool_subnet: 10.0.32.0/20, prod_like: false }
+  prod:  { tenant_supernet: 10.64.0.0/12, gke_pool_subnet: 10.0.48.0/20, prod_like: true }
+
+# IP plan for GKE (secondary ranges are per VPC, so they only need to be unique within one env)
+#   pods:     pooled shard n  -> cidrsubnet(100.64.0.0/11, 3, n)   (/14, shards 0..7)
+#             dedicated idx i -> cidrsubnet(100.96.0.0/11, 5, i)   (/16, 32 dedicated clusters per env)
+#   services: pooled shard n  -> cidrsubnet(10.240.0.0/12, 8, n)   (/20)
+#             dedicated idx i -> cidrsubnet(10.240.0.0/12, 8, 16+i)
+#   control plane: cidrsubnet(172.16.0.0/16, 12, n) (/28); dedicated uses 16+i
+gke_pools:
+  dev:   [ { name: gke-dev-pool-01,   shard: 0 } ]
+  stage: [ { name: gke-stage-pool-01, shard: 0 } ]
+  uat:   [ { name: gke-uat-pool-01,   shard: 0 } ]
+  prod:  [ { name: gke-prod-pool-01,  shard: 0 }, { name: gke-prod-pool-02, shard: 1 } ]
+
+cicd:
+  github_org: my-company           # WIF attribute condition: only this org's repos
+  bitbucket_workspace: my-company  # optional Bitbucket OIDC provider
+  bitbucket_workspace_uuid: "{00000000-0000-0000-0000-000000000000}"

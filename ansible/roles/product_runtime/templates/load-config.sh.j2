@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Writes /etc/product/env from instance metadata (CUSTOMER, ENVIRONMENT, FF_*, config keys
+# set by Terraform from the release file) and pulls secrets from the customer's project.
+set -euo pipefail
+MD=http://metadata.google.internal/computeMetadata/v1/instance/attributes
+mkdir -p /etc/product
+: > /etc/product/env
+for key in $(curl -s -H 'Metadata-Flavor: Google' "$MD/"); do
+  case "$key" in enable-oslogin|startup-script|ssh-keys) continue ;; esac
+  echo "${key}=$(curl -s -H 'Metadata-Flavor: Google' "$MD/$key")" >> /etc/product/env
+done
+PROJECT=$(curl -s -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/project/project-id)
+echo "DB_PASSWORD=$(gcloud secrets versions access latest --secret={{ product }}-db --project="$PROJECT")" >> /etc/product/env
+chmod 600 /etc/product/env
