@@ -16,7 +16,7 @@ Architecture and reference implementation for hosting **15–20 products across 
 | Compute Engine MIG architecture | [Runtime diagrams](diagrams/README.md#5-compute-engine-mig-runtime) |
 | Terraform infrastructure automation | [`terraform/`](terraform/README.md) |
 | Helm charts for GKE | [`helm/`](helm/README.md) |
-| Documentation and AI prompts | [`documentation/`](documentation/) and [prompts log](documentation/prompts-log.md) |
+| Documentation and AI prompts | [`documentation/`](documentation/) and [prompts log](PROMPTS.md) |
 
 ## Key design decisions
 
@@ -32,7 +32,7 @@ Architecture and reference implementation for hosting **15–20 products across 
 
 | Directory | Contents |
 |---|---|
-| `documentation/` | Reviewer guide, assignment traceability, stage implementation notes, assumptions and prompts log |
+| `documentation/` | Reviewer guide, assignment traceability, stage implementation notes and assumptions |
 | `architecture/` | Detailed platform architecture and design decisions |
 | `diagrams/` | Primary diagrams plus optional detailed implementation diagrams |
 | `terraform/` | Terraform modules, stacks and environment configuration |
@@ -41,6 +41,7 @@ Architecture and reference implementation for hosting **15–20 products across 
 | `registry/` | Tenant and product registry examples, schemas and naming rules |
 | `security/`, `network/`, `slo/`, `cost/` | Supporting platform configuration |
 | `tests/`, `tools/` | Local validation and consistency checks |
+| `PROMPTS.md` | AI prompts and engineering decision log (start here for the AI-use record) |
 
 ## Validation status
 
@@ -52,5 +53,5 @@ The project includes local validation and test tooling. The completion summary r
 - [Diagrams index](diagrams/README.md)
 - [Assignment completion summary](documentation/assignment-completion-summary.md)
 - [Requirements traceability](documentation/requirements-traceability.md)
-- [Prompts log](documentation/prompts-log.md)
+- [Prompts log](PROMPTS.md)
 - [Assumptions and open questions](documentation/assumptions-and-open-questions.md)

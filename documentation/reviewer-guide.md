@@ -230,7 +230,7 @@ The following documents are supporting references; they are not required to unde
 | [Database architecture](database-architecture-mysql.md) | MySQL pools, customer databases and privilege model |
 | [Assumptions and open questions](assumptions-and-open-questions.md) | Decisions that require confirmation before a real deployment |
 | [Requirements traceability](requirements-traceability.md) | Where assignment requirements are addressed |
-| [Prompts log](prompts-log.md) | AI-assisted workflow and prompt record |
+| [Prompts log](../PROMPTS.md) | AI-assisted workflow and prompt record |
 
 ## 10. Implementation and validation status
 
