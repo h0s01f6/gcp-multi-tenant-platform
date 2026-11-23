@@ -11,9 +11,9 @@ Architecture and reference implementation for a GCP platform hosting 15–20 pro
 | Requested deliverable | Repository location |
 |---|---|
 | Overall GCP infrastructure architecture | [Architecture Overview](documentation/reviewer-guide.md) and [detailed architecture](architecture/stage-2-platform-architecture.md) |
-| GKE runtime diagram | [Diagram 03](diagrams/rendered/03-gke-runtime.svg) |
-| Cloud Run runtime diagram | [Diagram 04](diagrams/rendered/04-cloudrun-runtime.svg) |
-| Instance Group runtime diagram | [Diagram 05](diagrams/rendered/05-mig-runtime.svg) |
+| GKE runtime diagram | [Diagram 03](diagrams/README.md#03-gke-runtime) |
+| Cloud Run runtime diagram | [Diagram 04](diagrams/README.md#04-cloudrun-runtime) |
+| Instance Group runtime diagram | [Diagram 05](diagrams/README.md#05-mig-runtime) |
 | Terraform infrastructure automation | [`terraform/`](terraform/) |
 | Helm charts for GKE | [`helm/`](helm/) |
 | Documentation and examples | [`documentation/`](documentation/), [`registry/`](registry/), [`examples/`](examples/) |
@@ -55,4 +55,4 @@ These are available for deeper review, but are not required as a first read:
 - [Architecture decision records](architecture/decisions/)
 - [Prompts log](documentation/prompts-log.md)
 
-The remaining diagrams in [`diagrams/`](diagrams/) and detailed design documents are supporting material for specific implementation questions.
+The [diagram index](diagrams/README.md) links to all architecture diagrams. PNG previews are used for reliable rendering in GitHub; the corresponding SVG exports and Mermaid source files are retained.
