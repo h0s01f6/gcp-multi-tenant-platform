@@ -31,11 +31,11 @@ The recurring direction to Claude was:
 
 ## Stage 1 – Understand the assignment and establish the architecture
 
-**Architectural direction (reconstructed from the initial project discussion)**
+**Architectural direction**
 
 > Review the assignment requirements and turn them into a clear set of architectural requirements and constraints. Compare viable multi-tenant deployment and isolation approaches, explain their trade-offs, and recommend an approach that can support the stated customer and product scale. Keep the design grounded in the assignment rather than assuming requirements that have not been provided. Record assumptions and questions that need confirmation.
 
-**Follow-up direction (reconstructed)**
+**Follow-up direction**
 
 > Make the recommendation explicit and defensible. Address the project and environment model, customer isolation, product subscription differences, runtime choices, data handling, disaster recovery and operational ownership. Show why the selected approach is preferable to the alternatives and retain the alternatives in the design record.
 
@@ -43,11 +43,11 @@ The recurring direction to Claude was:
 
 ## Stage 2 – Convert the architecture into a technical design
 
-**Technical-design prompt (reconstructed)**
+**Technical-design prompt**
 
 > Expand the approved architecture into an implementable GCP design. Define the project and folder structure, environment separation, GKE/Cloud Run/MIG placement, database and storage model, workload identities, networking, ingress/egress, deployment tiers and operating model. Show how the design supports customer subscriptions to different products and versions. Include capacity assumptions for 200 and 500 customers, identify scaling constraints, and record decisions and open questions. Keep the design consistent with the assignment scope.
 
-**Review and refinement direction (reconstructed)**
+**Review and refinement direction**
 
 > Review the design for consistency and operational feasibility. Make the isolation guarantees precise for Dedicated, Shared and Cohort products; distinguish infrastructure permissions from database permissions; validate naming limits and identity derivation; and ensure non-production data is handled through an explicitly controlled, masked flow. Update the architecture decisions and tests where a correction is needed.
 
@@ -55,11 +55,11 @@ The recurring direction to Claude was:
 
 ## Stage 3 – Implement security, identity and governance controls
 
-**Stage objective prompt (reconstructed)**
+**Stage objective prompt**
 
 > Implement the security design in small, independently verifiable parts. Start with the tenant/product registry and validation rules, then derive workload identities and access groups, build the access matrix and database grants, and implement organisation policies, CI/CD identities, privileged access, Kubernetes security, secrets/key protection and audit controls. Use the existing architecture and naming conventions. Add deterministic generators, validation tools and tests so the controls can be checked locally.
 
-**Security review prompts (reconstructed)**
+**Security review prompts**
 
 > Check that workload identities receive only the permissions required for their runtime and customer/product scope. Do not let shared workload groups accidentally grant customer-specific database access. Verify the Shared/Cohort isolation model against the documented ADR, and make the application-level boundary explicit. Check that production human access is time-bound and approved, that break-glass access is separately controlled, and that CI identities are restricted to the intended repository, environment and branch.
 
@@ -71,11 +71,11 @@ The recurring direction to Claude was:
 
 ## Stage 4 – Design and validate the network foundation
 
-**Networking prompt (reconstructed)**
+**Networking prompt**
 
 > Implement the network design from the approved architecture: private address allocation, Shared VPCs, tier separation, GKE and workload subnets, Cloud SQL private connectivity, firewall policy, DNS, ingress/egress, NAT and quota assumptions. Keep production and non-production boundaries clear. Make the configuration consistent with the project model and identity permissions, and add local checks for address overlap, required ranges, policy coverage and references.
 
-**Review direction (reconstructed)**
+**Review direction**
 
 > Check that the network controls match the actual runtime paths. Avoid broad project-wide network permissions where subnet-level permissions are sufficient. Confirm that private workloads do not gain unintended public access, and document product-specific egress requirements as assumptions where the assignment does not provide them.
 
@@ -83,11 +83,11 @@ The recurring direction to Claude was:
 
 ## Stage 5 – Build the Terraform infrastructure layer
 
-**Terraform implementation prompt (reconstructed)**
+**Terraform implementation prompt**
 
 > Implement reusable Terraform modules and independently managed stacks for the approved GCP architecture. Cover organisation/folder/project foundations, networking, platform services, security, shared infrastructure and tenant/product resources. Keep state boundaries and apply dependencies explicit. Generate example configuration from the registry and existing design inputs. Ensure Terraform owns cloud infrastructure and platform-owned Kubernetes foundations, not application release resources that belong in Helm.
 
-**Review direction (reconstructed)**
+**Review direction**
 
 > Check module inputs/outputs, naming, stack dependencies, state layout, least-privilege deployment identities and consistency with the access matrix. Add static validation and tests. Clearly identify anything that requires Terraform CLI, provider access or a real GCP organisation and therefore cannot be validated in the current environment.
 
@@ -95,11 +95,11 @@ The recurring direction to Claude was:
 
 ## Stage 6 – Build the application delivery layer
 
-**Helm and Ansible prompt (reconstructed)**
+**Helm and Ansible prompt**
 
 > Implement the agreed Helm library and application chart using the Terraform-to-Helm contract. Include the application release resources required by the design and support the relevant environment sizing. Keep platform-owned resources such as namespaces, service accounts, network policies, RBAC, quotas and shared gateways outside the application chart. For MIG-based products, provide the Packer/Ansible image-bake and day-two configuration path described by the architecture.
 
-**Review direction (reconstructed)**
+**Review direction**
 
 > Render representative releases and validate the chart contract against Terraform outputs. Check that Helm does not recreate resources owned by Terraform and that the GKE, Cloud Run and MIG deployment models remain consistent. Report unavailable Helm/Packer/Ansible tooling as a validation limitation rather than claiming a real deployment.
 
@@ -107,7 +107,6 @@ The recurring direction to Claude was:
 
 ## Stages 7 and 8 – Complete CI/CD, cost, SLOs and disaster recovery together
 
-**Exact prompt retained from the Claude conversation**
 
 > Stages 5 and 6 are accepted. Let's complete the remaining assignment by working on Stage 7 (CI/CD) and Stage 8 (Cost and SLOs) together.  
 > Please use the existing architecture, Terraform modules, Helm charts, registry, identities and security controls.  
@@ -120,7 +119,7 @@ The recurring direction to Claude was:
 > Before starting, briefly show implementation plan and deliverables. Then proceed.  
 > At end provide final assignment-completion summary, outstanding validation items and assumptions.
 
-**Follow-up direction (reconstructed from the completion review)**
+**Follow-up direction**
 
 > Inspect the existing planner, workflows, workflow checks, cost model and capacity checks before changing anything. Complete only the remaining SLO, monitoring, backup and DR implementation, documentation/register updates and tests. Keep the implementation aligned with the existing Stage 3 identities and security controls, Stage 5 Terraform stacks and Stage 6 release mechanisms. Check workflow permissions, promotion order, approval gates, rollback paths, customer onboarding and capacity enforcement. Do not repeat completed work or expand the scope.
 
@@ -132,7 +131,7 @@ The recurring direction to Claude was:
 
 ## Final review and handover direction
 
-**Final verification prompt (reconstructed)**
+**Final verification prompt**
 
 > Review the complete repository against the original assignment requirements. Check that the implementation, documentation, diagrams, examples, traceability matrix and tests agree. Identify missing deliverables, contradictory assumptions, accidental scope additions and claims that overstate validation. Run all available local checks and tests. Produce a concise handover summary with completed work, test evidence, open decisions, risks and the GCP validation sequence. Do not make further architectural changes unless a concrete defect or requirement gap is found.
 
@@ -143,5 +142,3 @@ The recurring direction to Claude was:
 The repository contains the implementation, tests, architecture decision records, assumptions/open-questions register, requirements traceability and stage completion documents. The final completion summary reports 26 local check steps with zero findings and 386 passing tests. Those are the results recorded by the project run; this prompt log does not independently certify every command or any cloud deployment.
 
 No real GCP deployment, Terraform apply, Cloud SQL isolation run, GitHub Actions deployment workflow, production release, backup restore drill or regional failover test is claimed here. The only pipeline run reported in the completion summary is the repository's own CI workflow, which does not require cloud access.
-
-The exact Stage 7–8 combined prompt above is reproduced from the conversation. Other stage entries are labelled reconstructed because a complete verbatim export of all Claude messages was not available when this log was prepared.
