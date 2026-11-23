@@ -1,87 +1,36 @@
-%% 02 - Overall multi-tenant platform architecture (one region shown: asia-south1)
-%% Status: PROPOSED baseline, revised in Stage 2 review (A1, A2, A5, K1) and final reconciliation (MySQL, groups). DR region is in diagram 12.
-flowchart LR
-  USERS["Customer end users<br/>abc.payroll.example.com<br/>abc.crm.example.com"]
-  ENG["Engineers<br/>(corporate IdP SSO)"]
+flowchart TB
+    USERS["Customer users"] --> ENTRY["Application entry point\nLoad balancing and routing"]
 
-  subgraph SHARED["Shared services (fldr-shared, fldr-bootstrap)"]
-    direction TB
-    GIT["GitHub org<br/>app repos, platform-tenants registry,<br/>platform-infra, platform-charts, platform-ansible"]
-    BLD["shr-build<br/>builds, scans, signs images,<br/>charts, VM images"]
-    AR["shr-artifacts<br/>release repo: written only by shr-build<br/>snapshot repo: Dev only"]
-    CIN["shr-cicd-nonprd<br/>ephemeral runners<br/>deploy-nonprd (via WIF)"]
-    CIP["shr-cicd-prd<br/>ephemeral runners<br/>deploy-prd (via WIF, env prd only)"]
-    STN["tfstate-nonprd"]
-    STP["tfstate-prd"]
-    OBS["plt-obs-prd-NN / plt-obs-nonprd-NN<br/>metrics scopes, Managed Prometheus,<br/>dashboards, SLOs, alerting"]
-    SEC["shr-security<br/>org audit log sink, SCC"]
-    GRP["Cloud Identity groups (ADR-009 rev. 2)<br/>humans grp-hum-*, pipelines grp-pl-*,<br/>workloads grp-wl-sqlconn / ar-readers / netusers<br/>(identical non-data permissions only)"]
-  end
-
-  subgraph PRD["PRODUCTION tier"]
-    direction TB
-    NETP["net-host-prd: Shared VPC vpc-prd<br/>subnets, Cloud NAT, PGA,<br/>private services access for Cloud SQL"]
-    INGP["plt-ingress-prd<br/>global external ALB + Cloud Armor<br/>Cloud Run and MIG products"]
-    subgraph GKEP_G["plt-gke-prd"]
-      GWP["GKE Gateway<br/>(creates its own global ALB)"]
-      GKEP["gke-prd-as1-01 Autopilot<br/>namespaces per customer-product"]
+    subgraph PLATFORM["GCP multi-tenant platform"]
+      direction TB
+      subgraph RUNTIMES["Product runtime options"]
+        direction LR
+        GKE["GKE\nShared regional clusters\nCustomer/product namespaces"]
+        CR["Cloud Run\nCustomer-scoped services"]
+        MIG["Compute Engine MIG\nCustomer-scoped instance groups"]
+      end
+      ENTRY --> GKE
+      ENTRY --> CR
+      ENTRY --> MIG
+      DATA["Data and configuration\nCloud SQL · Cloud Storage · Secret Manager"]
+      GKE --> DATA
+      CR --> DATA
+      MIG --> DATA
+      ISOLATION["Tenant isolation controls\nProjects · identities · network rules\nnamespace boundaries · database permissions"]
+      ISOLATION -. "protects workloads and data" .-> RUNTIMES
+      ISOLATION -. "controls access" .-> DATA
     end
-    SQLP["plt-sql-prd-NN<br/>Cloud SQL for MySQL 8.4 pools (HA)<br/>sql-prd-payroll-01, sql-prd-crm-01<br/>database + role per customer-product"]
-    subgraph TPRD["Tenant projects: t-abc-prd, t-xyz-prd ..."]
-      TRUN["Cloud Run services"]
-      TMIG["Regional MIGs"]
-      TDATA["GCS buckets, Secret Manager,<br/>per-workload SAs, KMS keyring"]
+
+    subgraph DELIVERY["Shared platform engineering"]
+      direction LR
+      REG["Tenant / product registry"] --> TF["Terraform\nInfrastructure"]
+      REG --> PIPE["CI/CD pipelines"]
+      PIPE --> HELM["Helm\nGKE applications"]
+      PIPE --> ANS["Packer + Ansible\nMIG images and configuration"]
+      PIPE --> CR
+      TF --> GKE
+      TF --> CR
+      TF --> MIG
+      HELM --> GKE
+      ANS --> MIG
     end
-    PPRD["p-product-prd<br/>Shared / Cohort products"]
-    DED["t-bigco-prd (dedicated tier)<br/>own GKE cluster + own Cloud SQL"]
-  end
-
-  subgraph NPRD["NON-PRODUCTION tier"]
-    direction TB
-    NETN["net-host-nonprd: Shared VPC vpc-nonprd"]
-    INGN["plt-ingress-nonprd"]
-    GKEN["plt-gke-nonprd<br/>gke-dev-as1-01, gke-stg-as1-01,<br/>gke-uat-as1-01 (each with own Gateway)"]
-    SQLN["plt-sql-nonprd-NN<br/>MySQL 8.4 pools sql-dev-NN, sql-stg-NN, sql-uat-NN"]
-    TNON["Tenant projects: t-abc-nonprd, t-xyz-nonprd ...<br/>Cloud Run, MIGs, buckets, secrets, SAs, keys"]
-  end
-
-  USERS --> GWP --> GKEP
-  USERS --> INGP
-  USERS -. "UAT testers only" .-> INGN
-  INGP --> TRUN
-  INGP --> TMIG
-  INGN --> TNON
-  USERS -. "UAT testers only" .-> GKEN
-
-  GKEP -- "Workload Identity as tenant SA" --> TDATA
-  GKEP -- "IAM DB auth" --> SQLP
-  TRUN --> SQLP
-  TRUN --> TDATA
-  TMIG --> SQLP
-  TMIG --> TDATA
-  GKEN --> SQLN
-  GKEN --> TNON
-
-  GIT -- "app repos" --> BLD -- "signed release artifacts" --> AR
-  GIT -- "registry PR merged" --> CIN
-  GIT -- "approved prod change" --> CIP
-  CIN -- "Terraform / Helm / gcloud / Ansible" --> NPRD
-  CIP -- "Terraform / Helm / gcloud / Ansible" --> PRD
-  CIN --- STN
-  CIP --- STP
-  AR -. "pull by digest" .-> PRD
-  AR -. "pull" .-> NPRD
-  GRP -. "fleet-wide grants" .-> SQLP
-
-  PRD -. "metrics, logs" .-> OBS
-  NPRD -. "metrics, logs" .-> OBS
-  PRD -. "audit logs" .-> SEC
-  NPRD -. "audit logs" .-> SEC
-  ENG -- "read-only by default,<br/>JIT elevation for prod" --> OBS
-
-  classDef prd fill:#fde2e1,stroke:#c0392b,color:#000
-  classDef nonprd fill:#e1ecfd,stroke:#2c6fbb,color:#000
-  classDef shared fill:#eeeeee,stroke:#555,color:#000
-  class INGP,GKEP,GWP,SQLP,TRUN,TMIG,TDATA,DED,NETP,CIP,STP,PPRD prd
-  class NETN,INGN,GKEN,SQLN,TNON,CIN,STN nonprd
-  class GIT,BLD,AR,OBS,SEC,GRP shared

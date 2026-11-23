@@ -1,0 +1,42 @@
+flowchart TB
+  subgraph SHARED["Shared platform projects"]
+    NET["Shared VPCs\nProd and Non-prod kept separate"]
+    GKEPLAT["GKE clusters\nOne cluster per environment, scaled by cells"]
+    EDGE["Shared ingress and routing"]
+    BUILD["Build and artifact services"]
+    RUNNERS["CI/CD runners"]
+  end
+
+  subgraph CUSTOMER["Each customer"]
+    direction TB
+    subgraph NONPROD["Customer non-production project"]
+      DEV["Dev"]
+      STG["Stage"]
+      UAT["UAT"]
+    end
+    subgraph PROD["Customer production project"]
+      PRD["Prod"]
+    end
+    DATA["Customer-owned data, secrets\nand workload identities"]
+    DEV --> DATA
+    STG --> DATA
+    UAT --> DATA
+    PRD --> DATA
+  end
+
+  NET --> DEV
+  NET --> STG
+  NET --> UAT
+  NET --> PRD
+  GKEPLAT --> DEV
+  GKEPLAT --> STG
+  GKEPLAT --> UAT
+  GKEPLAT --> PRD
+  EDGE --> DEV
+  EDGE --> STG
+  EDGE --> UAT
+  EDGE --> PRD
+  BUILD --> RUNNERS
+  RUNNERS --> NONPROD
+  RUNNERS --> PROD
+  UAT -. "controlled, approved and\nmasked data movement" .-> DEV

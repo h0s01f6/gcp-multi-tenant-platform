@@ -1,284 +1,237 @@
-# Multi-Tenant GCP Platform – Architecture Overview
+# Multi-Tenant GCP Platform — Architecture Overview
 
-## 1. Problem and design goals
+> **Start here:** this document explains the proposed architecture at a conceptual level. It focuses on the decisions that answer the assignment. Detailed implementation documents, Terraform modules, Helm charts and supporting diagrams are linked at the end.
 
-The platform hosts 15–20 products for 200+ customers across Dev, Stage, UAT and Prod. Products may run on GKE, Cloud Run or Compute Engine Managed Instance Groups (MIGs). Customers may subscribe to multiple products, run different product versions and apply customer-specific configuration.
+## 1. What we are building
 
-The design aims to:
+A GCP platform for **15–20 products and 200+ customers**, with four environments (Dev, Stage, UAT and Prod). A customer can subscribe to several products. Products can run on GKE, Cloud Run or Compute Engine Managed Instance Groups (MIGs), and different customers may run different product versions and configurations.
 
-- isolate customer workloads and data;
-- support all four environments and controlled data movement between a customer's own environments;
-- allow product versions to differ by customer where the deployment model supports it;
-- reuse platform services and automation without giving customers direct GCP administration access;
-- scale by adding customers and capacity cells rather than redesigning the platform.
+The design uses shared platform services where reuse is useful, while keeping customer production boundaries, workload identities and data access separate.
 
-## 2. Tenancy and environment model
+## 2. Overall architecture
 
-The recommended model is hybrid:
-
-- Each customer has a **non-production project** for Dev, Stage and UAT, and a separate **production project**.
-- Shared platform projects provide centrally managed services such as networking, GKE clusters, ingress, build artifacts and observability.
-- GKE workloads use customer/product/environment namespaces on shared regional clusters. Cloud Run services and MIGs run in the appropriate customer project for Dedicated deployments.
-- Customer data and workload identities remain customer-scoped for Dedicated deployments. Shared services are granted only the access they need.
-
-This avoids creating a separate GCP project for every product/environment combination while retaining a meaningful production boundary for each customer.
-
-## 3. Product deployment models
-
-The product catalogue declares one of three deployment models:
-
-| Model | Deployment pattern | Version handling | Isolation boundary |
-|---|---|---|---|
-| Dedicated (default) | Separate customer deployment | Each customer can run its own version | Platform / infrastructure boundary |
-| Shared | One product deployment serves multiple customers | One common version; customer differences use configuration or feature flags | Application logic |
-| Cohort | One deployment per version cohort | Customers in different cohorts can run different versions | Application logic within each cohort |
-
-Dedicated is the default because it provides the clearest isolation. Shared and Cohort are options only where the product is designed and reviewed for application-level tenant isolation. This trade-off is explicit: a shared product identity can access the customer databases assigned to that shared deployment, so application code must enforce tenant separation.
-
-## 4. Runtime architectures
-
-The assignment asks for one architecture diagram per runtime. These are the three primary runtime diagrams:
-
-### GKE
+This is the main view of the platform. It shows how users reach products, where the three runtime options sit, where customer data lives, and how the platform is delivered.
 
 ```mermaid
-%% 03 - GKE-based product runtime (Payroll in production)
-%% Two customers, two different versions, one shared Autopilot cluster.
-%% Revised in Stage 2 review: A2 (group IAM), A6 (hostname policy), K12 (egress).
-%% Final reconciliation: Cloud SQL for MySQL 8.4, customer-unique SA names (M1), per-database roles (M2).
-flowchart LR
-  U1["ABC users<br/>abc.payroll.example.com"]
-  U2["XYZ users<br/>xyz.payroll.example.com"]
+flowchart TB
+    USERS["Customer users"] --> ENTRY["Application entry point\nLoad balancing and routing"]
 
-  subgraph EDGE["Edge (global)"]
-    ALB["Global external ALB<br/>created by GKE Gateway<br/>Cloud Armor WAF + rate limits<br/>cert *.payroll.example.com"]
+    subgraph PLATFORM["GCP multi-tenant platform"]
+      direction TB
+      subgraph RUNTIMES["Product runtime options"]
+        direction LR
+        GKE["GKE\nShared regional clusters\nCustomer/product namespaces"]
+        CR["Cloud Run\nCustomer-scoped services"]
+        MIG["Compute Engine MIG\nCustomer-scoped instance groups"]
+      end
+      ENTRY --> GKE
+      ENTRY --> CR
+      ENTRY --> MIG
+      DATA["Data and configuration\nCloud SQL · Cloud Storage · Secret Manager"]
+      GKE --> DATA
+      CR --> DATA
+      MIG --> DATA
+      ISOLATION["Tenant isolation controls\nProjects · identities · network rules\nnamespace boundaries · database permissions"]
+      ISOLATION -. "protects workloads and data" .-> RUNTIMES
+      ISOLATION -. "controls access" .-> DATA
+    end
+
+    subgraph DELIVERY["Shared platform engineering"]
+      direction LR
+      REG["Tenant / product registry"] --> TF["Terraform\nInfrastructure"]
+      REG --> PIPE["CI/CD pipelines"]
+      PIPE --> HELM["Helm\nGKE applications"]
+      PIPE --> ANS["Packer + Ansible\nMIG images and configuration"]
+      PIPE --> CR
+      TF --> GKE
+      TF --> CR
+      TF --> MIG
+      HELM --> GKE
+      ANS --> MIG
+    end
+```
+
+**How to read it:** users reach a product through the common entry layer. The product runs on one of the three supported runtimes. Each runtime accesses only the data and configuration permitted to its workload identity. Terraform provisions infrastructure; CI/CD coordinates releases; Helm deploys GKE applications; Packer and Ansible prepare and configure MIG instances.
+
+## 3. Customer and environment model
+
+The design uses a **hybrid project model**:
+
+- Each customer has a separate **production project** and a separate **non-production project**.
+- Dev, Stage and UAT are separated as environments within the non-production tier; Prod is isolated in the production tier.
+- Shared platform projects host common networking, GKE clusters, ingress, build/artifact services and deployment runners.
+- Cloud SQL instances can be pooled, while each customer/product receives its own database and database permissions.
+
+```mermaid
+flowchart TB
+  subgraph SHARED["Shared platform projects"]
+    NET["Shared VPCs\nProd and Non-prod kept separate"]
+    GKEPLAT["GKE clusters\nOne cluster per environment, scaled by cells"]
+    EDGE["Shared ingress and routing"]
+    BUILD["Build and artifact services"]
+    RUNNERS["CI/CD runners"]
   end
 
-  subgraph CL["plt-gke-prd / gke-prd-as1-01 (Autopilot, regional, private nodes, Dataplane V2)"]
+  subgraph CUSTOMER["Each customer"]
     direction TB
-    subgraph GWNS["ns: gateway-infra (platform-owned)"]
-      GW["Gateway gw-payroll-prd<br/>allowedRoutes: namespaces labelled product=payroll<br/>admission policy: route hostnames must match<br/>the namespace tenant and env labels"]
+    subgraph NONPROD["Customer non-production project"]
+      DEV["Dev"]
+      STG["Stage"]
+      UAT["UAT"]
     end
-    subgraph NSA["ns: abc-payroll-prd  labels tenant=abc product=payroll env=prd"]
-      RA["HTTPRoute host abc.payroll.example.com"]
-      HA["Helm release abc-payroll-prd<br/>chart payroll 2.0.2, image payroll@sha256 digest"]
-      PA["Deployment payroll x3 pods across zones<br/>HPA 3..12, PDB minAvailable 2<br/>readiness + liveness probes"]
-      KA["KSA payroll (app)<br/>KSA payroll-migrate (pre-upgrade Job)"]
-      NPA["NetworkPolicy: default deny,<br/>allow from gateway, allow egress to<br/>kube-dns, GKE metadata server,<br/>Cloud SQL + Google APIs only"]
-      QA["ResourceQuota + LimitRange"]
+    subgraph PROD["Customer production project"]
+      PRD["Prod"]
     end
-    subgraph NSX["ns: xyz-payroll-prd  labels tenant=xyz product=payroll env=prd"]
-      RX["HTTPRoute host xyz.payroll.example.com"]
-      HX["Helm release xyz-payroll-prd<br/>chart payroll 1.5.3, image payroll@sha256 digest"]
-      PX["Deployment payroll x2 pods"]
-      KX["KSA payroll"]
-      NPX["NetworkPolicy (same baseline)"]
-    end
+    DATA["Customer-owned data, secrets\nand workload identities"]
+    DEV --> DATA
+    STG --> DATA
+    UAT --> DATA
+    PRD --> DATA
   end
 
-  subgraph TA["t-abc-prd"]
-    GSA_A["GSA abc-payroll-prd@t-abc-prd<br/>(+ abc-payroll-prd-mig for migrations)"]
-    SM_A["Secret Manager payroll-prd-*"]
-    GCS_A["Bucket abc-payroll-prd-data"]
-    KMS_A["KMS kr-abc-prd-as1 / payroll-prd"]
-  end
-  subgraph TX["t-xyz-prd"]
-    GSA_X["GSA xyz-payroll-prd@t-xyz-prd"]
-    SM_X["Secret Manager payroll-prd-*"]
-    GCS_X["Bucket xyz-payroll-prd-data"]
-  end
-  subgraph SQL["plt-sql-prd-01 / sql-prd-payroll-01 (Cloud SQL for MySQL 8.4, HA)<br/>no global privileges for tenant accounts, isolation test ISO-01..10"]
-    DBA["database abc_payroll<br/>account abc-payroll-prd: role r_abc_payroll_app<br/>account abc-payroll-prd-mig: role r_abc_payroll_ddl"]
-    DBX["database xyz_payroll<br/>account xyz-payroll-prd: role r_xyz_payroll_app"]
-  end
-
-  U1 --> ALB
-  U2 --> ALB
-  ALB --> GW
-  GW --> RA --> PA
-  GW --> RX --> PX
-  HA -. "renders" .-> PA
-  HX -. "renders" .-> PX
-  PA --- KA
-  PX --- KX
-  KA == "Workload Identity:<br/>KSA impersonates GSA" ==> GSA_A
-  KX == "Workload Identity" ==> GSA_X
-  GSA_A --> SM_A
-  GSA_A --> GCS_A
-  GCS_A -. "CMEK" .-> KMS_A
-  GSA_A -- "Auth Proxy, automatic IAM DB auth<br/>(connect via grp-wl-sqlconn-prd-01),<br/>grants only on abc_payroll" --> DBA
-  GSA_X --> SM_X
-  GSA_X --> GCS_X
-  GSA_X -- "grants only on xyz_payroll" --> DBX
-  PA -. "blocked by NetworkPolicy" .-x PX
-
-  classDef abc fill:#fff3cd,stroke:#b8860b,color:#000
-  classDef xyz fill:#d4edda,stroke:#2e7d32,color:#000
-  class NSA,RA,HA,PA,KA,NPA,QA,GSA_A,SM_A,GCS_A,KMS_A,DBA abc
-  class NSX,RX,HX,PX,KX,NPX,GSA_X,SM_X,GCS_X,DBX xyz
+  NET --> DEV
+  NET --> STG
+  NET --> UAT
+  NET --> PRD
+  GKEPLAT --> DEV
+  GKEPLAT --> STG
+  GKEPLAT --> UAT
+  GKEPLAT --> PRD
+  EDGE --> DEV
+  EDGE --> STG
+  EDGE --> UAT
+  EDGE --> PRD
+  BUILD --> RUNNERS
+  RUNNERS --> NONPROD
+  RUNNERS --> PROD
+  UAT -. "controlled, approved and\nmasked data movement" .-> DEV
 ```
 
-GKE provides shared regional clusters with separate namespaces and Helm releases. Customer-specific service accounts, secrets, storage and database grants are used for Dedicated workloads. Network policies and namespace controls limit workload communication.
+The data movement shown is an example of controlled sharing between a customer's own environments, not unrestricted replication. Production data is not copied into non-production without the required masking and approval controls.
 
-### Cloud Run
+## 4. Product deployment models
+
+The product registry defines how each customer subscription is deployed.
+
+| Model | How it works | Version handling | Isolation approach |
+|---|---|---|---|
+| **Dedicated (default)** | A separate deployment for each customer | Each customer can use its own version and configuration | Stronger infrastructure and identity separation |
+| **Shared** | One product deployment serves multiple customers | One common product version; customer-specific configuration where supported | Application-level tenant isolation |
+| **Cohort** | Customers are grouped into deployments | Different cohorts can run different product versions | Application-level isolation within each cohort |
+
+Dedicated is the default because it provides the clearest isolation. Shared and Cohort are used only for products designed and reviewed for application-level tenant isolation. A shared workload identity can access the customer databases assigned to that deployment, so the application must enforce tenant separation.
+
+## 5. Runtime architectures
+
+These diagrams intentionally show the main components and flow, not individual resource names or configuration values.
+
+### 5.1 GKE
 
 ```mermaid
-%% 04 - Cloud Run-based product runtime (CRM in production)
-%% Each customer's service lives in the customer's own tenant project.
-%% Final reconciliation: MySQL 8.4 pool, customer-unique SA names (M1).
-flowchart LR
-  U1["ABC users<br/>abc.crm.example.com"]
-  U2["XYZ users<br/>xyz.crm.example.com"]
-
-  subgraph ING["plt-ingress-prd"]
-    ALB["Global external ALB + Cloud Armor<br/>URL map: host rule per customer<br/>cert *.crm.example.com"]
+flowchart TB
+  USER["Customer user"] --> LB["Load balancer / GKE Gateway"]
+  LB --> ROUTE["HTTP routing"]
+  subgraph CLUSTER["Regional GKE cluster"]
+    direction TB
+    subgraph NS1["Customer A · Product X namespace"]
+      H1["Helm release\nProduct version + configuration"] --> P1["Application pods"]
+      ID1["Kubernetes service account"] --- P1
+      POLICY1["Namespace policy\nNetwork policy · quotas"]
+    end
+    subgraph NS2["Customer B · Product X namespace"]
+      H2["Helm release\nProduct version + configuration"] --> P2["Application pods"]
+      ID2["Kubernetes service account"] --- P2
+      POLICY2["Namespace policy\nNetwork policy · quotas"]
+    end
   end
-
-  subgraph TA["t-abc-prd"]
-    BSA["backend service bs-crm-prd<br/>+ serverless NEG (asia-south1)"]
-    RUNA["Cloud Run service crm-prd<br/>ingress: internal + load balancer only<br/>revision crm-prd-00042 = image crm 3.1.0<br/>min 1, max 20 instances, concurrency 80"]
-    SAA["service identity abc-crm-prd@t-abc-prd<br/>MySQL account abc-crm-prd"]
-    SMA["Secret Manager crm-prd-* (mounted as env/volume)"]
-    GCSA["Bucket abc-crm-prd-files (CMEK)"]
-  end
-
-  subgraph TX["t-xyz-prd"]
-    BSX["backend service bs-crm-prd<br/>+ serverless NEG"]
-    RUNX["Cloud Run service crm-prd<br/>revision crm-prd-00017 = image crm 3.0.5"]
-    SAX["service identity xyz-crm-prd@t-xyz-prd<br/>MySQL account xyz-crm-prd"]
-    SMX["Secret Manager crm-prd-*"]
-    GCSX["Bucket xyz-crm-prd-files"]
-  end
-
-  subgraph NET["net-host-prd / vpc-prd"]
-    SUB["subnet snet-prd-as1-run<br/>Direct VPC egress, network tags<br/>run-crm"]
-  end
-
-  subgraph SQL["plt-sql-prd-01 / sql-prd-crm-01 (MySQL 8.4, HA)"]
-    DBA["database abc_crm<br/>role r_abc_crm_app"]
-    DBX["database xyz_crm<br/>role r_xyz_crm_app"]
-  end
-
-  OTHER["Another internal service<br/>(caller)"]
-
-  U1 --> ALB
-  U2 --> ALB
-  ALB -- "cross-project backend reference" --> BSA --> RUNA
-  ALB -- "cross-project backend reference" --> BSX --> RUNX
-  RUNA --- SAA
-  RUNX --- SAX
-  SAA --> SMA
-  SAA --> GCSA
-  SAX --> SMX
-  SAX --> GCSX
-  RUNA -- "Direct VPC egress" --> SUB
-  RUNX -- "Direct VPC egress" --> SUB
-  SUB -- "private IP, IAM DB auth" --> DBA
-  SUB -- "private IP, IAM DB auth" --> DBX
-  OTHER -- "ID token, needs roles/run.invoker<br/>on that one service" --> RUNA
-  RUNA -. "no invoker grant: 403" .-x RUNX
-
-  classDef abc fill:#fff3cd,stroke:#b8860b,color:#000
-  classDef xyz fill:#d4edda,stroke:#2e7d32,color:#000
-  class BSA,RUNA,SAA,SMA,GCSA,DBA abc
-  class BSX,RUNX,SAX,SMX,GCSX,DBX xyz
+  ROUTE --> H1
+  ROUTE --> H2
+  P1 --> WI1["Workload Identity"] --> DATA1["Permitted customer data\nCloud SQL / Storage / Secrets"]
+  P2 --> WI2["Workload Identity"] --> DATA2["Permitted customer data\nCloud SQL / Storage / Secrets"]
 ```
 
-Cloud Run services are deployed per customer for Dedicated products. A shared external load balancer routes customer hostnames to the correct service. Services use customer-scoped identities and private connectivity to required data services.
+**Approach:** regional GKE clusters are shared by default. Each customer/product/environment gets a namespace and Helm release. Workload Identity maps Kubernetes service accounts to Google service accounts. Namespace controls and network policies limit workload interaction; customer-specific IAM and database grants control data access. Dedicated customers can use a dedicated cluster where required by their isolation tier.
 
-### Compute Engine MIG
+### 5.2 Cloud Run
 
 ```mermaid
-%% 05 - Compute Engine MIG-based product runtime
-%% "Ledger" is an ILLUSTRATIVE VM-based product (not part of the ABC/XYZ Payroll/CRM example).
-%% Revised in Stage 2 review: A5 (images built in shr-build, not on a non-prod runner).
-flowchart LR
-  U["ABC users<br/>abc.ledger.example.com"]
-
-  subgraph BUILD["Build (shr-build + shr-artifacts)"]
-    PK["Packer + Ansible playbook<br/>bakes OS hardening + ledger 4.2.1"]
-    IMG["Image family ledger<br/>image img-ledger-4-2-1-20261120<br/>scanned + signed, shared via grp-wl-ar-readers"]
+flowchart TB
+  USER["Customer users"] --> LB["External load balancer\nHost-based routing"]
+  LB --> BACKEND["Customer-specific backend"]
+  subgraph PROJECT["Customer project — Dedicated deployment"]
+    BACKEND --> SERVICE["Cloud Run service\nProduct version + configuration"]
+    SERVICE --> ID["Customer-scoped service identity"]
+    ID --> SECRET["Secret Manager"]
+    ID --> BUCKET["Customer Cloud Storage"]
   end
-
-  subgraph ING["plt-ingress-prd"]
-    ALB["Global external ALB + Cloud Armor"]
-  end
-
-  subgraph TA["t-abc-prd"]
-    BS["backend service bs-ledger-prd<br/>health check GET /healthz"]
-    IT_OLD["instance template<br/>it-ledger-prd-4-2-0"]
-    IT_NEW["instance template<br/>it-ledger-prd-4-2-1<br/>machine e2-standard-4, no public IP<br/>SA abc-ledger-prd@t-abc-prd<br/>metadata: tenant=abc env=prd<br/>config=secret ledger-prd-config"]
-    MIG["Regional MIG mig-ledger-prd<br/>3 zones, autoscale 3..9 on CPU/LB util<br/>autohealing on /healthz<br/>rolling update maxSurge 1 maxUnavailable 0"]
-    VM1["vm-1 zone a"]
-    VM2["vm-2 zone b"]
-    VM3["vm-3 zone c"]
-    SA["SA abc-ledger-prd@t-abc-prd"]
-    SM["Secret Manager ledger-prd-*"]
-    GCS["Bucket abc-ledger-prd-data"]
-    SNAP["(only if stateful disks)<br/>snapshot schedule"]
-  end
-
-  subgraph SQL["plt-sql-prd-01 / sql-prd-ledger-01 (MySQL 8.4)"]
-    DB["database abc_ledger<br/>account abc-ledger-prd"]
-  end
-
-  subgraph OPS["Operations access"]
-    ANS["Ansible controller (shr-cicd-prd)<br/>config drift + one-off ops"]
-    IAP["IAP TCP forwarding<br/>+ OS Login (2FA, no SSH keys in metadata)"]
-  end
-
-  PK --> IMG --> IT_NEW
-  U --> ALB --> BS --> MIG
-  IT_OLD -. "previous version, kept for rollback" .-> MIG
-  IT_NEW -- "rolling update target" --> MIG
-  MIG --> VM1
-  MIG --> VM2
-  MIG --> VM3
-  VM1 --- SA
-  VM2 --- SA
-  VM3 --- SA
-  SA -- "startup: fetch config" --> SM
-  SA --> GCS
-  SA -- "IAM DB auth" --> DB
-  ANS --> IAP --> VM2
-  VM3 -.- SNAP
+  SERVICE --> VPC["Private VPC connectivity"] --> SQL["Permitted customer database\non pooled Cloud SQL"]
 ```
 
-MIG products use versioned machine images built with Packer and Ansible. Regional managed instance groups provide rolling updates, health checks and autoscaling. Instances use customer-scoped service accounts and private access to data services.
+**Approach:** Dedicated Cloud Run services run in the customer's project. A shared load-balancing layer routes each customer hostname to the correct backend. Each service uses its customer-scoped identity and private connectivity to reach only its permitted data services.
 
-## 5. Version divergence and customer customisation
+### 5.3 Compute Engine Managed Instance Groups (MIG)
 
-A tenant/product subscription is represented in the registry. For Dedicated deployments, the subscription records the version and configuration for each environment. The same product can therefore run version 2.x for one customer and 1.x for another. Shared deployments use a common product version with customer-specific configuration; Cohort deployments assign customers to a version cohort.
+```mermaid
+flowchart TB
+  SOURCE["Product source and release configuration"] --> BUILD["Packer image build\nAnsible provisioning"]
+  BUILD --> IMAGE["Versioned machine image\nScanned and approved"]
+  IMAGE --> TEMPLATE["Instance template"]
+  USER["Customer users"] --> LB["Load balancer"]
+  LB --> MIG["Regional managed instance group"]
+  TEMPLATE --> MIG
+  subgraph VMS["Managed VM instances"]
+    APP["Product application"]
+    AGENT["Customer-scoped service identity"]
+    APP --- AGENT
+  end
+  MIG --> VMS
+  AGENT --> DATA["Private access to permitted\ncustomer data and secrets"]
+  MIG --> SCALE["Health checks\nAutoscaling and rolling updates"]
+```
 
-Changes are promoted through Dev → Stage → UAT → Prod. Environment-specific configuration is kept separate from the product image or chart, and deployed artifacts are versioned and immutable.
+**Approach:** Packer and Ansible create versioned machine images. A versioned instance template defines the MIG deployment. Regional MIGs provide health checks, autoscaling and rolling updates. Instances use customer-scoped identities and private access to permitted data services.
 
-## 6. Data isolation and controlled sharing
+## 6. Version divergence and customer customisation
 
-For Dedicated deployments, each customer has a separate database/schema boundary, workload identity and scoped grants. Shared or Cohort products retain a database per customer but use a shared product identity for the databases served by that deployment; tenant isolation is therefore enforced by the product application and must be tested by the product team.
+A customer/product subscription records its runtime, deployment model, version and environment-specific configuration in the registry. For Dedicated deployments, each customer can be upgraded independently. Shared deployments use a common product version, while Cohort deployments allow different versions between cohorts. Customer-specific settings are supplied as configuration rather than separate product code wherever possible.
 
-Data movement is controlled and limited to the same customer's environments. Production data is not copied directly into lower environments as-is; the designed flow uses an approved, masked or sanitised dataset. There is no cross-customer data sharing in the design.
+## 7. Data isolation and environment sharing
 
-## 7. Infrastructure and application automation
+- Dedicated workloads use customer-scoped identities, storage and database permissions.
+- Cloud SQL can be pooled at the infrastructure level, but customer/product databases and grants remain separate.
+- Shared and Cohort workloads use application-level tenant isolation; this is a deliberate trade-off, not database-level identity isolation.
+- Data sharing between Dev, Stage, UAT and Prod is controlled. Non-production copies of production data must be masked and approved.
 
-- **Terraform** provisions GCP foundations and runtime infrastructure, including projects, networking, platform services and tenant resources.
-- **Helm** packages and deploys GKE applications. It consumes the release configuration produced from the tenant/product registry; it does not own shared cluster foundations.
-- **CI/CD workflows** validate changes, plan and apply infrastructure, build and scan artifacts, promote releases, and run deployment checks. GitHub Actions is used for the reference workflow implementation; the design can be adapted to Bitbucket.
-- **Ansible** supports configuration and day-2 operations for MIG-based products. Shared runners are centrally managed and use scoped identities.
+## 8. How infrastructure and releases are automated
 
-## 8. Repository validation and limitations
+```mermaid
+flowchart LR
+  CHANGE["Tenant / product change\nor application change"] --> REVIEW["Pull request\nValidation and approval"]
+  REVIEW --> PLAN["Terraform plan /\napplication build and checks"]
+  PLAN --> APPLY["Approved infrastructure\nprovisioning"]
+  APPLY --> RELEASE["Deploy application\nHelm / Cloud Run / MIG"]
+  RELEASE --> VERIFY["Smoke tests and\nrelease verification"]
+  VERIFY --> PROMOTE["Promote through\nDev → Stage → UAT → Prod"]
+```
 
-The repository includes Terraform modules and stacks, Helm charts, Ansible playbooks, registry examples, workflow definitions, diagrams, documentation and local automated checks.
+Terraform manages GCP infrastructure. Helm manages GKE application releases. Cloud Run and MIG application releases are handled by the delivery workflows. GitHub/Bitbucket and Ansible runners are shared platform services, with separate production and non-production deployment identities and approval gates.
 
-The implementation has been checked locally. **It has not been deployed to or tested in a GCP organisation.** Terraform plans/applies, real Cloud SQL isolation tests, live GitHub/Bitbucket workflow execution, and runtime deployment/rollback tests remain validation steps. Cost figures and service-level targets are design assumptions for assessment purposes, not confirmed commercial commitments.
+## 9. Further implementation detail
 
-## 9. Further technical references
+The following documents are supporting references; they are not required to understand the high-level design:
 
-The following documents provide implementation detail if required; they are supporting references rather than prerequisites for understanding the design:
+| Topic | Detail |
+|---|---|
+| [Runtime and platform diagrams](../diagrams/README.md) | All architecture diagrams, including detailed implementation views |
+| [Terraform and Helm](stage-5-6-terraform-helm.md) | Infrastructure modules, stack layout and chart responsibilities |
+| [CI/CD, cost and SLOs](stage-7-8-cicd-cost-slo.md) | Delivery workflows, capacity, cost assumptions, monitoring and DR |
+| [Security implementation](stage-3-security-implementation.md) | IAM, policy, secrets, audit and Kubernetes controls |
+| [Networking](stage-4-networking.md) | Shared VPC, segmentation, routing and ingress |
+| [Database architecture](database-architecture-mysql.md) | MySQL pools, customer databases and privilege model |
+| [Assumptions and open questions](assumptions-and-open-questions.md) | Decisions that require confirmation before a real deployment |
+| [Requirements traceability](requirements-traceability.md) | Where assignment requirements are addressed |
+| [Prompts log](prompts-log.md) | AI-assisted workflow and prompt record |
 
-- [Terraform and Helm implementation](stage-5-6-terraform-helm.md)
-- [CI/CD, cost, SLO and DR details](stage-7-8-cicd-cost-slo.md)
-- [Security implementation](stage-3-security-implementation.md)
-- [Networking implementation](stage-4-networking.md)
-- [Assumptions and open questions](assumptions-and-open-questions.md)
-- [Requirements traceability](requirements-traceability.md)
-- [Prompts log](prompts-log.md)
+## 10. Implementation and validation status
+
+The repository contains proposed architecture, Terraform and Helm implementation, automation workflows, tests and documentation. Local validation is documented in the completion summary. **The platform has not been deployed or tested in a GCP organisation, and the CI/CD workflows have not been run against GCP.** Cloud-specific behaviour, permissions, quotas, cost assumptions and disaster-recovery timings therefore require validation before production use.

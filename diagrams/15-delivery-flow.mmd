@@ -1,0 +1,7 @@
+flowchart LR
+  CHANGE["Tenant / product change\nor application change"] --> REVIEW["Pull request\nValidation and approval"]
+  REVIEW --> PLAN["Terraform plan /\napplication build and checks"]
+  PLAN --> APPLY["Approved infrastructure\nprovisioning"]
+  APPLY --> RELEASE["Deploy application\nHelm / Cloud Run / MIG"]
+  RELEASE --> VERIFY["Smoke tests and\nrelease verification"]
+  VERIFY --> PROMOTE["Promote through\nDev → Stage → UAT → Prod"]

@@ -1,74 +1,20 @@
-%% 03 - GKE-based product runtime (Payroll in production)
-%% Two customers, two different versions, one shared Autopilot cluster.
-%% Revised in Stage 2 review: A2 (group IAM), A6 (hostname policy), K12 (egress).
-%% Final reconciliation: Cloud SQL for MySQL 8.4, customer-unique SA names (M1), per-database roles (M2).
-flowchart LR
-  U1["ABC users<br/>abc.payroll.example.com"]
-  U2["XYZ users<br/>xyz.payroll.example.com"]
-
-  subgraph EDGE["Edge (global)"]
-    ALB["Global external ALB<br/>created by GKE Gateway<br/>Cloud Armor WAF + rate limits<br/>cert *.payroll.example.com"]
-  end
-
-  subgraph CL["plt-gke-prd / gke-prd-as1-01 (Autopilot, regional, private nodes, Dataplane V2)"]
+flowchart TB
+  USER["Customer user"] --> LB["Load balancer / GKE Gateway"]
+  LB --> ROUTE["HTTP routing"]
+  subgraph CLUSTER["Regional GKE cluster"]
     direction TB
-    subgraph GWNS["ns: gateway-infra (platform-owned)"]
-      GW["Gateway gw-payroll-prd<br/>allowedRoutes: namespaces labelled product=payroll<br/>admission policy: route hostnames must match<br/>the namespace tenant and env labels"]
+    subgraph NS1["Customer A · Product X namespace"]
+      H1["Helm release\nProduct version + configuration"] --> P1["Application pods"]
+      ID1["Kubernetes service account"] --- P1
+      POLICY1["Namespace policy\nNetwork policy · quotas"]
     end
-    subgraph NSA["ns: abc-payroll-prd  labels tenant=abc product=payroll env=prd"]
-      RA["HTTPRoute host abc.payroll.example.com"]
-      HA["Helm release abc-payroll-prd<br/>chart payroll 2.0.2, image payroll@sha256 digest"]
-      PA["Deployment payroll x3 pods across zones<br/>HPA 3..12, PDB minAvailable 2<br/>readiness + liveness probes"]
-      KA["KSA payroll (app)<br/>KSA payroll-migrate (pre-upgrade Job)"]
-      NPA["NetworkPolicy: default deny,<br/>allow from gateway, allow egress to<br/>kube-dns, GKE metadata server,<br/>Cloud SQL + Google APIs only"]
-      QA["ResourceQuota + LimitRange"]
-    end
-    subgraph NSX["ns: xyz-payroll-prd  labels tenant=xyz product=payroll env=prd"]
-      RX["HTTPRoute host xyz.payroll.example.com"]
-      HX["Helm release xyz-payroll-prd<br/>chart payroll 1.5.3, image payroll@sha256 digest"]
-      PX["Deployment payroll x2 pods"]
-      KX["KSA payroll"]
-      NPX["NetworkPolicy (same baseline)"]
+    subgraph NS2["Customer B · Product X namespace"]
+      H2["Helm release\nProduct version + configuration"] --> P2["Application pods"]
+      ID2["Kubernetes service account"] --- P2
+      POLICY2["Namespace policy\nNetwork policy · quotas"]
     end
   end
-
-  subgraph TA["t-abc-prd"]
-    GSA_A["GSA abc-payroll-prd@t-abc-prd<br/>(+ abc-payroll-prd-mig for migrations)"]
-    SM_A["Secret Manager payroll-prd-*"]
-    GCS_A["Bucket abc-payroll-prd-data"]
-    KMS_A["KMS kr-abc-prd-as1 / payroll-prd"]
-  end
-  subgraph TX["t-xyz-prd"]
-    GSA_X["GSA xyz-payroll-prd@t-xyz-prd"]
-    SM_X["Secret Manager payroll-prd-*"]
-    GCS_X["Bucket xyz-payroll-prd-data"]
-  end
-  subgraph SQL["plt-sql-prd-01 / sql-prd-payroll-01 (Cloud SQL for MySQL 8.4, HA)<br/>no global privileges for tenant accounts, isolation test ISO-01..10"]
-    DBA["database abc_payroll<br/>account abc-payroll-prd: role r_abc_payroll_app<br/>account abc-payroll-prd-mig: role r_abc_payroll_ddl"]
-    DBX["database xyz_payroll<br/>account xyz-payroll-prd: role r_xyz_payroll_app"]
-  end
-
-  U1 --> ALB
-  U2 --> ALB
-  ALB --> GW
-  GW --> RA --> PA
-  GW --> RX --> PX
-  HA -. "renders" .-> PA
-  HX -. "renders" .-> PX
-  PA --- KA
-  PX --- KX
-  KA == "Workload Identity:<br/>KSA impersonates GSA" ==> GSA_A
-  KX == "Workload Identity" ==> GSA_X
-  GSA_A --> SM_A
-  GSA_A --> GCS_A
-  GCS_A -. "CMEK" .-> KMS_A
-  GSA_A -- "Auth Proxy, automatic IAM DB auth<br/>(connect via grp-wl-sqlconn-prd-01),<br/>grants only on abc_payroll" --> DBA
-  GSA_X --> SM_X
-  GSA_X --> GCS_X
-  GSA_X -- "grants only on xyz_payroll" --> DBX
-  PA -. "blocked by NetworkPolicy" .-x PX
-
-  classDef abc fill:#fff3cd,stroke:#b8860b,color:#000
-  classDef xyz fill:#d4edda,stroke:#2e7d32,color:#000
-  class NSA,RA,HA,PA,KA,NPA,QA,GSA_A,SM_A,GCS_A,KMS_A,DBA abc
-  class NSX,RX,HX,PX,KX,NPX,GSA_X,SM_X,GCS_X,DBX xyz
+  ROUTE --> H1
+  ROUTE --> H2
+  P1 --> WI1["Workload Identity"] --> DATA1["Permitted customer data\nCloud SQL / Storage / Secrets"]
+  P2 --> WI2["Workload Identity"] --> DATA2["Permitted customer data\nCloud SQL / Storage / Secrets"]

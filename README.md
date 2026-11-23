@@ -1,58 +1,56 @@
-# Multi-Tenant GCP Platform – DevOps Architect Assignment
+# Multi-Tenant GCP Platform
 
-Architecture and reference implementation for a GCP platform hosting 15–20 products for 200+ customers across Dev, Stage, UAT and Prod, using GKE, Cloud Run and Compute Engine Managed Instance Groups.
+Architecture and reference implementation for hosting **15–20 products across 200+ customers** on GCP, across Dev, Stage, UAT and Prod.
 
 ## Start here
 
-**Read the [Architecture Overview](documentation/reviewer-guide.md) first.** It explains the tenancy model, deployment choices, runtime diagrams, version handling, data isolation and automation without requiring you to navigate the implementation details.
+**[Read the Architecture Overview](documentation/reviewer-guide.md)** — the recommended starting point. It explains the tenancy model, environment layout, three runtimes, version divergence, data isolation and automation using simple diagrams.
 
 ## Assignment deliverables
 
 | Requested deliverable | Repository location |
 |---|---|
-| Overall GCP infrastructure architecture | [Architecture Overview](documentation/reviewer-guide.md) and [detailed architecture](architecture/stage-2-platform-architecture.md) |
-| GKE runtime diagram | [Diagram 03](diagrams/README.md#03-gke-runtime) |
-| Cloud Run runtime diagram | [Diagram 04](diagrams/README.md#04-cloudrun-runtime) |
-| Instance Group runtime diagram | [Diagram 05](diagrams/README.md#05-mig-runtime) |
-| Terraform infrastructure automation | [`terraform/`](terraform/) |
-| Helm charts for GKE | [`helm/`](helm/) |
-| Documentation and examples | [`documentation/`](documentation/), [`registry/`](registry/), [`examples/`](examples/) |
-| AI prompts log | [Prompts log](documentation/prompts-log.md) |
+| GCP infrastructure architecture | [Architecture Overview](documentation/reviewer-guide.md) and [platform architecture](architecture/stage-2-platform-architecture.md) |
+| GKE architecture | [Runtime diagrams](diagrams/README.md#3-gke-runtime) |
+| Cloud Run architecture | [Runtime diagrams](diagrams/README.md#4-cloud-run-runtime) |
+| Compute Engine MIG architecture | [Runtime diagrams](diagrams/README.md#5-compute-engine-mig-runtime) |
+| Terraform infrastructure automation | [`terraform/`](terraform/README.md) |
+| Helm charts for GKE | [`helm/`](helm/README.md) |
+| Documentation and AI prompts | [`documentation/`](documentation/) and [prompts log](documentation/prompts-log.md) |
 
-## Implementation at a glance
+## Key design decisions
 
-- **Tenancy:** customer production and non-production projects, with shared platform projects.
-- **Deployment choices:** Dedicated by default; Shared and Cohort where application-level tenant isolation is appropriate.
-- **GKE:** shared regional clusters, customer/product/environment namespaces and Helm releases.
-- **Cloud Run and MIG:** customer-scoped services and identities for Dedicated deployments.
-- **Automation:** Terraform for infrastructure, Helm for GKE applications, Ansible for MIG configuration, and CI/CD workflows for validation and promotion.
+- **Hybrid tenancy:** a production and a non-production project per customer, with shared platform projects for common services.
+- **Four environments:** Dev, Stage and UAT in the non-production tier; Prod in a separate production tier.
+- **Three runtimes:** shared regional GKE clusters, customer-scoped Cloud Run services and customer-scoped regional MIGs for Dedicated deployments.
+- **Deployment models:** Dedicated by default; Shared and Cohort only where application-level tenant isolation is appropriate.
+- **Version divergence:** per-customer versions for Dedicated deployments and per-cohort versions for Cohort deployments.
+- **Data isolation:** customer-scoped workload identities and database permissions; controlled, masked data movement to non-production.
+- **Automation:** Terraform for infrastructure, Helm for GKE releases, and shared CI/CD / Ansible delivery services.
+
+## Repository map
+
+| Directory | Contents |
+|---|---|
+| `documentation/` | Reviewer guide, assignment traceability, stage implementation notes, assumptions and prompts log |
+| `architecture/` | Detailed platform architecture and design decisions |
+| `diagrams/` | Primary diagrams plus optional detailed implementation diagrams |
+| `terraform/` | Terraform modules, stacks and environment configuration |
+| `helm/` | Shared chart library and product charts |
+| `ansible/` | Packer and Ansible image/configuration automation |
+| `registry/` | Tenant and product registry examples, schemas and naming rules |
+| `security/`, `network/`, `slo/`, `cost/` | Supporting platform configuration |
+| `tests/`, `tools/` | Local validation and consistency checks |
 
 ## Validation status
 
-The repository includes local validation tools and automated tests. The implementation **has not been deployed to or tested in GCP**, and the application deployment workflows have not been run against live infrastructure. The repository's own CI workflow is separate from those deployment workflows.
+The project includes local validation and test tooling. The completion summary records the reported local test results. **No GCP deployment, GCP integration test or real CI/CD deployment workflow has been run.** Treat cost figures, capacity thresholds, SLOs and DR timings as design assumptions pending validation against the target GCP organisation and business requirements.
 
-Previously reported local results are 26 `check_all` steps with zero findings and 386 passing pytest tests. Re-run them in your environment using:
+## Useful links
 
-```bash
-python3 -m tools.check_all
-python3 -m pytest -q
-```
-
-Terraform init/validate/plan/apply, real Cloud SQL isolation, live workflow execution, and runtime deployment and rollback still require a GCP test environment.
-
-## Supporting technical references
-
-These are available for deeper review, but are not required as a first read:
-
-- [Terraform and Helm implementation](documentation/stage-5-6-terraform-helm.md)
-- [CI/CD, cost, SLO and DR](documentation/stage-7-8-cicd-cost-slo.md)
-- [Security implementation](documentation/stage-3-security-implementation.md)
-- [Networking implementation](documentation/stage-4-networking.md)
-- [Database architecture](documentation/database-architecture-mysql.md)
-- [Identity and groups](documentation/identity-and-groups-model.md)
-- [Assumptions and open questions](documentation/assumptions-and-open-questions.md)
+- [Architecture Overview](documentation/reviewer-guide.md)
+- [Diagrams index](diagrams/README.md)
+- [Assignment completion summary](documentation/assignment-completion-summary.md)
 - [Requirements traceability](documentation/requirements-traceability.md)
-- [Architecture decision records](architecture/decisions/)
 - [Prompts log](documentation/prompts-log.md)
-
-The [diagram index](diagrams/README.md) links to all architecture diagrams. PNG previews are used for reliable rendering in GitHub; the corresponding SVG exports and Mermaid source files are retained.
+- [Assumptions and open questions](documentation/assumptions-and-open-questions.md)
