@@ -1,0 +1,9 @@
+apiVersion: v2
+name: payroll
+description: Payroll (GKE, Dedicated) – one release per customer namespace (<tenant>-payroll-<env>).
+type: application
+version: 1.0.0            # chart version; the application version comes from the registry (values.image.version)
+dependencies:
+  - name: platform-lib
+    version: 1.0.0
+    repository: file://../platform-lib

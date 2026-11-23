@@ -1,0 +1,55 @@
+%% 11 - Network isolation and traffic controls (production shown; non-production is an identical, separate VPC)
+%% vpc-prd and vpc-nonprd are NOT peered and NOT connected: no network path between tiers.
+%% Revised in Stage 2 review (K6): private.googleapis.com until VPC-SC.
+%% Stage 4: IP plan, per-cell subnets, firewall layering (N3), Cloud Run egress matched by subnet (K26).
+flowchart TB
+  NET_IN["Internet"]
+  ADMIN["Engineer laptop"]
+
+  subgraph EDGE["Edge"]
+    ARMOR["Cloud Armor policy<br/>OWASP rules, rate limit,<br/>geo / IP allowlists for UAT"]
+    ALB["Global external ALBs<br/>(GKE Gateway + plt-ingress-prd)<br/>TLS via Certificate Manager"]
+  end
+
+  subgraph HOST["net-host-prd: vpc-prd (Shared VPC)"]
+    direction TB
+    HFW["Hierarchical firewall policies<br/>fw-org: IAP, LB/health checks, 10.0.0.0/8 go to next; deny all else<br/>fw-tier-prd (prd folders): deny 10.128.0.0/10 both ways"]
+    NFW["Network firewall policy fwp-prd (secure tags)<br/>IAP SSH to wl=mig only; LB to wl=mig / wl=gke-node :8080<br/>deny MIG VM-to-VM; egress: PSA :3307, PGA :443,<br/>intra-cluster, per-product FQDN; default deny egress"]
+    subgraph SUBS["Subnets in asia-south1 (vpc-prd 10.64.0.0/10, region 10.64.0.0/11)"]
+      S1["snet-prd-as1-gke-prd-NN (one per cell)<br/>nodes /22 from 10.82.0.0/16<br/>Pods /17 (+/17 reserve) from 10.64.0.0/12<br/>Services /20 from 10.80.0.0/15"]
+      S2["snet-prd-as1-run 10.83.0.0/16<br/>Cloud Run Direct VPC egress"]
+      S3["snet-prd-as1-mig 10.85.0.0/17<br/>MIG VMs, no public IPs"]
+      S4["proxy-only 10.85.128.0/23<br/>reserved, not created"]
+      S5["psa-prd-01 10.84.0.0/16<br/>Cloud SQL private IPs"]
+    end
+    NAT["Cloud NAT nat-prd-as1 (static IPs)<br/>+ FQDN egress rules per product<br/>(secure tags for MIG, Pod ranges for GKE,<br/>run subnet for Cloud Run – K26)"]
+    PGA["Private Google Access<br/>private.googleapis.com now,<br/>restricted.googleapis.com once VPC-SC is enforced"]
+  end
+
+  subgraph K8S["Inside gke-prd-as1-01"]
+    NP1["NetworkPolicy per namespace:<br/>default-deny ingress + egress"]
+    NP2["allow ingress from gateway-infra only"]
+    NP3["allow egress: kube-dns, Cloud SQL IP,<br/>Google APIs, same namespace"]
+  end
+
+  subgraph RUN["Cloud Run services"]
+    RIN["ingress = internal-and-cloud-load-balancing<br/>no public run.app access"]
+    RIAM["roles/run.invoker granted per service"]
+  end
+
+  subgraph PERIM["VPC Service Controls (recommended, Phase 6, dry-run first)"]
+    VSC["Perimeter around prod tenant + plt-sql-prd-NN projects<br/>(one egress rule for the masking job write)<br/>blocks data exfiltration to outside projects"]
+  end
+
+  NET_IN --> ARMOR --> ALB
+  ALB -- "GKE NEGs, MIG backends" --> HFW
+  ALB -- "serverless NEG" --> RIN
+  HFW --> S1
+  HFW --> NFW --> S3
+  S1 --> K8S
+  RUN -- "Direct VPC egress (outbound only)" --> S2
+  S1 & S2 & S3 --> S5
+  S1 & S2 & S3 --> NAT
+  S1 & S2 & S3 --> PGA
+  ADMIN -- "IAP TCP forwarding + OS Login" --> HFW
+  PGA --> VSC

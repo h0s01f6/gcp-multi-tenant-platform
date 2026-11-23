@@ -1,0 +1,28 @@
+%% 09 - Controlled data movement: ABC Payroll Prod to ABC UAT (masked)
+%% One direction only. Non-prod identities never receive read access to prod data.
+%% Revised in Stage 2 review (K7): when the prod VPC-SC perimeter is enforced, this write needs one explicit egress rule.
+sequenceDiagram
+  autonumber
+  actor OWN as ABC data owner<br/>(approver)
+  participant REG as platform-tenants repo<br/>data-refresh request
+  participant PRDP as Prod pipeline<br/>(deploy-prd)
+  participant SQLP as sql-prd-payroll-01<br/>database abc_payroll
+  participant EXP as Bucket abc-prd-exports<br/>(t-abc-prd, CMEK, 7-day lifecycle)
+  participant MSK as Cloud Run job mask-payroll<br/>SA masker-prd@t-abc-prd
+  participant ING as Bucket abc-nonprd-masked-ingest<br/>(t-abc-nonprd)
+  participant NPP as Non-prod pipeline<br/>(deploy-nonprd)
+  participant UAT as sql-uat-01<br/>database abc_payroll
+
+  OWN->>REG: approve PR: refresh abc payroll uat from prd (masking profile payroll-v2)
+  REG->>PRDP: merged request triggers prod-side job
+  PRDP->>SQLP: export database abc_payroll only (serverless export, no load on primary)
+  SQLP->>EXP: write dump object
+  PRDP->>MSK: start job with masking profile payroll-v2
+  MSK->>EXP: read dump (masker-prd has read on this bucket only)
+  MSK->>MSK: apply rules: hash IDs, fake names, shift dates, null bank details,<br/>Sensitive Data Protection scan as a safety net
+  MSK->>MSK: verification: fail the job if any column still matches a sensitive infoType
+  MSK->>ING: write masked dump (objectCreator only, cannot read or list)
+  ING-->>NPP: object finalize event
+  NPP->>UAT: import into abc_payroll (replace), re-apply grants
+  NPP-->>OWN: completion report: row counts, masking report, audit log links
+  Note over EXP,ING: Prod export auto-deleted by lifecycle rule.<br/>No path exists for xyz data: masker-prd@t-abc-prd has no IAM on t-xyz-*.<br/>Future VPC-SC: egress rule allows only masker-prd to this one ingest bucket.

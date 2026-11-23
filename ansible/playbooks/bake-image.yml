@@ -1,11 +1,14 @@
-# Run by Packer on a temporary VM to produce the golden image <product>-<version>.
-# Customer-specific settings are NOT baked in; they arrive at boot from instance metadata
-# and Secret Manager, so one image per version serves every customer.
+# Run by Packer in shr-build (ADR-010): produces image family <product> in shr-build (D9 trusted image project).
 - name: Bake product image
   hosts: all
   become: true
   vars:
     product: "{{ lookup('env', 'PRODUCT') }}"
-    version: "{{ lookup('env', 'VERSION') }}"
+    app_version: "{{ lookup('env', 'APP_VERSION') }}"     # registry version; artifact fetched by digest-pinned URL
+  pre_tasks:
+    - name: Require product and version
+      ansible.builtin.assert:
+        that: [product | length > 0, app_version | length > 0]
   roles:
-    - product_runtime
+    - base
+    - app

@@ -1,0 +1,44 @@
+# Stage 7 – PR validation (no cloud identity). Runs the whole local test suite of Stages 1-8 on the change.
+name: validate
+on:
+  workflow_call:
+    inputs:
+      platform_ref: { type: string, default: main }
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: example-org/platform-workflows/.github/actions/workspace@v1
+        with:
+          app-id: ${{ vars.PLATFORM_READER_APP_ID }}
+          private-key: ${{ secrets.PLATFORM_READER_APP_KEY }}
+          platform-ref: ${{ inputs.platform_ref }}
+      - name: Generators and checkers (D1-D11, N1-N5, S5-S8)
+        working-directory: platform
+        run: python -m tools.check_all
+      - name: Unit and contract tests
+        working-directory: platform
+        run: python -m pytest -q
+      - uses: hashicorp/setup-terraform@v3
+        with: { terraform_version: "1.9.8", terraform_wrapper: false }
+      - name: terraform fmt / validate (all stacks, no backend)
+        working-directory: platform
+        run: |
+          terraform fmt -check -recursive terraform
+          for d in terraform/stacks/*/; do terraform -chdir="$d" init -backend=false -input=false >/dev/null && terraform -chdir="$d" validate; done
+      - uses: azure/setup-helm@v4
+        with: { version: "v3.16.2" }
+      - name: helm lint + template with the generated values (T-H1)
+        working-directory: platform
+        run: |
+          helm dependency build helm/charts/payroll
+          for v in build/helm/*/*/*.values.json; do helm lint helm/charts/$(basename "$v" .values.json) -f "$v"; done
+      - uses: open-policy-agent/setup-opa@v2
+        with: { version: "0.69.0" }
+      - name: Rego unit tests (D8 constraints)
+        working-directory: platform
+        run: opa test policies/k8s/src -v

@@ -1,0 +1,13 @@
+# platform-charts – a chart version bump merged to main publishes that chart version (OCI, release repository).
+name: release
+on:
+  push:
+    branches: [main]
+    paths: ["charts/**"]
+permissions:
+  contents: read
+jobs:
+  payroll:
+    uses: example-org/platform-workflows/.github/workflows/build-chart.yml@v1
+    secrets: inherit
+    with: { chart: payroll }

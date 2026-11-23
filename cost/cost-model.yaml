@@ -1,0 +1,121 @@
+# Stage 8 – cost model inputs (tools/cost/model.py). Counts come from the capacity model (scripts/capacity_model.py:
+# subscriptions, cells, Cloud SQL pools incl. DR, MIG floor); this file holds prices, sizing and usage assumptions.
+#
+# PRICES: indicative on-demand LIST prices in USD, recalled from the public price pages for the reference region
+# (us-central1) and multiplied by `region_factor` for asia-south1 where marked `regional: true`. They are planning
+# figures, NOT quotes: validate every line with the Google Cloud Pricing Calculator / Cloud Billing Catalog API for
+# asia-south1 and the company's negotiated discounts before any budget decision (T-CO1). Taxes excluded.
+# Monthly = 730 hours.
+schema_version: "1.0"
+currency: USD
+as_of: "2026-11"
+region: asia-south1
+region_factor: 1.12            # assumption A-S8-2: asia-south1 list prices ~12% above us-central1 (validate, T-CO1)
+hours_per_month: 730
+
+prices:
+  gke_cluster_fee_hour:        { value: 0.10,      unit: "cluster-hour", regional: false, source: "GKE pricing (management fee)" }
+  autopilot_vcpu_hour:         { value: 0.0445,    unit: "vCPU-hour",    regional: true,  source: "GKE Autopilot general-purpose pod pricing (us-central1)" }
+  autopilot_gib_hour:          { value: 0.0049225, unit: "GiB-hour",     regional: true,  source: "GKE Autopilot general-purpose pod pricing (us-central1)" }
+  run_instance_vcpu_second:    { value: 0.000018,  unit: "vCPU-second",  regional: true,  source: "Cloud Run instance-based billing, tier 1" }
+  run_instance_gib_second:     { value: 0.000002,  unit: "GiB-second",   regional: true,  source: "Cloud Run instance-based billing, tier 1" }
+  run_request_vcpu_second:     { value: 0.000024,  unit: "vCPU-second",  regional: true,  source: "Cloud Run request-based billing, tier 1" }
+  run_request_gib_second:      { value: 0.0000025, unit: "GiB-second",   regional: true,  source: "Cloud Run request-based billing, tier 1" }
+  run_requests_million:        { value: 0.40,      unit: "1M requests",  regional: false, source: "Cloud Run request-based billing" }
+  e2_standard_2_hour:          { value: 0.067,     unit: "VM-hour",      regional: true,  source: "Compute Engine e2-standard-2 on-demand" }
+  e2_standard_4_hour:          { value: 0.134,     unit: "VM-hour",      regional: true,  source: "Compute Engine e2-standard-4 on-demand" }
+  e2_standard_8_hour:          { value: 0.268,     unit: "VM-hour",      regional: true,  source: "Compute Engine e2-standard-8 on-demand" }
+  pd_balanced_gb_month:        { value: 0.10,      unit: "GB-month",     regional: true,  source: "Persistent Disk balanced" }
+  sql_ent_vcpu_hour:           { value: 0.0413,    unit: "vCPU-hour",    regional: true,  source: "Cloud SQL for MySQL Enterprise" }
+  sql_ent_gib_hour:            { value: 0.0070,    unit: "GiB-hour",     regional: true,  source: "Cloud SQL for MySQL Enterprise" }
+  sql_entplus_vcpu_hour:       { value: 0.0537,    unit: "vCPU-hour",    regional: true,  source: "Cloud SQL for MySQL Enterprise Plus" }
+  sql_entplus_gib_hour:        { value: 0.0091,    unit: "GiB-hour",     regional: true,  source: "Cloud SQL for MySQL Enterprise Plus" }
+  sql_ssd_gb_month:            { value: 0.17,      unit: "GB-month",     regional: true,  source: "Cloud SQL SSD storage (x2 for HA)" }
+  sql_backup_gb_month:         { value: 0.08,      unit: "GB-month",     regional: true,  source: "Cloud SQL backups" }
+  lb_forwarding_rule_hour:     { value: 0.025,     unit: "rule-hour",    regional: false, source: "Cloud Load Balancing forwarding rule" }
+  lb_data_processed_gb:        { value: 0.008,     unit: "GB",           regional: false, source: "Application LB data processing" }
+  internet_egress_gb:          { value: 0.12,      unit: "GB",           regional: false, source: "Premium tier internet egress (APAC, first tier)" }
+  nat_gateway_hour:            { value: 0.044,     unit: "gateway-hour", regional: false, source: "Cloud NAT gateway (>32 VMs cap)" }
+  nat_data_gb:                 { value: 0.045,     unit: "GB",           regional: false, source: "Cloud NAT data processing" }
+  static_ip_hour:              { value: 0.005,     unit: "IP-hour",      regional: false, source: "External IPv4 address in use" }
+  armor_policy_month:          { value: 5.0,       unit: "policy-month", regional: false, source: "Cloud Armor Standard" }
+  armor_rule_month:            { value: 1.0,       unit: "rule-month",   regional: false, source: "Cloud Armor Standard" }
+  armor_requests_million:      { value: 0.75,      unit: "1M requests",  regional: false, source: "Cloud Armor Standard" }
+  dns_zone_month:              { value: 0.20,      unit: "zone-month",   regional: false, source: "Cloud DNS managed zone" }
+  dns_queries_million:         { value: 0.40,      unit: "1M queries",   regional: false, source: "Cloud DNS" }
+  logging_ingest_gib:          { value: 0.50,      unit: "GiB",          regional: false, source: "Cloud Logging (first 50 GiB per project free)" }
+  logging_retention_gib_month: { value: 0.01,      unit: "GiB-month",    regional: false, source: "Cloud Logging retention beyond 30 days" }
+  alert_condition_month:       { value: 0.10,      unit: "condition-month", regional: false, source: "Cloud Monitoring alerting" }
+  prometheus_samples_million:  { value: 0.06,      unit: "1M samples",   regional: false, source: "Managed Service for Prometheus (first tier)" }
+  uptime_executions_thousand:  { value: 0.30,      unit: "1k executions", regional: false, source: "Cloud Monitoring uptime checks (1M free per project)" }
+  kms_software_key_month:      { value: 0.06,      unit: "key version-month", regional: false, source: "Cloud KMS software key" }
+  kms_hsm_key_month:           { value: 2.50,      unit: "key version-month", regional: false, source: "Cloud KMS HSM key (asymmetric)" }
+  secret_version_month:        { value: 0.06,      unit: "version-month", regional: false, source: "Secret Manager" }
+  artifact_storage_gb_month:   { value: 0.10,      unit: "GB-month",     regional: false, source: "Artifact Registry storage" }
+  artifact_scan_image:         { value: 0.26,      unit: "image scanned", regional: false, source: "Artifact Analysis on-push scanning" }
+  gcs_standard_gb_month:       { value: 0.023,     unit: "GB-month",     regional: true,  source: "Cloud Storage standard" }
+
+free_tier:
+  logging_gib_per_project: 50
+  uptime_executions_per_project: 1000000
+
+# Sizing per environment deployment (illustrative product sizes; replace with measured requests, Q22)
+sizing:
+  gke:            # Autopilot pod requests per deployment (all replicas)
+    prd: { replicas: 3, vcpu: 0.5,  gib: 1.0 }     # 3 replicas over 3 zones, PDB (Stage 6)
+    uat: { replicas: 2, vcpu: 0.25, gib: 0.5 }
+    stg: { replicas: 1, vcpu: 0.25, gib: 0.5 }
+    dev: { replicas: 1, vcpu: 0.25, gib: 0.5 }
+  cloudrun:
+    prd: { min_instances: 1, vcpu: 1, gib: 0.5, billing: instance, busy_extra_instances: 0.5 }
+    nonprd: { vcpu: 1, gib: 0.5, billing: request, duty: 0.10 }      # scale to zero, ~10 % of the month busy
+  mig:            # e2-standard-2 per VM; counts = capacity-model MIG floor (prd 3, nonprd 1 per environment)
+    disk_gb: 20
+  sql:
+    prd:    { vcpu: 8, gib: 32, edition: entplus, ha: true }        # capacity model C2 illustrative prod pool
+    nonprd: { vcpu: 4, gib: 16, edition: ent }                      # uat pools HA (sql-pool module), dev/stg zonal
+    fill: 0.75                                                      # average pool fill vs effective capacity
+    tenant_gb: { prd: 20, nonprd: 5 }                               # capacity model (year 1)
+    backup_overhead: 1.5                                            # retained backups + binlogs vs data size
+  frontends_per_product_env: 1    # one ALB URL map or one Gateway per product per environment per cell (N4)
+
+usage:            # per prd subscription per month (illustrative)
+  requests_million: 2.0
+  kb_per_response: 40
+  nat_gb: 2
+  log_gib: { prd: 4.0, nonprd: 0.8 }        # per deployment, after exclusion filters (D10 keeps audit logs)
+  lb_log_sample_rate: 1.0                   # LB request logs feed the per-customer SLI of Shared/Cohort products
+  lb_log_kb_per_request: 1.0
+  audit_log_gib: 60                         # org-level audit sink (D10) per month
+  audit_retention_days: 400
+  prometheus_samples_million_per_gke_deployment: 2.0
+  uptime: { regions: 3, period_minutes: 5 }  # S8 slo/slos.yaml
+  alert_conditions_per_product: 6           # burn-rate page + ticket (2 windows each) + uptime + latency (S8)
+  platform_alert_conditions: 40             # S8 platform alerts + D10 security alerts
+  keys_per_prd_tenant: 2                    # D9 tenant CMEK keys (buckets, secrets)
+  secrets_per_deployment: 1
+  artifact: { gb_per_image: 0.3, versions_kept: 30, builds_per_product_month: 60 }
+  cicd_runners:                             # self-hosted ephemeral runners (Q14), average busy fraction
+    build:  { vm: e2_standard_8_hour, count: 4, busy: 0.5 }
+    nonprd: { vm: e2_standard_4_hour, count: 2, busy: 0.5 }
+    prd:    { vm: e2_standard_4_hour, count: 2, busy: 0.3 }
+  fixed_month: 150                          # state buckets, bootstrap, small items
+
+dr:
+  regional: true             # pilot-light DR as designed in Stage 2 (Q10 open): cross-region replicas + empty DR cells
+  replica_ha: false          # DR replicas are single-zone until promoted
+
+levers:                       # cost optimisation levers applied in the "optimised" column
+  cud_sql_3y: 0.52            # Cloud SQL 3-year committed use discount on prd vCPU/memory
+  cud_flex_3y: 0.46           # Compute Flexible CUD 3-year (Autopilot, Cloud Run, Compute Engine) on prd steady state
+  nonprd_office_hours: 0.36   # dev/stg run 60 of 168 h a week (scale to zero / stop instances out of hours)
+
+# Capacity planning thresholds (tools/cost/capacity.py). Planned scale-out starts at `warn`, placement is refused
+# above `max` (PL05).
+capacity:
+  namespaces_per_cell:      { limit: 1000, warn: 0.8, max: 1.0, action: "add a cell gke-<env>-as1-NN (N1 slot, cluster-config, Gateways)" }
+  tenants_per_pool:         { limit: capacity_model, warn: 0.8, max: 1.0, action: "add a pool sql-<env>-NN / split the product group (capacity rule C1)" }
+  instances_per_pool_project: { limit: 100, warn: 0.8, max: 1.0, action: "add a pool project plt-sql-<tier>-NN" }
+  projects_per_metrics_scope: { limit: 375, warn: 0.8, max: 1.0, action: "add a scoping project plt-obs-<tier>-NN" }
+  slos_per_service:         { limit: 500, warn: 0.8, max: 1.0, action: "shard the product SLO service svc-<product>-<tier>-NN" }
+  uptime_checks_per_project: { limit: 100, warn: 0.8, max: 1.0, action: "checks live in the customer's own project (<= 20 hostnames)" }

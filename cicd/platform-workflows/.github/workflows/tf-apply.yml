@@ -1,0 +1,71 @@
+# Stage 7 – apply the stack instances of one stack in one tier, after review, from main.
+# Identity per stacks.yaml: tf-org (org), groups-mgr-<tier> (memberships), tf-<tier> (all other stacks).
+# One concurrency group per state, never cancelled mid-apply. cluster-config is applied in two phases (R-TF-1).
+name: tf-apply
+on:
+  workflow_call:
+    inputs:
+      tier: { type: string, required: true }        # org | nonprd | prd
+      stack: { type: string, required: true }
+      matrix: { type: string, required: true }
+      platform_ref: { type: string, default: main }
+permissions:
+  contents: read
+jobs:
+  apply:
+    name: apply ${{ matrix.stack }}/${{ matrix.instance }}
+    runs-on: [self-hosted, "${{ inputs.tier == 'nonprd' && 'nonprd' || 'prd' }}"]
+    environment: ${{ inputs.tier }}
+    concurrency:
+      group: tf-${{ matrix.state }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix: ${{ fromJSON(inputs.matrix) }}
+    steps:
+      - uses: example-org/platform-workflows/.github/actions/workspace@v1
+        with:
+          app-id: ${{ vars.PLATFORM_READER_APP_ID }}
+          private-key: ${{ secrets.PLATFORM_READER_APP_KEY }}
+          platform-ref: ${{ inputs.platform_ref }}
+      - name: Authenticate (org stack)
+        if: inputs.tier == 'org'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: tf-org@bootstrap-seed.iam.gserviceaccount.com
+      - name: Authenticate (memberships stack)
+        if: inputs.tier != 'org' && inputs.stack == 'memberships'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: groups-mgr-${{ inputs.tier }}@shr-cicd-${{ inputs.tier }}.iam.gserviceaccount.com
+      - name: Authenticate (tier stacks)
+        if: inputs.tier != 'org' && inputs.stack != 'memberships'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: tf-${{ inputs.tier }}@shr-cicd-${{ inputs.tier }}.iam.gserviceaccount.com
+      - name: Identity matches the stack catalogue
+        run: test "${{ matrix.stack }}" = "${{ inputs.stack }}"
+      - uses: hashicorp/setup-terraform@v3
+        with: { terraform_version: "1.9.8", terraform_wrapper: false }
+      - name: Generate inputs
+        working-directory: platform
+        run: python -m tools.check_all
+      - name: terraform apply
+        working-directory: platform
+        env:
+          STACK: ${{ matrix.stack }}
+          INSTANCE: ${{ matrix.instance }}
+          STATE: ${{ matrix.state }}
+          TWO_PHASE: ${{ matrix.two_phase }}
+          TFSTATE_BUCKET_SUFFIX: ${{ vars.TFSTATE_BUCKET_SUFFIX }}
+          TF_VAR_org_state_bucket: tfstate-org-${{ vars.TFSTATE_BUCKET_SUFFIX }}
+          TF_VAR_github_org_id: ${{ vars.GH_ORG_ID }}
+          TF_VAR_github_org: ${{ github.repository_owner }}
+        run: tools/cicd/tf.sh apply

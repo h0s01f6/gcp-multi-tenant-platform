@@ -1,0 +1,16 @@
+# platform-infra – every pull request: validation, planner, read-only plans (org + both tiers).
+name: pr
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  pipeline:
+    uses: example-org/platform-workflows/.github/workflows/pr-pipeline.yml@v1
+    secrets: inherit
+    with:
+      allow_org: true

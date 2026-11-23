@@ -1,0 +1,5 @@
+app_user: app
+app_dir: /opt/app
+app_port: 8080                                   # A-N3-1
+artifact_repository: "asia-south1-apt.pkg.dev/shr-artifacts"   # release packages (ADR-010)
+health_path: /healthz

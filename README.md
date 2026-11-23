@@ -1,118 +1,74 @@
-# Multi-Tenant, Multi-Product GCP Platform
+# GCP Multi-Tenant Platform – Architecture Assignment
 
-Infrastructure design and automation to host **15–20 products** for **200+ customers** across **4 environments** (`dev`, `stage`, `uat`, `prod`) on Google Cloud. Products run on **GKE**, **Cloud Run** or **Managed Instance Groups**. Customers can run different product versions with their own customizations, and data can be shared only between a customer's own environments.
+Design for a multi-tenant Google Cloud platform hosting 15–20 products for 200+ customers across Dev, Stage, UAT and Prod, on GKE, Cloud Run and Compute Engine MIGs.
 
-> **Core idea:** a new customer, product version or customization is a **YAML change**, not new code.
-> One file, `config/tenants/<customer>/<env>/<product>.yaml`, drives both Terraform (Cloud Run, MIG, identities, network, data access) and Argo CD (GKE via Helm).
+> **Status:** All stages (1–8) complete at configuration and code level, with local checks (`check_all`: 26 steps, 0 findings; `pytest`: 386 passing). **Nothing has been deployed or tested in GCP**, and no pipeline has run except this repository's own CI. Start with [`documentation/assignment-completion-summary.md`](documentation/assignment-completion-summary.md). Outstanding validation items are in [`documentation/assumptions-and-open-questions.md`](documentation/assumptions-and-open-questions.md).
 
-## Deliverables map
+## Contents
 
-| # | Assignment deliverable | Where |
-|---|---|---|
-| 1 | Architecture design: 4 envs, multi-product/multi-customer, version divergence, data sharing | [`docs/architecture.md`](docs/architecture.md) |
-| 2 | Three architecture diagrams: Cloud Run, GKE, Instance Groups | [`docs/diagrams/cloud-run.svg`](docs/diagrams/cloud-run.svg), [`gke.svg`](docs/diagrams/gke.svg), [`mig.svg`](docs/diagrams/mig.svg) (+ [overview](docs/diagrams/overview.svg), [data sharing](docs/diagrams/data-sharing.svg); Mermaid sources in `docs/diagrams/src`) |
-| 3 | Terraform for infrastructure automation | [`terraform/`](terraform): 8 modules, 7 layered stacks |
-| 4 | Helm charts for GKE | [`helm/charts/product-service`](helm/charts/product-service), [`helm/charts/tenant-namespace`](helm/charts/tenant-namespace), values layers in [`helm/values`](helm/values), Argo CD in [`gitops/`](gitops) |
-| 5 | Public repository with docs and code | this repository |
-| – | AI prompts log | [`PROMPTS_LOG.md`](PROMPTS_LOG.md) |
-
-## Architecture at a glance
-
-![overview](docs/diagrams/overview.svg)
-
-| Concern | Decision |
+| Path | What it contains |
 |---|---|
-| Hierarchy | `fldr-tenants/fldr-<customer>/` → `mtp-<customer>-{dev,stage,uat,prod}` + `mtp-<customer>-data`. Environment policy comes from an `env` **tag** plus conditional org policies. |
-| Multi-product | All products of a customer share that customer's env project. Each product gets its own service account. |
-| Network | Shared VPC host per env. Each customer has the same `/22` slot in every env, and firewalls allow intra-customer traffic only. |
-| GKE | **Pooled** sharded clusters per env (namespace per customer) or a **dedicated** cluster per customer-env, chosen per env in `tenant.yaml` |
-| Cloud Run / MIG | In the customer project, behind one global external ALB plus Cloud Armor per customer-env |
-| Version divergence | Version pin per customer-env-product file, an N-2 support window in the product catalog, customer patch builds (`2.9.1-globex.2`), and a 4-layer Helm values ladder |
-| Data sharing | Per-customer data project (`raw_prod`, `masked`, `shared_reference`) with IAM generated from `tenant.yaml`. A **VPC-SC perimeter and CMEK key ring per customer** prevent cross-customer movement. |
-| Shared infra | GitHub/Bitbucket runners and Ansible runners (prod and non-prod pools), WIF instead of keys, Artifact Registry, Argo CD management cluster, central audit logs |
+| [`architecture/stage-2-platform-architecture.md`](architecture/stage-2-platform-architecture.md) | Main architecture document with all diagrams rendered inline |
+| [`documentation/assignment-completion-summary.md`](documentation/assignment-completion-summary.md) | **Final summary:** deliverables per stage, headline results, ordered GCP validation, open decisions |
+| [`documentation/stage-7-8-cicd-cost-slo.md`](documentation/stage-7-8-cicd-cost-slo.md) | **Stages 7–8 consolidated:** pipelines, promotion, onboarding, failure handling, cost, capacity, SLOs, monitoring, backup, DR, implementation phases |
+| [`documentation/cost-estimate.md`](documentation/cost-estimate.md) | Generated cost estimate for 200 / 500 customers × 1–20 products |
+| [`documentation/stage-5-6-terraform-helm.md`](documentation/stage-5-6-terraform-helm.md) | **Stages 5–6 consolidated:** responsibilities, stack order, Terraform → Helm interface, coverage, validation |
+| [`documentation/stage-4-networking.md`](documentation/stage-4-networking.md) | **Stage 4 consolidated:** network isolation, address plan, runtime connectivity, firewall layering, DNS, carried-forward items |
+| [`documentation/stage-3-security-implementation.md`](documentation/stage-3-security-implementation.md) | **Stage 3 consolidated:** deliverables D1–D11, status, alerts, corrections, carried-forward items, validation order |
+| [`architecture/decisions/`](architecture/decisions/) | Architecture Decision Records ADR-001 … ADR-011 |
+| [`documentation/database-architecture-mysql.md`](documentation/database-architecture-mysql.md) | Cloud SQL for MySQL 8.4: isolation, accounts, roles, bootstrap, isolation tests, migrations, pooling |
+| [`documentation/identity-and-groups-model.md`](documentation/identity-and-groups-model.md) | Human, pipeline and workload identities; hybrid Cloud Identity groups model |
+| [`documentation/stage-2-architecture-review.md`](documentation/stage-2-architecture-review.md) | Stage 2 review: feasibility, security paths, consistency, completeness, findings A–E |
+| [`documentation/capacity-model.md`](documentation/capacity-model.md) | Capacity across 200/500 customers × 1–20 products per customer |
+| [`CHANGELOG.md`](CHANGELOG.md) | Traceable list of changes by review ID |
+| [`diagrams/`](diagrams/) | Mermaid sources (`*.mmd`) – the single source of truth for every diagram; `rendered/` holds SVG exports |
+| [`documentation/assumptions-and-open-questions.md`](documentation/assumptions-and-open-questions.md) | Confirmed requirements, assumptions, recommendations, open questions |
+| [`documentation/requirements-traceability.md`](documentation/requirements-traceability.md) | Assignment section → where it is addressed |
+| [`scripts/embed_diagrams.py`](scripts/embed_diagrams.py) | Inlines `.mmd` files into `*.src.md` docs to keep docs and diagrams in sync |
+| [`registry/naming-rules.md`](registry/naming-rules.md) | Tenant registry schema v2.1 naming rules (service-account length budget) |
+| [`scripts/validate_names.py`](scripts/validate_names.py) | Naming validator with boundary tests |
+| [`scripts/capacity_model.py`](scripts/capacity_model.py) | Planning calculator that generates the capacity-model tables (illustrative inputs) |
+| [`registry/`](registry/) | Stage 3 D1 – tenant registry schemas, inventory, example products and tenants |
+| [`tools/`](tools/) | Stage 3 generators and checkers: registry (D1), identity plan (D2), access matrix (D3), MySQL grants + isolation harness (D4), org policies (D5), CI/CD federation (D6), privileged access (D7), namespace baseline (D8), data protection (D9), audit and alerts (D10), `check_all` (D11) |
+| [`security/`](security/) | Stage 3 access matrix (D3), organisation policies (D5), CI/CD identities (D6), privileged access (D7), Kubernetes baseline inputs (D8), secrets/keys/supply chain (D9), audit logging and alerts (D10) |
+| [`network/`](network/) | Stage 4 networking: IP plan, VPC / Shared VPC, firewall, DNS / ingress / egress, quota register (N1–N5) |
+| [`terraform/`](terraform/) | Stage 5: 18 modules, 10 stacks (Stage 8 adds `observability`), stack catalogue |
+| [`cicd/`](cicd/) | Stage 7: reusable workflows (`platform-workflows`) and caller workflows per repository |
+| [`cost/`](cost/), [`slo/`](slo/) | Stage 8: cost-model inputs and capacity thresholds; SLOs, alerts, backup and DR targets |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | CI of this repository (runs `check_all` + tests; no cloud access) |
+| [`helm/`](helm/) | Stage 6: library chart, payroll chart, environment values |
+| [`ansible/`](ansible/) | Stage 6: MIG image bake and day-2 configuration |
+| [`interfaces/`](interfaces/) | Terraform -> Helm values contract |
+| [`examples/`](examples/) | Generated ABC/XYZ Terraform inputs and Helm values/manifests |
+| [`policies/k8s/`](policies/k8s/) | Stage 3 D8 – Gatekeeper / Policy Controller templates (Rego) |
+| [`tests/`](tests/) | Automated local tests (`python3 -m pytest -q tests`) |
 
-## Repository layout
+## Diagram index
 
-```
-config/                         single source of truth (data, not code)
-  platform.yaml                 org, envs, IP supernets, pooled GKE shards, CI settings
-  catalog/products.yaml         products, runtime, supported versions (N-2)
-  tenants/<customer>/
-    tenant.yaml                 tier per env, subnet slot, budgets, data-sharing rules
-    <env>/<product>.yaml        release pin + customer overrides  ← the deployable unit
-terraform/
-  modules/                      tenant-project, tenant-subnet, gke-cluster, cloud-run-service,
-                                mig-service, tenant-ingress, vpc-sc-perimeter, runner-pool
-  stacks/0-bootstrap … 6-tenant-env   layered roots; tenant stacks keep one state per customer-env
-helm/
-  charts/product-service        generic chart for every GKE product
-  charts/tenant-namespace       namespace, quota, limits, default-deny NetworkPolicy, RBAC
-  values/{products,env}/        value layers 2 and 3 (layer 4 = the release file)
-gitops/argocd/                  ApplicationSets (products, tenant namespaces) + AppProjects
-gitops/platform/gateway.yaml    shared Gateway per cluster
-ansible/, packer/               golden images for MIG products, day-2 config via IAP
-tools/validate_config.py        CI gate: IP slots, versions, clusters, data-sharing rules
-tools/changed_tenants.py        git diff → minimal Terraform matrix (blast radius = 1 customer-env)
-.github/workflows/, bitbucket-pipelines.yml   CI/CD for both supported platforms
-```
+| # | Diagram |
+|---|---|
+| 01 | Resource hierarchy (org, folders, projects) |
+| 02 | Overall platform architecture |
+| 03 | GKE runtime (Payroll) |
+| 04 | Cloud Run runtime (CRM) |
+| 05 | Compute Engine MIG runtime (illustrative "Ledger") |
+| 06 | New customer onboarding workflow |
+| 07 | Day-2 lifecycle: add product, upgrade, offboard |
+| 08 | ABC / XYZ worked example (all four environments) |
+| 09 | Controlled Prod → non-prod data movement |
+| 10 | Identity and access |
+| 11 | Network isolation and traffic controls |
+| 12 | High availability and disaster recovery |
+| 13 | Cloud SQL for MySQL identities, accounts, roles and isolation gate |
 
-## How a change flows
-
-```
-PR edits config/tenants/acme/uat/orders.yaml  (version: 3.1.4 → 3.2.0)
-  ├─ ci: validate_config.py · terraform fmt/validate/tflint/checkov · helm lint/template · kubeconform
-  ├─ plan: only tenants/acme/uat (changed_tenants.py)
-  └─ merge → Argo CD syncs Application "acme-uat-orders" → Helm upgrade in namespace acme
-```
-
-Version divergence in the sample data:
-
-| Product | acme dev | acme prod | globex prod |
-|---|---|---|---|
-| orders (GKE) | 3.2.0 (pooled) | 3.1.4 (**dedicated** cluster) | 2.9.1-globex.2 (customer patch build) |
-| billing (GKE) | – | 5.1.0 | 5.0.3 |
-| notify (Cloud Run) | 1.9.0 | 1.8.0 + **10% canary on 1.9.0** | – |
-| reports (Cloud Run) | – | – | 4.1.0 |
-| legacy-erp (MIG) | – | 7.3.0 | – |
-
-## Deploying
-
-Placeholders to replace first: `org_id`, `billing_account`, `github_org` and `bitbucket_*` in `config/platform.yaml`, and the domain `example.com`.
+## Regenerating
 
 ```bash
-# 0. once, as org admin (local state, then migrate into the bucket it creates)
-cd terraform/stacks/0-bootstrap && terraform init && terraform apply
-
-# 1-4. platform layers, in order (CI does this with the tf-prod identity)
-for s in 1-org 2-networking 3-platform 4-gke-fleet; do
-  terraform -chdir=terraform/stacks/$s init -backend-config="bucket=mtp-tfstate" -backend-config="prefix=$s"
-  terraform -chdir=terraform/stacks/$s apply -var terraform_sa=... -var billing_project=mtp-seed -var state_bucket=mtp-tfstate
-done
-
-# 5-6. per customer, then per customer x env (CI runs these as a matrix)
-terraform -chdir=terraform/stacks/5-tenant-base init -backend-config="bucket=mtp-tfstate" -backend-config="prefix=tenants/acme/base"
-terraform -chdir=terraform/stacks/5-tenant-base apply -var customer=acme ...
-terraform -chdir=terraform/stacks/6-tenant-env init -backend-config="bucket=mtp-tfstate" -backend-config="prefix=tenants/acme/prod"
-terraform -chdir=terraform/stacks/6-tenant-env apply -var customer=acme -var env=prod ...
-
-# GKE workloads: install Argo CD on mgmt-argocd, then
-kubectl apply -f gitops/argocd/
+python3 -m tools.check_all                            # every generator/checker of Stages 3–8 (26 steps)
+python3 -m pytest -q tests                            # all local tests (386)
 ```
-
-## Validating locally
 
 ```bash
-pip install pyyaml && python tools/validate_config.py        # config gate
-terraform fmt -recursive terraform                             # formatting
-for d in terraform/modules/* terraform/stacks/*; do terraform -chdir=$d init -backend=false && terraform -chdir=$d validate; done
-helm lint helm/charts/product-service -f helm/charts/product-service/ci/acme-prod-orders-values.yaml
-helm template orders helm/charts/product-service -n globex \
-  -f helm/values/products/orders.yaml -f helm/values/env/prod.yaml -f config/tenants/globex/prod/orders.yaml
+python3 scripts/embed_diagrams.py                     # refresh docs from diagram sources
+npx -p @mermaid-js/mermaid-cli mmdc -i diagrams/03-gke-runtime.mmd -o diagrams/rendered/03-gke-runtime.svg
 ```
-
-## Scope and assumptions
-
-* This is a reference implementation for review. It hasn't been applied to a live organization, and IDs, domains and repository URLs are placeholders.
-* Two sample customers (Acme: dedicated prod GKE, raw-data opt-in for UAT; Globex: fully pooled, customer patch build) and five sample products cover every runtime and tenancy variant. Scaling to 200 customers and 20 products is a matter of adding files.
-* Application datastores (Cloud SQL instances and so on) are product-specific and left to each product's own module. The platform provides the network (PSA), identity, CMEK and perimeter they plug into.
-* Region `asia-south1`, with locations restricted to the India regions. Both are configurable in `platform.yaml`.

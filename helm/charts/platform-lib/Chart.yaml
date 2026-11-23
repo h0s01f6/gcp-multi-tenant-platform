@@ -1,0 +1,5 @@
+apiVersion: v2
+name: platform-lib
+description: Library chart with the platform's application building blocks (Stage 6). Product charts include it.
+type: library
+version: 1.0.0

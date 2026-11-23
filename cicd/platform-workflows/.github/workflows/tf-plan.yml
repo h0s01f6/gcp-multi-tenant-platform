@@ -1,0 +1,59 @@
+# Stage 7 – read-only Terraform plans of the stack instances a PR touches (one tier per call).
+# Identity: tf-plan-<tier> through WIF from the plan-<tier> environment (any branch, no reviewers, CI04/CI05).
+name: tf-plan
+on:
+  workflow_call:
+    inputs:
+      tier: { type: string, required: true }        # org | nonprd | prd
+      matrix: { type: string, required: true }      # planner matrix {"include": [...]}
+      platform_ref: { type: string, default: main }
+permissions:
+  contents: read
+jobs:
+  plan:
+    name: plan ${{ matrix.stack }}/${{ matrix.instance }}
+    runs-on: [self-hosted, "${{ inputs.tier == 'nonprd' && 'nonprd' || 'prd' }}"]
+    environment: plan-${{ inputs.tier }}
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix: ${{ fromJSON(inputs.matrix) }}
+    steps:
+      - uses: example-org/platform-workflows/.github/actions/workspace@v1
+        with:
+          app-id: ${{ vars.PLATFORM_READER_APP_ID }}
+          private-key: ${{ secrets.PLATFORM_READER_APP_KEY }}
+          platform-ref: ${{ inputs.platform_ref }}
+      - name: Authenticate (org read identity)
+        if: inputs.tier == 'org'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: tf-plan-org@bootstrap-seed.iam.gserviceaccount.com
+      - name: Authenticate (tier read identity)
+        if: inputs.tier != 'org'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: tf-plan-${{ inputs.tier }}@shr-cicd-${{ inputs.tier }}.iam.gserviceaccount.com
+      - uses: hashicorp/setup-terraform@v3
+        with: { terraform_version: "1.9.8", terraform_wrapper: false }
+      - name: Generate inputs
+        working-directory: platform
+        run: python -m tools.check_all
+      - name: terraform plan (no lock)
+        working-directory: platform
+        env:
+          STACK: ${{ matrix.stack }}
+          INSTANCE: ${{ matrix.instance }}
+          STATE: ${{ matrix.state }}
+          TFSTATE_BUCKET_SUFFIX: ${{ vars.TFSTATE_BUCKET_SUFFIX }}
+          TF_VAR_org_state_bucket: tfstate-org-${{ vars.TFSTATE_BUCKET_SUFFIX }}
+          TF_VAR_github_org_id: ${{ vars.GH_ORG_ID }}
+          TF_VAR_github_org: ${{ github.repository_owner }}
+        run: |
+          tools/cicd/tf.sh plan
+          { echo "### ${{ matrix.stack }}/${{ matrix.instance }}"; echo '```'; tail -n 40 build/plan-${{ matrix.stack }}-${{ matrix.instance }}.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"

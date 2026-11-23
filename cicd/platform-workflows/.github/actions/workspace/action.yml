@@ -1,0 +1,55 @@
+# Stage 7 – common job preparation for every platform workflow.
+# Assembles ./platform = platform-infra (tools, Terraform, charts, registry/platform + products) + the customer
+# registry (tenants/ of platform-tenants -> registry/tenants/). The calling repository is used at the commit under
+# test; the other one at a reviewed ref (platform-infra: platform-ref, platform-tenants: main).
+# The GitHub App has read-only `contents` on these two repositories (T-CI2); it is a GitHub credential, not a GCP key.
+name: platform-workspace
+description: Assemble the platform workspace in ./platform and install the Python tooling
+inputs:
+  app-id: { description: "GitHub App id (platform-reader)", required: true }
+  private-key: { description: "GitHub App private key", required: true }
+  platform-ref: { description: "platform-infra ref to use when called from another repository", required: false, default: main }
+runs:
+  using: composite
+  steps:
+    - id: token
+      uses: actions/create-github-app-token@v1
+      with:
+        app-id: ${{ inputs.app-id }}
+        private-key: ${{ inputs.private-key }}
+        owner: ${{ github.repository_owner }}
+        repositories: platform-infra,platform-tenants
+    - name: Checkout caller
+      uses: actions/checkout@v4
+      with: { path: caller, fetch-depth: 0 }
+    - name: Checkout platform-infra
+      if: github.event.repository.name != 'platform-infra'
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ github.repository_owner }}/platform-infra
+        ref: ${{ inputs.platform-ref }}
+        token: ${{ steps.token.outputs.token }}
+        path: platform
+    - name: Checkout platform-tenants (customer registry)
+      if: github.event.repository.name != 'platform-tenants'
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ github.repository_owner }}/platform-tenants
+        ref: main
+        token: ${{ steps.token.outputs.token }}
+        path: tenants-repo
+    - name: Overlay
+      shell: bash
+      run: |
+        if [ "${{ github.event.repository.name }}" = platform-infra ]; then
+          mv caller platform && ln -s platform caller
+        fi
+        src=$([ -d caller/tenants ] && [ "${{ github.event.repository.name }}" = platform-tenants ] && echo caller/tenants || echo tenants-repo/tenants)
+        rm -rf platform/registry/tenants && cp -r "$src" platform/registry/tenants
+    - uses: actions/setup-python@v5
+      with: { python-version: "3.12" }
+    - uses: actions/setup-go@v5
+      with: { go-version: "1.22" }
+    - name: Install tooling
+      shell: bash
+      run: pip install -r platform/requirements.txt

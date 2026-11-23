@@ -1,0 +1,16 @@
+# platform-tenants – merge to main: onboarding / changes / releases. Tier nonprd runs first (1 reviewer on the
+# nonprd environment), prd follows after its own approval (2 reviewers, prd environment). Customer onboarding =
+# tenant -> memberships -> DB bootstrap -> isolation gate -> edge -> cluster-config -> releases, per tier.
+name: apply
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  pipeline:
+    uses: example-org/platform-workflows/.github/workflows/apply-pipeline.yml@v1
+    secrets: inherit
+    with:
+      allow_org: false
+      allow_deploy: true

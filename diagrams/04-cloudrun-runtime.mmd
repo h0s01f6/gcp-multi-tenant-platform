@@ -1,0 +1,59 @@
+%% 04 - Cloud Run-based product runtime (CRM in production)
+%% Each customer's service lives in the customer's own tenant project.
+%% Final reconciliation: MySQL 8.4 pool, customer-unique SA names (M1).
+flowchart LR
+  U1["ABC users<br/>abc.crm.example.com"]
+  U2["XYZ users<br/>xyz.crm.example.com"]
+
+  subgraph ING["plt-ingress-prd"]
+    ALB["Global external ALB + Cloud Armor<br/>URL map: host rule per customer<br/>cert *.crm.example.com"]
+  end
+
+  subgraph TA["t-abc-prd"]
+    BSA["backend service bs-crm-prd<br/>+ serverless NEG (asia-south1)"]
+    RUNA["Cloud Run service crm-prd<br/>ingress: internal + load balancer only<br/>revision crm-prd-00042 = image crm 3.1.0<br/>min 1, max 20 instances, concurrency 80"]
+    SAA["service identity abc-crm-prd@t-abc-prd<br/>MySQL account abc-crm-prd"]
+    SMA["Secret Manager crm-prd-* (mounted as env/volume)"]
+    GCSA["Bucket abc-crm-prd-files (CMEK)"]
+  end
+
+  subgraph TX["t-xyz-prd"]
+    BSX["backend service bs-crm-prd<br/>+ serverless NEG"]
+    RUNX["Cloud Run service crm-prd<br/>revision crm-prd-00017 = image crm 3.0.5"]
+    SAX["service identity xyz-crm-prd@t-xyz-prd<br/>MySQL account xyz-crm-prd"]
+    SMX["Secret Manager crm-prd-*"]
+    GCSX["Bucket xyz-crm-prd-files"]
+  end
+
+  subgraph NET["net-host-prd / vpc-prd"]
+    SUB["subnet snet-prd-as1-run<br/>Direct VPC egress, network tags<br/>run-crm"]
+  end
+
+  subgraph SQL["plt-sql-prd-01 / sql-prd-crm-01 (MySQL 8.4, HA)"]
+    DBA["database abc_crm<br/>role r_abc_crm_app"]
+    DBX["database xyz_crm<br/>role r_xyz_crm_app"]
+  end
+
+  OTHER["Another internal service<br/>(caller)"]
+
+  U1 --> ALB
+  U2 --> ALB
+  ALB -- "cross-project backend reference" --> BSA --> RUNA
+  ALB -- "cross-project backend reference" --> BSX --> RUNX
+  RUNA --- SAA
+  RUNX --- SAX
+  SAA --> SMA
+  SAA --> GCSA
+  SAX --> SMX
+  SAX --> GCSX
+  RUNA -- "Direct VPC egress" --> SUB
+  RUNX -- "Direct VPC egress" --> SUB
+  SUB -- "private IP, IAM DB auth" --> DBA
+  SUB -- "private IP, IAM DB auth" --> DBX
+  OTHER -- "ID token, needs roles/run.invoker<br/>on that one service" --> RUNA
+  RUNA -. "no invoker grant: 403" .-x RUNX
+
+  classDef abc fill:#fff3cd,stroke:#b8860b,color:#000
+  classDef xyz fill:#d4edda,stroke:#2e7d32,color:#000
+  class BSA,RUNA,SAA,SMA,GCSA,DBA abc
+  class BSX,RUNX,SAX,SMX,GCSX,DBX xyz

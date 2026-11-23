@@ -1,0 +1,31 @@
+# app-ledger (MIG runtime) – the application is packaged as a signed OCI artifact like every product; release tags
+# additionally bake the VM image ledger-X-Y-Z in shr-build that the deploy pipeline rolls out (A-H-2).
+name: build
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - run: make test
+  image:
+    needs: test
+    uses: example-org/platform-workflows/.github/workflows/build-image.yml@v1
+    secrets: inherit
+    with:
+      image: ledger
+  vm-image:
+    needs: image
+    if: startsWith(github.ref, 'refs/tags/v')
+    uses: example-org/platform-workflows/.github/workflows/bake-vm-image.yml@v1
+    secrets: inherit
+    with:
+      product: ledger
+      artifact_url: asia-south1-docker.pkg.dev/shr-artifacts/release/ledger@${{ needs.image.outputs.digest }}

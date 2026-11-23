@@ -1,0 +1,23 @@
+# app-payroll – main: snapshot image for dev; tag vX.Y.Z: release image (scanned, signed). Deployment is a version
+# change in platform-tenants (never from the application repository).
+name: build
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - run: make test            # product test suite (product team contract, A-H-1)
+  image:
+    needs: test
+    uses: example-org/platform-workflows/.github/workflows/build-image.yml@v1
+    secrets: inherit
+    with:
+      image: payroll

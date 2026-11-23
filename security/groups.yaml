@@ -1,0 +1,29 @@
+# Group catalogue (Stage 3 D3). Templates: {tenant}, {product} from the registry; {nn} from inventory pool projects.
+# tier: prd | nonprd | org (org only for org-level read/admin/break-glass groups)
+# membership: idp | registry | expiring-approval | manual-breakglass
+# cloudsql_mechanism: none | iam-policy (mechanism 1) | sql-group-auth (mechanism 2, humans only)
+schema_version: "1.0"
+groups:
+  # ---------------- humans ----------------
+  grp-hum-platform-admins:          { category: hum, tier: org, owner: security-team, membership: idp, max_members: 4 }
+  grp-hum-security-audit:           { category: hum, tier: org, owner: security-team, membership: idp }
+  grp-hum-prd-breakglass:           { category: hum, tier: org, owner: security-team, membership: manual-breakglass, default_members: 0 }
+  grp-hum-platform-prd-operators:   { category: hum, tier: prd, owner: platform-lead, membership: idp }
+  grp-hum-platform-nonprd-operators: { category: hum, tier: nonprd, owner: platform-lead, membership: idp }
+  grp-hum-dba-prd-ro:               { category: hum, tier: prd, owner: dba-lead, membership: idp, cloudsql_mechanism: sql-group-auth }
+  grp-hum-dba-prd-admin:            { category: hum, tier: prd, owner: dba-lead, membership: expiring-approval, max_duration_hours: 4, cloudsql_mechanism: sql-group-auth }
+  grp-hum-dba-nonprd:               { category: hum, tier: nonprd, owner: dba-lead, membership: idp, cloudsql_mechanism: sql-group-auth }
+  grp-hum-product-{product}-dev:    { category: hum, tier: nonprd, owner: product-owner, membership: idp }
+  grp-hum-product-{product}-prd-viewers: { category: hum, tier: prd, owner: product-owner, membership: idp }
+  grp-hum-cust-{tenant}-support-prd:    { category: hum, tier: prd, owner: account-owner, membership: idp }
+  grp-hum-cust-{tenant}-support-nonprd: { category: hum, tier: nonprd, owner: account-owner, membership: idp }
+  # ---------------- pipelines ----------------
+  grp-pl-prd-deployers:             { category: pl, tier: prd, owner: platform-lead, membership: registry }
+  grp-pl-nonprd-deployers:          { category: pl, tier: nonprd, owner: platform-lead, membership: registry }
+  # ---------------- workloads (mechanism 1 only, never added to instances) ----------------
+  grp-wl-sqlconn-prd-{nn}:          { category: wl, tier: prd, owner: platform-lead, membership: registry, cloudsql_mechanism: iam-policy }
+  grp-wl-sqlconn-nonprd-{nn}:       { category: wl, tier: nonprd, owner: platform-lead, membership: registry, cloudsql_mechanism: iam-policy }
+  grp-wl-ar-readers-prd:            { category: wl, tier: prd, owner: platform-lead, membership: registry }
+  grp-wl-ar-readers-nonprd:         { category: wl, tier: nonprd, owner: platform-lead, membership: registry }
+  grp-wl-netusers-prd:              { category: wl, tier: prd, owner: platform-lead, membership: registry }
+  grp-wl-netusers-nonprd:           { category: wl, tier: nonprd, owner: platform-lead, membership: registry }

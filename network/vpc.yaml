@@ -1,0 +1,56 @@
+# VPCs, subnets, Shared VPC and runtime network settings (Stage 4 N2). Input for tools/network/vpc.py.
+# Status: PROPOSED; generator and checks locally tested; nothing created in GCP.
+# Ranges come from the IP plan (N1); which projects attach and which runtimes need which subnet come from the
+# registry, inventory and identity plan (D1/D2), so a new customer never needs a hand-edited network file.
+schema_version: "1.0"
+
+vpc:
+  routing_mode: GLOBAL
+  auto_create_subnetworks: false
+  mtu: 1460
+  keep_default_internet_route: true     # needed by Cloud NAT and by the Private Google Access VIP route
+  peering: none                         # vpc-prd and vpc-nonprd are never peered (only the PSA service peering exists)
+
+subnets:                                 # per tier in the active region; gke subnets are generated per cell
+  run: { name: "snet-{tier}-{short}-run", block: run, private_google_access: true }
+  mig: { name: "snet-{tier}-{short}-mig", block: mig, private_google_access: true }
+  proxy_only: { name: "snet-{tier}-{short}-proxy", block: proxy_only, create: false }   # reserved (N1)
+gke_subnet: { private_google_access: true, create_pods_reserve_range: false }          # reserve range added only when needed
+
+psa:
+  range_name: "psa-{tier}-01"
+  service: servicenetworking.googleapis.com
+  export_custom_routes: false
+
+gke:                                     # network settings of every cell (Autopilot)
+  private_nodes: true
+  control_plane: { dns_endpoint: true, ip_endpoint_external_access: false, authorized_networks: [] }
+  dataplane: ADVANCED_DATAPATH           # Dataplane V2 (Autopilot default; NetworkPolicy enforcement, D8)
+  gateway_api: CHANNEL_STANDARD
+
+cloud_run:
+  egress: all-traffic                    # D5 run.allowedVPCEgress (prod); non-prod uses the same for uniform egress control
+  ingress: internal-and-cloud-load-balancing
+  network_tags: ["run-{tier}", "run-{product}"]   # Cloud Run can only use network tags in firewall rules (review F3)
+  jobs:                                   # platform Cloud Run jobs that need the VPC (Cloud SQL private IP)
+    - { name: db-bootstrap, project: "plt-sql-{tier}-{nn}", tags: ["run-{tier}", "run-sqlboot"] }
+    - { name: db-isotest,   project: "shr-cicd-{tier}",    tags: ["run-{tier}", "run-isotest"] }
+
+mig:
+  external_ip: false                      # D5 compute.vmExternalIpAccess deny all
+  secure_tags: ["wl=mig", "app={product}"]           # firewall targets (N3); tag keys live in the tier host project
+
+cloud_sql:
+  ipv4_enabled: false                     # D5 sql.restrictPublicIp
+  ssl_mode: ENCRYPTED_ONLY
+  connector_enforcement: REQUIRED         # only Cloud SQL connectors / Auth Proxy (IAM database authentication)
+
+# Service agents that need Network User on the tier's runtime subnets (members of grp-wl-netusers-<tier>, D3).
+service_agents:
+  cloudrun: "service-${PROJECT_NUMBER:{project}}@serverless-robot-prod.iam.gserviceaccount.com"
+  gke: "service-${PROJECT_NUMBER:{project}}@container-engine-robot.iam.gserviceaccount.com"
+  apis: "${PROJECT_NUMBER:{project}}@cloudservices.gserviceaccount.com"
+
+limits:                                    # checked; unknown values are reported, not assumed (Q20, T-N1)
+  secondary_ranges_per_subnet: 30
+  shared_vpc_service_projects_per_host: null

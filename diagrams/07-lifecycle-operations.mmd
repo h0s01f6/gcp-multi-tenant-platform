@@ -1,0 +1,32 @@
+%% 07 - Day-2 lifecycle: add product, upgrade version, offboard customer
+%% All three start with a PR to the tenant registry. Nothing is changed by hand.
+%% Revised in Stage 2 review: per-env placement (A7), retention note (K14).
+flowchart TB
+  subgraph ADD["A. Existing customer ABC adds product CRM"]
+    direction TB
+    A1["PR: add crm block to tenants/abc.yaml<br/>runtime cloudrun, versions per env"] --> A2["Validate + plan<br/>(projects already exist: only new resources;<br/>placement per env: pool with headroom)"]
+    A2 --> A3["Apply non-prod: SAs crm-dev/stg/uat,<br/>databases abc_crm on dev/stg/uat pools,<br/>buckets, secrets, Cloud Run services"]
+    A3 --> A4["Deploy Dev, verify"] --> A5["Promote Stage then UAT by PR"]
+    A5 --> A6["Prod PR + approval: crm-prd in t-abc-prd,<br/>abc_crm on its prod pool, URL map host rule"]
+  end
+
+  subgraph UPG["B. Upgrade Payroll for XYZ only: 1.5.3 to 2.0.2"]
+    direction TB
+    U1["shr-build publishes chart + image 2.0.2<br/>(scanned, signed, release notes, DB migration notes)"] --> U2["PR: xyz.yaml payroll.dev = 2.0.2"]
+    U2 --> U3["CI deploys only xyz-payroll-dev<br/>(Helm diff shows a single release)"]
+    U3 --> U4["DB migration runs as pre-upgrade job<br/>against xyz_payroll only"]
+    U4 --> U5{"Healthy?"}
+    U5 -- "no" --> U6["helm rollback xyz-payroll-dev<br/>restore DB if migration was not backward compatible"]
+    U5 -- "yes" --> U7["Promote stg, uat, then prd by PR<br/>prd: on-demand backup before migration"]
+    U7 --> U8["ABC stays on 2.0.2 already, other<br/>customers untouched: separate releases"]
+  end
+
+  subgraph OFF["C. Offboard customer XYZ"]
+    direction TB
+    O1["PR: set xyz.yaml status = offboarding<br/>+ contract end date + data handling choice"] --> O2["Disable ingress host rules, scale workloads to zero"]
+    O2 --> O3["Final export to customer, if contract requires<br/>(encrypted, signed URL, time-limited)"]
+    O3 --> O4["Retention hold: keep backups for the agreed period<br/>(compliance decision, not technical)"]
+    O4 --> O5["PR: remove tenant. Terraform destroys namespaces,<br/>Cloud Run, MIGs, drops xyz_* databases, SAs<br/>NOTE: pooled backups keep xyz data until<br/>backup retention expires (Q19)"]
+    O5 --> O6["Projects t-xyz-prd / t-xyz-nonprd deleted<br/>(30-day recovery window), KMS keys scheduled for destruction"]
+    O6 --> O7["Remove dashboards, alerts, labels from cost reports.<br/>Audit log retained centrally"]
+  end

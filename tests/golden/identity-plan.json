@@ -1,0 +1,3499 @@
+{
+  "cloud_sql_databases": {
+    "psql-ledger-dev-01/abc_ledger": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "abc_ledger",
+      "env": "dev",
+      "pool": "psql-ledger-dev-01",
+      "pool_project": "p-ledger-nonprd",
+      "product": "ledger",
+      "tenant": "abc"
+    },
+    "psql-ledger-prd-01/abc_ledger": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "abc_ledger",
+      "env": "prd",
+      "pool": "psql-ledger-prd-01",
+      "pool_project": "p-ledger-prd",
+      "product": "ledger",
+      "tenant": "abc"
+    },
+    "psql-ledger-stg-01/abc_ledger": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "abc_ledger",
+      "env": "stg",
+      "pool": "psql-ledger-stg-01",
+      "pool_project": "p-ledger-nonprd",
+      "product": "ledger",
+      "tenant": "abc"
+    },
+    "psql-ledger-uat-01/abc_ledger": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "abc_ledger",
+      "env": "uat",
+      "pool": "psql-ledger-uat-01",
+      "pool_project": "p-ledger-nonprd",
+      "product": "ledger",
+      "tenant": "abc"
+    },
+    "psql-notify-dev-01/abc_notify": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "abc_notify",
+      "env": "dev",
+      "pool": "psql-notify-dev-01",
+      "pool_project": "p-notify-nonprd",
+      "product": "notify",
+      "tenant": "abc"
+    },
+    "psql-notify-prd-01/abc_notify": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "abc_notify",
+      "env": "prd",
+      "pool": "psql-notify-prd-01",
+      "pool_project": "p-notify-prd",
+      "product": "notify",
+      "tenant": "abc"
+    },
+    "psql-notify-stg-01/abc_notify": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "abc_notify",
+      "env": "stg",
+      "pool": "psql-notify-stg-01",
+      "pool_project": "p-notify-nonprd",
+      "product": "notify",
+      "tenant": "abc"
+    },
+    "psql-notify-uat-01/abc_notify": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "abc_notify",
+      "env": "uat",
+      "pool": "psql-notify-uat-01",
+      "pool_project": "p-notify-nonprd",
+      "product": "notify",
+      "tenant": "abc"
+    },
+    "sql-dev-01/abc_crm": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "abc_crm",
+      "env": "dev",
+      "pool": "sql-dev-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "product": "crm",
+      "tenant": "abc"
+    },
+    "sql-dev-01/abc_payroll": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "abc_payroll",
+      "env": "dev",
+      "pool": "sql-dev-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "product": "payroll",
+      "tenant": "abc"
+    },
+    "sql-dev-01/xyz_crm": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "xyz_crm",
+      "env": "dev",
+      "pool": "sql-dev-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "product": "crm",
+      "tenant": "xyz"
+    },
+    "sql-dev-01/xyz_payroll": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "xyz_payroll",
+      "env": "dev",
+      "pool": "sql-dev-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "product": "payroll",
+      "tenant": "xyz"
+    },
+    "sql-prd-crm-01/abc_crm": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "abc_crm",
+      "env": "prd",
+      "pool": "sql-prd-crm-01",
+      "pool_project": "plt-sql-prd-01",
+      "product": "crm",
+      "tenant": "abc"
+    },
+    "sql-prd-crm-01/xyz_crm": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "xyz_crm",
+      "env": "prd",
+      "pool": "sql-prd-crm-01",
+      "pool_project": "plt-sql-prd-01",
+      "product": "crm",
+      "tenant": "xyz"
+    },
+    "sql-prd-payroll-01/abc_payroll": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "abc_payroll",
+      "env": "prd",
+      "pool": "sql-prd-payroll-01",
+      "pool_project": "plt-sql-prd-01",
+      "product": "payroll",
+      "tenant": "abc"
+    },
+    "sql-prd-payroll-01/xyz_payroll": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "xyz_payroll",
+      "env": "prd",
+      "pool": "sql-prd-payroll-01",
+      "pool_project": "plt-sql-prd-01",
+      "product": "payroll",
+      "tenant": "xyz"
+    },
+    "sql-stg-01/abc_crm": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "abc_crm",
+      "env": "stg",
+      "pool": "sql-stg-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "product": "crm",
+      "tenant": "abc"
+    },
+    "sql-stg-01/abc_payroll": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "abc_payroll",
+      "env": "stg",
+      "pool": "sql-stg-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "product": "payroll",
+      "tenant": "abc"
+    },
+    "sql-stg-01/xyz_crm": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "xyz_crm",
+      "env": "stg",
+      "pool": "sql-stg-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "product": "crm",
+      "tenant": "xyz"
+    },
+    "sql-stg-01/xyz_payroll": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "xyz_payroll",
+      "env": "stg",
+      "pool": "sql-stg-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "product": "payroll",
+      "tenant": "xyz"
+    },
+    "sql-uat-01/abc_crm": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "abc_crm",
+      "env": "uat",
+      "pool": "sql-uat-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "product": "crm",
+      "tenant": "abc"
+    },
+    "sql-uat-01/abc_payroll": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "abc_payroll",
+      "env": "uat",
+      "pool": "sql-uat-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "product": "payroll",
+      "tenant": "abc"
+    },
+    "sql-uat-01/xyz_crm": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "xyz_crm",
+      "env": "uat",
+      "pool": "sql-uat-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "product": "crm",
+      "tenant": "xyz"
+    },
+    "sql-uat-01/xyz_payroll": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_0900_ai_ci",
+      "database": "xyz_payroll",
+      "env": "uat",
+      "pool": "sql-uat-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "product": "payroll",
+      "tenant": "xyz"
+    }
+  },
+  "cloud_sql_iam_users": {
+    "psql-ledger-dev-01/ledger-v4-dev": {
+      "databases": [
+        "abc_ledger"
+      ],
+      "env": "dev",
+      "isolation_boundary": "application",
+      "pool": "psql-ledger-dev-01",
+      "pool_project": "p-ledger-nonprd",
+      "purpose": "app",
+      "sa_email": "ledger-v4-dev@p-ledger-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "ledger-v4-dev"
+    },
+    "psql-ledger-dev-01/ledger-v4-dev-mig": {
+      "databases": [
+        "abc_ledger"
+      ],
+      "env": "dev",
+      "isolation_boundary": "application",
+      "pool": "psql-ledger-dev-01",
+      "pool_project": "p-ledger-nonprd",
+      "purpose": "mig",
+      "sa_email": "ledger-v4-dev-mig@p-ledger-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "ledger-v4-dev-mig"
+    },
+    "psql-ledger-prd-01/ledger-v3-prd": {
+      "databases": [
+        "abc_ledger"
+      ],
+      "env": "prd",
+      "isolation_boundary": "application",
+      "pool": "psql-ledger-prd-01",
+      "pool_project": "p-ledger-prd",
+      "purpose": "app",
+      "sa_email": "ledger-v3-prd@p-ledger-prd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "ledger-v3-prd"
+    },
+    "psql-ledger-prd-01/ledger-v3-prd-mig": {
+      "databases": [
+        "abc_ledger"
+      ],
+      "env": "prd",
+      "isolation_boundary": "application",
+      "pool": "psql-ledger-prd-01",
+      "pool_project": "p-ledger-prd",
+      "purpose": "mig",
+      "sa_email": "ledger-v3-prd-mig@p-ledger-prd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "ledger-v3-prd-mig"
+    },
+    "psql-ledger-stg-01/ledger-v4-stg": {
+      "databases": [
+        "abc_ledger"
+      ],
+      "env": "stg",
+      "isolation_boundary": "application",
+      "pool": "psql-ledger-stg-01",
+      "pool_project": "p-ledger-nonprd",
+      "purpose": "app",
+      "sa_email": "ledger-v4-stg@p-ledger-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "ledger-v4-stg"
+    },
+    "psql-ledger-stg-01/ledger-v4-stg-mig": {
+      "databases": [
+        "abc_ledger"
+      ],
+      "env": "stg",
+      "isolation_boundary": "application",
+      "pool": "psql-ledger-stg-01",
+      "pool_project": "p-ledger-nonprd",
+      "purpose": "mig",
+      "sa_email": "ledger-v4-stg-mig@p-ledger-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "ledger-v4-stg-mig"
+    },
+    "psql-ledger-uat-01/ledger-v4-uat": {
+      "databases": [
+        "abc_ledger"
+      ],
+      "env": "uat",
+      "isolation_boundary": "application",
+      "pool": "psql-ledger-uat-01",
+      "pool_project": "p-ledger-nonprd",
+      "purpose": "app",
+      "sa_email": "ledger-v4-uat@p-ledger-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "ledger-v4-uat"
+    },
+    "psql-ledger-uat-01/ledger-v4-uat-mig": {
+      "databases": [
+        "abc_ledger"
+      ],
+      "env": "uat",
+      "isolation_boundary": "application",
+      "pool": "psql-ledger-uat-01",
+      "pool_project": "p-ledger-nonprd",
+      "purpose": "mig",
+      "sa_email": "ledger-v4-uat-mig@p-ledger-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "ledger-v4-uat-mig"
+    },
+    "psql-notify-dev-01/notify-dev": {
+      "databases": [
+        "abc_notify"
+      ],
+      "env": "dev",
+      "isolation_boundary": "application",
+      "pool": "psql-notify-dev-01",
+      "pool_project": "p-notify-nonprd",
+      "purpose": "app",
+      "sa_email": "notify-dev@p-notify-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "notify-dev"
+    },
+    "psql-notify-dev-01/notify-dev-mig": {
+      "databases": [
+        "abc_notify"
+      ],
+      "env": "dev",
+      "isolation_boundary": "application",
+      "pool": "psql-notify-dev-01",
+      "pool_project": "p-notify-nonprd",
+      "purpose": "mig",
+      "sa_email": "notify-dev-mig@p-notify-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "notify-dev-mig"
+    },
+    "psql-notify-prd-01/notify-prd": {
+      "databases": [
+        "abc_notify"
+      ],
+      "env": "prd",
+      "isolation_boundary": "application",
+      "pool": "psql-notify-prd-01",
+      "pool_project": "p-notify-prd",
+      "purpose": "app",
+      "sa_email": "notify-prd@p-notify-prd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "notify-prd"
+    },
+    "psql-notify-prd-01/notify-prd-mig": {
+      "databases": [
+        "abc_notify"
+      ],
+      "env": "prd",
+      "isolation_boundary": "application",
+      "pool": "psql-notify-prd-01",
+      "pool_project": "p-notify-prd",
+      "purpose": "mig",
+      "sa_email": "notify-prd-mig@p-notify-prd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "notify-prd-mig"
+    },
+    "psql-notify-stg-01/notify-stg": {
+      "databases": [
+        "abc_notify"
+      ],
+      "env": "stg",
+      "isolation_boundary": "application",
+      "pool": "psql-notify-stg-01",
+      "pool_project": "p-notify-nonprd",
+      "purpose": "app",
+      "sa_email": "notify-stg@p-notify-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "notify-stg"
+    },
+    "psql-notify-stg-01/notify-stg-mig": {
+      "databases": [
+        "abc_notify"
+      ],
+      "env": "stg",
+      "isolation_boundary": "application",
+      "pool": "psql-notify-stg-01",
+      "pool_project": "p-notify-nonprd",
+      "purpose": "mig",
+      "sa_email": "notify-stg-mig@p-notify-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "notify-stg-mig"
+    },
+    "psql-notify-uat-01/notify-uat": {
+      "databases": [
+        "abc_notify"
+      ],
+      "env": "uat",
+      "isolation_boundary": "application",
+      "pool": "psql-notify-uat-01",
+      "pool_project": "p-notify-nonprd",
+      "purpose": "app",
+      "sa_email": "notify-uat@p-notify-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "notify-uat"
+    },
+    "psql-notify-uat-01/notify-uat-mig": {
+      "databases": [
+        "abc_notify"
+      ],
+      "env": "uat",
+      "isolation_boundary": "application",
+      "pool": "psql-notify-uat-01",
+      "pool_project": "p-notify-nonprd",
+      "purpose": "mig",
+      "sa_email": "notify-uat-mig@p-notify-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "notify-uat-mig"
+    },
+    "sql-dev-01/abc-crm-dev": {
+      "databases": [
+        "abc_crm"
+      ],
+      "env": "dev",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-dev-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "app",
+      "sa_email": "abc-crm-dev@t-abc-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-crm-dev"
+    },
+    "sql-dev-01/abc-crm-dev-mig": {
+      "databases": [
+        "abc_crm"
+      ],
+      "env": "dev",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-dev-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "mig",
+      "sa_email": "abc-crm-dev-mig@t-abc-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-crm-dev-mig"
+    },
+    "sql-dev-01/abc-payroll-dev": {
+      "databases": [
+        "abc_payroll"
+      ],
+      "env": "dev",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-dev-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "app",
+      "sa_email": "abc-payroll-dev@t-abc-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-payroll-dev"
+    },
+    "sql-dev-01/abc-payroll-dev-mig": {
+      "databases": [
+        "abc_payroll"
+      ],
+      "env": "dev",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-dev-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "mig",
+      "sa_email": "abc-payroll-dev-mig@t-abc-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-payroll-dev-mig"
+    },
+    "sql-dev-01/abc-payroll-dev-ro": {
+      "databases": [
+        "abc_payroll"
+      ],
+      "env": "dev",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-dev-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "ro",
+      "sa_email": "abc-payroll-dev-ro@t-abc-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-payroll-dev-ro"
+    },
+    "sql-dev-01/xyz-crm-dev": {
+      "databases": [
+        "xyz_crm"
+      ],
+      "env": "dev",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-dev-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "app",
+      "sa_email": "xyz-crm-dev@t-xyz-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-crm-dev"
+    },
+    "sql-dev-01/xyz-crm-dev-mig": {
+      "databases": [
+        "xyz_crm"
+      ],
+      "env": "dev",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-dev-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "mig",
+      "sa_email": "xyz-crm-dev-mig@t-xyz-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-crm-dev-mig"
+    },
+    "sql-dev-01/xyz-payroll-dev": {
+      "databases": [
+        "xyz_payroll"
+      ],
+      "env": "dev",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-dev-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "app",
+      "sa_email": "xyz-payroll-dev@t-xyz-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-payroll-dev"
+    },
+    "sql-dev-01/xyz-payroll-dev-mig": {
+      "databases": [
+        "xyz_payroll"
+      ],
+      "env": "dev",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-dev-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "mig",
+      "sa_email": "xyz-payroll-dev-mig@t-xyz-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-payroll-dev-mig"
+    },
+    "sql-dev-01/xyz-payroll-dev-ro": {
+      "databases": [
+        "xyz_payroll"
+      ],
+      "env": "dev",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-dev-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "ro",
+      "sa_email": "xyz-payroll-dev-ro@t-xyz-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-payroll-dev-ro"
+    },
+    "sql-prd-crm-01/abc-crm-prd": {
+      "databases": [
+        "abc_crm"
+      ],
+      "env": "prd",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-prd-crm-01",
+      "pool_project": "plt-sql-prd-01",
+      "purpose": "app",
+      "sa_email": "abc-crm-prd@t-abc-prd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-crm-prd"
+    },
+    "sql-prd-crm-01/abc-crm-prd-mig": {
+      "databases": [
+        "abc_crm"
+      ],
+      "env": "prd",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-prd-crm-01",
+      "pool_project": "plt-sql-prd-01",
+      "purpose": "mig",
+      "sa_email": "abc-crm-prd-mig@t-abc-prd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-crm-prd-mig"
+    },
+    "sql-prd-crm-01/xyz-crm-prd": {
+      "databases": [
+        "xyz_crm"
+      ],
+      "env": "prd",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-prd-crm-01",
+      "pool_project": "plt-sql-prd-01",
+      "purpose": "app",
+      "sa_email": "xyz-crm-prd@t-xyz-prd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-crm-prd"
+    },
+    "sql-prd-crm-01/xyz-crm-prd-mig": {
+      "databases": [
+        "xyz_crm"
+      ],
+      "env": "prd",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-prd-crm-01",
+      "pool_project": "plt-sql-prd-01",
+      "purpose": "mig",
+      "sa_email": "xyz-crm-prd-mig@t-xyz-prd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-crm-prd-mig"
+    },
+    "sql-prd-payroll-01/abc-payroll-prd": {
+      "databases": [
+        "abc_payroll"
+      ],
+      "env": "prd",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-prd-payroll-01",
+      "pool_project": "plt-sql-prd-01",
+      "purpose": "app",
+      "sa_email": "abc-payroll-prd@t-abc-prd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-payroll-prd"
+    },
+    "sql-prd-payroll-01/abc-payroll-prd-mig": {
+      "databases": [
+        "abc_payroll"
+      ],
+      "env": "prd",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-prd-payroll-01",
+      "pool_project": "plt-sql-prd-01",
+      "purpose": "mig",
+      "sa_email": "abc-payroll-prd-mig@t-abc-prd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-payroll-prd-mig"
+    },
+    "sql-prd-payroll-01/abc-payroll-prd-ro": {
+      "databases": [
+        "abc_payroll"
+      ],
+      "env": "prd",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-prd-payroll-01",
+      "pool_project": "plt-sql-prd-01",
+      "purpose": "ro",
+      "sa_email": "abc-payroll-prd-ro@t-abc-prd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-payroll-prd-ro"
+    },
+    "sql-prd-payroll-01/xyz-payroll-prd": {
+      "databases": [
+        "xyz_payroll"
+      ],
+      "env": "prd",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-prd-payroll-01",
+      "pool_project": "plt-sql-prd-01",
+      "purpose": "app",
+      "sa_email": "xyz-payroll-prd@t-xyz-prd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-payroll-prd"
+    },
+    "sql-prd-payroll-01/xyz-payroll-prd-mig": {
+      "databases": [
+        "xyz_payroll"
+      ],
+      "env": "prd",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-prd-payroll-01",
+      "pool_project": "plt-sql-prd-01",
+      "purpose": "mig",
+      "sa_email": "xyz-payroll-prd-mig@t-xyz-prd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-payroll-prd-mig"
+    },
+    "sql-prd-payroll-01/xyz-payroll-prd-ro": {
+      "databases": [
+        "xyz_payroll"
+      ],
+      "env": "prd",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-prd-payroll-01",
+      "pool_project": "plt-sql-prd-01",
+      "purpose": "ro",
+      "sa_email": "xyz-payroll-prd-ro@t-xyz-prd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-payroll-prd-ro"
+    },
+    "sql-stg-01/abc-crm-stg": {
+      "databases": [
+        "abc_crm"
+      ],
+      "env": "stg",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-stg-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "app",
+      "sa_email": "abc-crm-stg@t-abc-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-crm-stg"
+    },
+    "sql-stg-01/abc-crm-stg-mig": {
+      "databases": [
+        "abc_crm"
+      ],
+      "env": "stg",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-stg-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "mig",
+      "sa_email": "abc-crm-stg-mig@t-abc-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-crm-stg-mig"
+    },
+    "sql-stg-01/abc-payroll-stg": {
+      "databases": [
+        "abc_payroll"
+      ],
+      "env": "stg",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-stg-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "app",
+      "sa_email": "abc-payroll-stg@t-abc-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-payroll-stg"
+    },
+    "sql-stg-01/abc-payroll-stg-mig": {
+      "databases": [
+        "abc_payroll"
+      ],
+      "env": "stg",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-stg-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "mig",
+      "sa_email": "abc-payroll-stg-mig@t-abc-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-payroll-stg-mig"
+    },
+    "sql-stg-01/abc-payroll-stg-ro": {
+      "databases": [
+        "abc_payroll"
+      ],
+      "env": "stg",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-stg-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "ro",
+      "sa_email": "abc-payroll-stg-ro@t-abc-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-payroll-stg-ro"
+    },
+    "sql-stg-01/xyz-crm-stg": {
+      "databases": [
+        "xyz_crm"
+      ],
+      "env": "stg",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-stg-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "app",
+      "sa_email": "xyz-crm-stg@t-xyz-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-crm-stg"
+    },
+    "sql-stg-01/xyz-crm-stg-mig": {
+      "databases": [
+        "xyz_crm"
+      ],
+      "env": "stg",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-stg-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "mig",
+      "sa_email": "xyz-crm-stg-mig@t-xyz-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-crm-stg-mig"
+    },
+    "sql-stg-01/xyz-payroll-stg": {
+      "databases": [
+        "xyz_payroll"
+      ],
+      "env": "stg",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-stg-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "app",
+      "sa_email": "xyz-payroll-stg@t-xyz-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-payroll-stg"
+    },
+    "sql-stg-01/xyz-payroll-stg-mig": {
+      "databases": [
+        "xyz_payroll"
+      ],
+      "env": "stg",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-stg-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "mig",
+      "sa_email": "xyz-payroll-stg-mig@t-xyz-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-payroll-stg-mig"
+    },
+    "sql-stg-01/xyz-payroll-stg-ro": {
+      "databases": [
+        "xyz_payroll"
+      ],
+      "env": "stg",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-stg-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "ro",
+      "sa_email": "xyz-payroll-stg-ro@t-xyz-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-payroll-stg-ro"
+    },
+    "sql-uat-01/abc-crm-uat": {
+      "databases": [
+        "abc_crm"
+      ],
+      "env": "uat",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-uat-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "app",
+      "sa_email": "abc-crm-uat@t-abc-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-crm-uat"
+    },
+    "sql-uat-01/abc-crm-uat-mig": {
+      "databases": [
+        "abc_crm"
+      ],
+      "env": "uat",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-uat-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "mig",
+      "sa_email": "abc-crm-uat-mig@t-abc-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-crm-uat-mig"
+    },
+    "sql-uat-01/abc-payroll-uat": {
+      "databases": [
+        "abc_payroll"
+      ],
+      "env": "uat",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-uat-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "app",
+      "sa_email": "abc-payroll-uat@t-abc-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-payroll-uat"
+    },
+    "sql-uat-01/abc-payroll-uat-mig": {
+      "databases": [
+        "abc_payroll"
+      ],
+      "env": "uat",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-uat-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "mig",
+      "sa_email": "abc-payroll-uat-mig@t-abc-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-payroll-uat-mig"
+    },
+    "sql-uat-01/abc-payroll-uat-ro": {
+      "databases": [
+        "abc_payroll"
+      ],
+      "env": "uat",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-uat-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "ro",
+      "sa_email": "abc-payroll-uat-ro@t-abc-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "abc-payroll-uat-ro"
+    },
+    "sql-uat-01/xyz-crm-uat": {
+      "databases": [
+        "xyz_crm"
+      ],
+      "env": "uat",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-uat-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "app",
+      "sa_email": "xyz-crm-uat@t-xyz-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-crm-uat"
+    },
+    "sql-uat-01/xyz-crm-uat-mig": {
+      "databases": [
+        "xyz_crm"
+      ],
+      "env": "uat",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-uat-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "mig",
+      "sa_email": "xyz-crm-uat-mig@t-xyz-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-crm-uat-mig"
+    },
+    "sql-uat-01/xyz-payroll-uat": {
+      "databases": [
+        "xyz_payroll"
+      ],
+      "env": "uat",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-uat-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "app",
+      "sa_email": "xyz-payroll-uat@t-xyz-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-payroll-uat"
+    },
+    "sql-uat-01/xyz-payroll-uat-mig": {
+      "databases": [
+        "xyz_payroll"
+      ],
+      "env": "uat",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-uat-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "mig",
+      "sa_email": "xyz-payroll-uat-mig@t-xyz-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-payroll-uat-mig"
+    },
+    "sql-uat-01/xyz-payroll-uat-ro": {
+      "databases": [
+        "xyz_payroll"
+      ],
+      "env": "uat",
+      "isolation_boundary": "identity-and-database",
+      "pool": "sql-uat-01",
+      "pool_project": "plt-sql-nonprd-01",
+      "purpose": "ro",
+      "sa_email": "xyz-payroll-uat-ro@t-xyz-nonprd.iam.gserviceaccount.com",
+      "type": "CLOUD_IAM_SERVICE_ACCOUNT",
+      "user": "xyz-payroll-uat-ro"
+    }
+  },
+  "group_memberships": {
+    "grp-wl-sqlconn-nonprd-01/abc-crm-dev-mig@t-abc-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "abc-crm-dev-mig@t-abc-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/abc-crm-dev@t-abc-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "abc-crm-dev@t-abc-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/abc-crm-stg-mig@t-abc-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "abc-crm-stg-mig@t-abc-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/abc-crm-stg@t-abc-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "abc-crm-stg@t-abc-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/abc-crm-uat-mig@t-abc-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "abc-crm-uat-mig@t-abc-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/abc-crm-uat@t-abc-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "abc-crm-uat@t-abc-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/abc-payroll-dev-mig@t-abc-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "abc-payroll-dev-mig@t-abc-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/abc-payroll-dev-ro@t-abc-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "abc-payroll-dev-ro@t-abc-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/abc-payroll-dev@t-abc-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "abc-payroll-dev@t-abc-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/abc-payroll-stg-mig@t-abc-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "abc-payroll-stg-mig@t-abc-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/abc-payroll-stg-ro@t-abc-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "abc-payroll-stg-ro@t-abc-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/abc-payroll-stg@t-abc-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "abc-payroll-stg@t-abc-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/abc-payroll-uat-mig@t-abc-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "abc-payroll-uat-mig@t-abc-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/abc-payroll-uat-ro@t-abc-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "abc-payroll-uat-ro@t-abc-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/abc-payroll-uat@t-abc-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "abc-payroll-uat@t-abc-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/xyz-crm-dev-mig@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "xyz-crm-dev-mig@t-xyz-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/xyz-crm-dev@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "xyz-crm-dev@t-xyz-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/xyz-crm-stg-mig@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "xyz-crm-stg-mig@t-xyz-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/xyz-crm-stg@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "xyz-crm-stg@t-xyz-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/xyz-crm-uat-mig@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "xyz-crm-uat-mig@t-xyz-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/xyz-crm-uat@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "xyz-crm-uat@t-xyz-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/xyz-payroll-dev-mig@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "xyz-payroll-dev-mig@t-xyz-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/xyz-payroll-dev-ro@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "xyz-payroll-dev-ro@t-xyz-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/xyz-payroll-dev@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "xyz-payroll-dev@t-xyz-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/xyz-payroll-stg-mig@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "xyz-payroll-stg-mig@t-xyz-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/xyz-payroll-stg-ro@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "xyz-payroll-stg-ro@t-xyz-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/xyz-payroll-stg@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "xyz-payroll-stg@t-xyz-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/xyz-payroll-uat-mig@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "xyz-payroll-uat-mig@t-xyz-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/xyz-payroll-uat-ro@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "xyz-payroll-uat-ro@t-xyz-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-nonprd-01/xyz-payroll-uat@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-nonprd-01",
+      "member": "xyz-payroll-uat@t-xyz-nonprd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-nonprd-01"
+    },
+    "grp-wl-sqlconn-prd-01/abc-crm-prd-mig@t-abc-prd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-prd-01",
+      "member": "abc-crm-prd-mig@t-abc-prd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-prd-01"
+    },
+    "grp-wl-sqlconn-prd-01/abc-crm-prd@t-abc-prd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-prd-01",
+      "member": "abc-crm-prd@t-abc-prd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-prd-01"
+    },
+    "grp-wl-sqlconn-prd-01/abc-payroll-prd-mig@t-abc-prd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-prd-01",
+      "member": "abc-payroll-prd-mig@t-abc-prd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-prd-01"
+    },
+    "grp-wl-sqlconn-prd-01/abc-payroll-prd-ro@t-abc-prd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-prd-01",
+      "member": "abc-payroll-prd-ro@t-abc-prd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-prd-01"
+    },
+    "grp-wl-sqlconn-prd-01/abc-payroll-prd@t-abc-prd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-prd-01",
+      "member": "abc-payroll-prd@t-abc-prd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-prd-01"
+    },
+    "grp-wl-sqlconn-prd-01/xyz-crm-prd-mig@t-xyz-prd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-prd-01",
+      "member": "xyz-crm-prd-mig@t-xyz-prd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-prd-01"
+    },
+    "grp-wl-sqlconn-prd-01/xyz-crm-prd@t-xyz-prd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-prd-01",
+      "member": "xyz-crm-prd@t-xyz-prd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-prd-01"
+    },
+    "grp-wl-sqlconn-prd-01/xyz-payroll-prd-mig@t-xyz-prd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-prd-01",
+      "member": "xyz-payroll-prd-mig@t-xyz-prd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-prd-01"
+    },
+    "grp-wl-sqlconn-prd-01/xyz-payroll-prd-ro@t-xyz-prd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-prd-01",
+      "member": "xyz-payroll-prd-ro@t-xyz-prd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-prd-01"
+    },
+    "grp-wl-sqlconn-prd-01/xyz-payroll-prd@t-xyz-prd.iam.gserviceaccount.com": {
+      "grants_via_group": [
+        "roles/cloudsql.client",
+        "roles/cloudsql.instanceUser"
+      ],
+      "group": "grp-wl-sqlconn-prd-01",
+      "member": "xyz-payroll-prd@t-xyz-prd.iam.gserviceaccount.com",
+      "member_type": "SERVICE_ACCOUNT",
+      "scope_project": "plt-sql-prd-01"
+    }
+  },
+  "kubernetes_namespaces": {
+    "gke-dev-as1-01/abc-payroll-dev": {
+      "cluster": "gke-dev-as1-01",
+      "cluster_project": "plt-gke-nonprd",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "dev",
+        "env_tier": "nonprd",
+        "isolation_tier": "standard",
+        "product": "payroll",
+        "tenant": "abc"
+      },
+      "namespace": "abc-payroll-dev"
+    },
+    "gke-dev-as1-01/xyz-payroll-dev": {
+      "cluster": "gke-dev-as1-01",
+      "cluster_project": "plt-gke-nonprd",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "dev",
+        "env_tier": "nonprd",
+        "isolation_tier": "standard",
+        "product": "payroll",
+        "tenant": "xyz"
+      },
+      "namespace": "xyz-payroll-dev"
+    },
+    "gke-prd-as1-01/abc-payroll-prd": {
+      "cluster": "gke-prd-as1-01",
+      "cluster_project": "plt-gke-prd",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "prd",
+        "env_tier": "prd",
+        "isolation_tier": "standard",
+        "product": "payroll",
+        "tenant": "abc"
+      },
+      "namespace": "abc-payroll-prd"
+    },
+    "gke-prd-as1-01/xyz-payroll-prd": {
+      "cluster": "gke-prd-as1-01",
+      "cluster_project": "plt-gke-prd",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "prd",
+        "env_tier": "prd",
+        "isolation_tier": "standard",
+        "product": "payroll",
+        "tenant": "xyz"
+      },
+      "namespace": "xyz-payroll-prd"
+    },
+    "gke-stg-as1-01/abc-payroll-stg": {
+      "cluster": "gke-stg-as1-01",
+      "cluster_project": "plt-gke-nonprd",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "stg",
+        "env_tier": "nonprd",
+        "isolation_tier": "standard",
+        "product": "payroll",
+        "tenant": "abc"
+      },
+      "namespace": "abc-payroll-stg"
+    },
+    "gke-stg-as1-01/xyz-payroll-stg": {
+      "cluster": "gke-stg-as1-01",
+      "cluster_project": "plt-gke-nonprd",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "stg",
+        "env_tier": "nonprd",
+        "isolation_tier": "standard",
+        "product": "payroll",
+        "tenant": "xyz"
+      },
+      "namespace": "xyz-payroll-stg"
+    },
+    "gke-uat-as1-01/abc-payroll-uat": {
+      "cluster": "gke-uat-as1-01",
+      "cluster_project": "plt-gke-nonprd",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "uat",
+        "env_tier": "nonprd",
+        "isolation_tier": "standard",
+        "product": "payroll",
+        "tenant": "abc"
+      },
+      "namespace": "abc-payroll-uat"
+    },
+    "gke-uat-as1-01/xyz-payroll-uat": {
+      "cluster": "gke-uat-as1-01",
+      "cluster_project": "plt-gke-nonprd",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "uat",
+        "env_tier": "nonprd",
+        "isolation_tier": "standard",
+        "product": "payroll",
+        "tenant": "xyz"
+      },
+      "namespace": "xyz-payroll-uat"
+    }
+  },
+  "project_iam": {
+    "p-ledger-nonprd/roles/cloudsql.client/ledger-v4-dev-mig@p-ledger-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:ledger-v4-dev-mig@p-ledger-nonprd.iam.gserviceaccount.com",
+      "project": "p-ledger-nonprd",
+      "role": "roles/cloudsql.client"
+    },
+    "p-ledger-nonprd/roles/cloudsql.client/ledger-v4-dev@p-ledger-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:ledger-v4-dev@p-ledger-nonprd.iam.gserviceaccount.com",
+      "project": "p-ledger-nonprd",
+      "role": "roles/cloudsql.client"
+    },
+    "p-ledger-nonprd/roles/cloudsql.client/ledger-v4-stg-mig@p-ledger-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:ledger-v4-stg-mig@p-ledger-nonprd.iam.gserviceaccount.com",
+      "project": "p-ledger-nonprd",
+      "role": "roles/cloudsql.client"
+    },
+    "p-ledger-nonprd/roles/cloudsql.client/ledger-v4-stg@p-ledger-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:ledger-v4-stg@p-ledger-nonprd.iam.gserviceaccount.com",
+      "project": "p-ledger-nonprd",
+      "role": "roles/cloudsql.client"
+    },
+    "p-ledger-nonprd/roles/cloudsql.client/ledger-v4-uat-mig@p-ledger-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:ledger-v4-uat-mig@p-ledger-nonprd.iam.gserviceaccount.com",
+      "project": "p-ledger-nonprd",
+      "role": "roles/cloudsql.client"
+    },
+    "p-ledger-nonprd/roles/cloudsql.client/ledger-v4-uat@p-ledger-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:ledger-v4-uat@p-ledger-nonprd.iam.gserviceaccount.com",
+      "project": "p-ledger-nonprd",
+      "role": "roles/cloudsql.client"
+    },
+    "p-ledger-nonprd/roles/cloudsql.instanceUser/ledger-v4-dev-mig@p-ledger-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:ledger-v4-dev-mig@p-ledger-nonprd.iam.gserviceaccount.com",
+      "project": "p-ledger-nonprd",
+      "role": "roles/cloudsql.instanceUser"
+    },
+    "p-ledger-nonprd/roles/cloudsql.instanceUser/ledger-v4-dev@p-ledger-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:ledger-v4-dev@p-ledger-nonprd.iam.gserviceaccount.com",
+      "project": "p-ledger-nonprd",
+      "role": "roles/cloudsql.instanceUser"
+    },
+    "p-ledger-nonprd/roles/cloudsql.instanceUser/ledger-v4-stg-mig@p-ledger-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:ledger-v4-stg-mig@p-ledger-nonprd.iam.gserviceaccount.com",
+      "project": "p-ledger-nonprd",
+      "role": "roles/cloudsql.instanceUser"
+    },
+    "p-ledger-nonprd/roles/cloudsql.instanceUser/ledger-v4-stg@p-ledger-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:ledger-v4-stg@p-ledger-nonprd.iam.gserviceaccount.com",
+      "project": "p-ledger-nonprd",
+      "role": "roles/cloudsql.instanceUser"
+    },
+    "p-ledger-nonprd/roles/cloudsql.instanceUser/ledger-v4-uat-mig@p-ledger-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:ledger-v4-uat-mig@p-ledger-nonprd.iam.gserviceaccount.com",
+      "project": "p-ledger-nonprd",
+      "role": "roles/cloudsql.instanceUser"
+    },
+    "p-ledger-nonprd/roles/cloudsql.instanceUser/ledger-v4-uat@p-ledger-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:ledger-v4-uat@p-ledger-nonprd.iam.gserviceaccount.com",
+      "project": "p-ledger-nonprd",
+      "role": "roles/cloudsql.instanceUser"
+    },
+    "p-ledger-prd/roles/cloudsql.client/ledger-v3-prd-mig@p-ledger-prd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:ledger-v3-prd-mig@p-ledger-prd.iam.gserviceaccount.com",
+      "project": "p-ledger-prd",
+      "role": "roles/cloudsql.client"
+    },
+    "p-ledger-prd/roles/cloudsql.client/ledger-v3-prd@p-ledger-prd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:ledger-v3-prd@p-ledger-prd.iam.gserviceaccount.com",
+      "project": "p-ledger-prd",
+      "role": "roles/cloudsql.client"
+    },
+    "p-ledger-prd/roles/cloudsql.instanceUser/ledger-v3-prd-mig@p-ledger-prd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:ledger-v3-prd-mig@p-ledger-prd.iam.gserviceaccount.com",
+      "project": "p-ledger-prd",
+      "role": "roles/cloudsql.instanceUser"
+    },
+    "p-ledger-prd/roles/cloudsql.instanceUser/ledger-v3-prd@p-ledger-prd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:ledger-v3-prd@p-ledger-prd.iam.gserviceaccount.com",
+      "project": "p-ledger-prd",
+      "role": "roles/cloudsql.instanceUser"
+    },
+    "p-notify-nonprd/roles/cloudsql.client/notify-dev-mig@p-notify-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:notify-dev-mig@p-notify-nonprd.iam.gserviceaccount.com",
+      "project": "p-notify-nonprd",
+      "role": "roles/cloudsql.client"
+    },
+    "p-notify-nonprd/roles/cloudsql.client/notify-dev@p-notify-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:notify-dev@p-notify-nonprd.iam.gserviceaccount.com",
+      "project": "p-notify-nonprd",
+      "role": "roles/cloudsql.client"
+    },
+    "p-notify-nonprd/roles/cloudsql.client/notify-stg-mig@p-notify-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:notify-stg-mig@p-notify-nonprd.iam.gserviceaccount.com",
+      "project": "p-notify-nonprd",
+      "role": "roles/cloudsql.client"
+    },
+    "p-notify-nonprd/roles/cloudsql.client/notify-stg@p-notify-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:notify-stg@p-notify-nonprd.iam.gserviceaccount.com",
+      "project": "p-notify-nonprd",
+      "role": "roles/cloudsql.client"
+    },
+    "p-notify-nonprd/roles/cloudsql.client/notify-uat-mig@p-notify-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:notify-uat-mig@p-notify-nonprd.iam.gserviceaccount.com",
+      "project": "p-notify-nonprd",
+      "role": "roles/cloudsql.client"
+    },
+    "p-notify-nonprd/roles/cloudsql.client/notify-uat@p-notify-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:notify-uat@p-notify-nonprd.iam.gserviceaccount.com",
+      "project": "p-notify-nonprd",
+      "role": "roles/cloudsql.client"
+    },
+    "p-notify-nonprd/roles/cloudsql.instanceUser/notify-dev-mig@p-notify-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:notify-dev-mig@p-notify-nonprd.iam.gserviceaccount.com",
+      "project": "p-notify-nonprd",
+      "role": "roles/cloudsql.instanceUser"
+    },
+    "p-notify-nonprd/roles/cloudsql.instanceUser/notify-dev@p-notify-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:notify-dev@p-notify-nonprd.iam.gserviceaccount.com",
+      "project": "p-notify-nonprd",
+      "role": "roles/cloudsql.instanceUser"
+    },
+    "p-notify-nonprd/roles/cloudsql.instanceUser/notify-stg-mig@p-notify-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:notify-stg-mig@p-notify-nonprd.iam.gserviceaccount.com",
+      "project": "p-notify-nonprd",
+      "role": "roles/cloudsql.instanceUser"
+    },
+    "p-notify-nonprd/roles/cloudsql.instanceUser/notify-stg@p-notify-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:notify-stg@p-notify-nonprd.iam.gserviceaccount.com",
+      "project": "p-notify-nonprd",
+      "role": "roles/cloudsql.instanceUser"
+    },
+    "p-notify-nonprd/roles/cloudsql.instanceUser/notify-uat-mig@p-notify-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:notify-uat-mig@p-notify-nonprd.iam.gserviceaccount.com",
+      "project": "p-notify-nonprd",
+      "role": "roles/cloudsql.instanceUser"
+    },
+    "p-notify-nonprd/roles/cloudsql.instanceUser/notify-uat@p-notify-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:notify-uat@p-notify-nonprd.iam.gserviceaccount.com",
+      "project": "p-notify-nonprd",
+      "role": "roles/cloudsql.instanceUser"
+    },
+    "p-notify-prd/roles/cloudsql.client/notify-prd-mig@p-notify-prd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:notify-prd-mig@p-notify-prd.iam.gserviceaccount.com",
+      "project": "p-notify-prd",
+      "role": "roles/cloudsql.client"
+    },
+    "p-notify-prd/roles/cloudsql.client/notify-prd@p-notify-prd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:notify-prd@p-notify-prd.iam.gserviceaccount.com",
+      "project": "p-notify-prd",
+      "role": "roles/cloudsql.client"
+    },
+    "p-notify-prd/roles/cloudsql.instanceUser/notify-prd-mig@p-notify-prd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:notify-prd-mig@p-notify-prd.iam.gserviceaccount.com",
+      "project": "p-notify-prd",
+      "role": "roles/cloudsql.instanceUser"
+    },
+    "p-notify-prd/roles/cloudsql.instanceUser/notify-prd@p-notify-prd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:notify-prd@p-notify-prd.iam.gserviceaccount.com",
+      "project": "p-notify-prd",
+      "role": "roles/cloudsql.instanceUser"
+    }
+  },
+  "resource_iam": {
+    "bucket/abc-crm-dev-files/roles/storage.objectAdmin/abc-crm-dev@t-abc-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-crm-dev@t-abc-nonprd.iam.gserviceaccount.com",
+      "project": "t-abc-nonprd",
+      "resource": "abc-crm-dev-files",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectAdmin",
+      "tenant": "abc"
+    },
+    "bucket/abc-crm-prd-files/roles/storage.objectAdmin/abc-crm-prd@t-abc-prd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-crm-prd@t-abc-prd.iam.gserviceaccount.com",
+      "project": "t-abc-prd",
+      "resource": "abc-crm-prd-files",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectAdmin",
+      "tenant": "abc"
+    },
+    "bucket/abc-crm-stg-files/roles/storage.objectAdmin/abc-crm-stg@t-abc-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-crm-stg@t-abc-nonprd.iam.gserviceaccount.com",
+      "project": "t-abc-nonprd",
+      "resource": "abc-crm-stg-files",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectAdmin",
+      "tenant": "abc"
+    },
+    "bucket/abc-crm-uat-files/roles/storage.objectAdmin/abc-crm-uat@t-abc-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-crm-uat@t-abc-nonprd.iam.gserviceaccount.com",
+      "project": "t-abc-nonprd",
+      "resource": "abc-crm-uat-files",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectAdmin",
+      "tenant": "abc"
+    },
+    "bucket/abc-payroll-dev-data/roles/storage.objectAdmin/abc-payroll-dev@t-abc-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-payroll-dev@t-abc-nonprd.iam.gserviceaccount.com",
+      "project": "t-abc-nonprd",
+      "resource": "abc-payroll-dev-data",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectAdmin",
+      "tenant": "abc"
+    },
+    "bucket/abc-payroll-dev-data/roles/storage.objectViewer/abc-payroll-dev-ro@t-abc-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-payroll-dev-ro@t-abc-nonprd.iam.gserviceaccount.com",
+      "project": "t-abc-nonprd",
+      "resource": "abc-payroll-dev-data",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectViewer",
+      "tenant": "abc"
+    },
+    "bucket/abc-payroll-prd-data/roles/storage.objectAdmin/abc-payroll-prd@t-abc-prd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-payroll-prd@t-abc-prd.iam.gserviceaccount.com",
+      "project": "t-abc-prd",
+      "resource": "abc-payroll-prd-data",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectAdmin",
+      "tenant": "abc"
+    },
+    "bucket/abc-payroll-prd-data/roles/storage.objectViewer/abc-payroll-prd-ro@t-abc-prd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-payroll-prd-ro@t-abc-prd.iam.gserviceaccount.com",
+      "project": "t-abc-prd",
+      "resource": "abc-payroll-prd-data",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectViewer",
+      "tenant": "abc"
+    },
+    "bucket/abc-payroll-stg-data/roles/storage.objectAdmin/abc-payroll-stg@t-abc-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-payroll-stg@t-abc-nonprd.iam.gserviceaccount.com",
+      "project": "t-abc-nonprd",
+      "resource": "abc-payroll-stg-data",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectAdmin",
+      "tenant": "abc"
+    },
+    "bucket/abc-payroll-stg-data/roles/storage.objectViewer/abc-payroll-stg-ro@t-abc-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-payroll-stg-ro@t-abc-nonprd.iam.gserviceaccount.com",
+      "project": "t-abc-nonprd",
+      "resource": "abc-payroll-stg-data",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectViewer",
+      "tenant": "abc"
+    },
+    "bucket/abc-payroll-uat-data/roles/storage.objectAdmin/abc-payroll-uat@t-abc-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-payroll-uat@t-abc-nonprd.iam.gserviceaccount.com",
+      "project": "t-abc-nonprd",
+      "resource": "abc-payroll-uat-data",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectAdmin",
+      "tenant": "abc"
+    },
+    "bucket/abc-payroll-uat-data/roles/storage.objectViewer/abc-payroll-uat-ro@t-abc-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-payroll-uat-ro@t-abc-nonprd.iam.gserviceaccount.com",
+      "project": "t-abc-nonprd",
+      "resource": "abc-payroll-uat-data",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectViewer",
+      "tenant": "abc"
+    },
+    "bucket/xyz-crm-dev-files/roles/storage.objectAdmin/xyz-crm-dev@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-crm-dev@t-xyz-nonprd.iam.gserviceaccount.com",
+      "project": "t-xyz-nonprd",
+      "resource": "xyz-crm-dev-files",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectAdmin",
+      "tenant": "xyz"
+    },
+    "bucket/xyz-crm-prd-files/roles/storage.objectAdmin/xyz-crm-prd@t-xyz-prd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-crm-prd@t-xyz-prd.iam.gserviceaccount.com",
+      "project": "t-xyz-prd",
+      "resource": "xyz-crm-prd-files",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectAdmin",
+      "tenant": "xyz"
+    },
+    "bucket/xyz-crm-stg-files/roles/storage.objectAdmin/xyz-crm-stg@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-crm-stg@t-xyz-nonprd.iam.gserviceaccount.com",
+      "project": "t-xyz-nonprd",
+      "resource": "xyz-crm-stg-files",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectAdmin",
+      "tenant": "xyz"
+    },
+    "bucket/xyz-crm-uat-files/roles/storage.objectAdmin/xyz-crm-uat@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-crm-uat@t-xyz-nonprd.iam.gserviceaccount.com",
+      "project": "t-xyz-nonprd",
+      "resource": "xyz-crm-uat-files",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectAdmin",
+      "tenant": "xyz"
+    },
+    "bucket/xyz-payroll-dev-data/roles/storage.objectAdmin/xyz-payroll-dev@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-payroll-dev@t-xyz-nonprd.iam.gserviceaccount.com",
+      "project": "t-xyz-nonprd",
+      "resource": "xyz-payroll-dev-data",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectAdmin",
+      "tenant": "xyz"
+    },
+    "bucket/xyz-payroll-dev-data/roles/storage.objectViewer/xyz-payroll-dev-ro@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-payroll-dev-ro@t-xyz-nonprd.iam.gserviceaccount.com",
+      "project": "t-xyz-nonprd",
+      "resource": "xyz-payroll-dev-data",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectViewer",
+      "tenant": "xyz"
+    },
+    "bucket/xyz-payroll-prd-data/roles/storage.objectAdmin/xyz-payroll-prd@t-xyz-prd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-payroll-prd@t-xyz-prd.iam.gserviceaccount.com",
+      "project": "t-xyz-prd",
+      "resource": "xyz-payroll-prd-data",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectAdmin",
+      "tenant": "xyz"
+    },
+    "bucket/xyz-payroll-prd-data/roles/storage.objectViewer/xyz-payroll-prd-ro@t-xyz-prd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-payroll-prd-ro@t-xyz-prd.iam.gserviceaccount.com",
+      "project": "t-xyz-prd",
+      "resource": "xyz-payroll-prd-data",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectViewer",
+      "tenant": "xyz"
+    },
+    "bucket/xyz-payroll-stg-data/roles/storage.objectAdmin/xyz-payroll-stg@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-payroll-stg@t-xyz-nonprd.iam.gserviceaccount.com",
+      "project": "t-xyz-nonprd",
+      "resource": "xyz-payroll-stg-data",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectAdmin",
+      "tenant": "xyz"
+    },
+    "bucket/xyz-payroll-stg-data/roles/storage.objectViewer/xyz-payroll-stg-ro@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-payroll-stg-ro@t-xyz-nonprd.iam.gserviceaccount.com",
+      "project": "t-xyz-nonprd",
+      "resource": "xyz-payroll-stg-data",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectViewer",
+      "tenant": "xyz"
+    },
+    "bucket/xyz-payroll-uat-data/roles/storage.objectAdmin/xyz-payroll-uat@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-payroll-uat@t-xyz-nonprd.iam.gserviceaccount.com",
+      "project": "t-xyz-nonprd",
+      "resource": "xyz-payroll-uat-data",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectAdmin",
+      "tenant": "xyz"
+    },
+    "bucket/xyz-payroll-uat-data/roles/storage.objectViewer/xyz-payroll-uat-ro@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-payroll-uat-ro@t-xyz-nonprd.iam.gserviceaccount.com",
+      "project": "t-xyz-nonprd",
+      "resource": "xyz-payroll-uat-data",
+      "resource_type": "storage_bucket",
+      "role": "roles/storage.objectViewer",
+      "tenant": "xyz"
+    },
+    "secret/t-abc-nonprd/crm-dev-api-key/abc-crm-dev@t-abc-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-crm-dev@t-abc-nonprd.iam.gserviceaccount.com",
+      "project": "t-abc-nonprd",
+      "resource": "crm-dev-api-key",
+      "resource_type": "secret",
+      "role": "roles/secretmanager.secretAccessor",
+      "tenant": "abc"
+    },
+    "secret/t-abc-nonprd/crm-stg-api-key/abc-crm-stg@t-abc-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-crm-stg@t-abc-nonprd.iam.gserviceaccount.com",
+      "project": "t-abc-nonprd",
+      "resource": "crm-stg-api-key",
+      "resource_type": "secret",
+      "role": "roles/secretmanager.secretAccessor",
+      "tenant": "abc"
+    },
+    "secret/t-abc-nonprd/crm-uat-api-key/abc-crm-uat@t-abc-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-crm-uat@t-abc-nonprd.iam.gserviceaccount.com",
+      "project": "t-abc-nonprd",
+      "resource": "crm-uat-api-key",
+      "resource_type": "secret",
+      "role": "roles/secretmanager.secretAccessor",
+      "tenant": "abc"
+    },
+    "secret/t-abc-nonprd/payroll-dev-smtp-password/abc-payroll-dev@t-abc-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-payroll-dev@t-abc-nonprd.iam.gserviceaccount.com",
+      "project": "t-abc-nonprd",
+      "resource": "payroll-dev-smtp-password",
+      "resource_type": "secret",
+      "role": "roles/secretmanager.secretAccessor",
+      "tenant": "abc"
+    },
+    "secret/t-abc-nonprd/payroll-stg-smtp-password/abc-payroll-stg@t-abc-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-payroll-stg@t-abc-nonprd.iam.gserviceaccount.com",
+      "project": "t-abc-nonprd",
+      "resource": "payroll-stg-smtp-password",
+      "resource_type": "secret",
+      "role": "roles/secretmanager.secretAccessor",
+      "tenant": "abc"
+    },
+    "secret/t-abc-nonprd/payroll-uat-smtp-password/abc-payroll-uat@t-abc-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-payroll-uat@t-abc-nonprd.iam.gserviceaccount.com",
+      "project": "t-abc-nonprd",
+      "resource": "payroll-uat-smtp-password",
+      "resource_type": "secret",
+      "role": "roles/secretmanager.secretAccessor",
+      "tenant": "abc"
+    },
+    "secret/t-abc-prd/crm-prd-api-key/abc-crm-prd@t-abc-prd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-crm-prd@t-abc-prd.iam.gserviceaccount.com",
+      "project": "t-abc-prd",
+      "resource": "crm-prd-api-key",
+      "resource_type": "secret",
+      "role": "roles/secretmanager.secretAccessor",
+      "tenant": "abc"
+    },
+    "secret/t-abc-prd/payroll-prd-smtp-password/abc-payroll-prd@t-abc-prd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:abc-payroll-prd@t-abc-prd.iam.gserviceaccount.com",
+      "project": "t-abc-prd",
+      "resource": "payroll-prd-smtp-password",
+      "resource_type": "secret",
+      "role": "roles/secretmanager.secretAccessor",
+      "tenant": "abc"
+    },
+    "secret/t-xyz-nonprd/crm-dev-api-key/xyz-crm-dev@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-crm-dev@t-xyz-nonprd.iam.gserviceaccount.com",
+      "project": "t-xyz-nonprd",
+      "resource": "crm-dev-api-key",
+      "resource_type": "secret",
+      "role": "roles/secretmanager.secretAccessor",
+      "tenant": "xyz"
+    },
+    "secret/t-xyz-nonprd/crm-stg-api-key/xyz-crm-stg@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-crm-stg@t-xyz-nonprd.iam.gserviceaccount.com",
+      "project": "t-xyz-nonprd",
+      "resource": "crm-stg-api-key",
+      "resource_type": "secret",
+      "role": "roles/secretmanager.secretAccessor",
+      "tenant": "xyz"
+    },
+    "secret/t-xyz-nonprd/crm-uat-api-key/xyz-crm-uat@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-crm-uat@t-xyz-nonprd.iam.gserviceaccount.com",
+      "project": "t-xyz-nonprd",
+      "resource": "crm-uat-api-key",
+      "resource_type": "secret",
+      "role": "roles/secretmanager.secretAccessor",
+      "tenant": "xyz"
+    },
+    "secret/t-xyz-nonprd/payroll-dev-smtp-password/xyz-payroll-dev@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-payroll-dev@t-xyz-nonprd.iam.gserviceaccount.com",
+      "project": "t-xyz-nonprd",
+      "resource": "payroll-dev-smtp-password",
+      "resource_type": "secret",
+      "role": "roles/secretmanager.secretAccessor",
+      "tenant": "xyz"
+    },
+    "secret/t-xyz-nonprd/payroll-stg-smtp-password/xyz-payroll-stg@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-payroll-stg@t-xyz-nonprd.iam.gserviceaccount.com",
+      "project": "t-xyz-nonprd",
+      "resource": "payroll-stg-smtp-password",
+      "resource_type": "secret",
+      "role": "roles/secretmanager.secretAccessor",
+      "tenant": "xyz"
+    },
+    "secret/t-xyz-nonprd/payroll-uat-smtp-password/xyz-payroll-uat@t-xyz-nonprd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-payroll-uat@t-xyz-nonprd.iam.gserviceaccount.com",
+      "project": "t-xyz-nonprd",
+      "resource": "payroll-uat-smtp-password",
+      "resource_type": "secret",
+      "role": "roles/secretmanager.secretAccessor",
+      "tenant": "xyz"
+    },
+    "secret/t-xyz-prd/crm-prd-api-key/xyz-crm-prd@t-xyz-prd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-crm-prd@t-xyz-prd.iam.gserviceaccount.com",
+      "project": "t-xyz-prd",
+      "resource": "crm-prd-api-key",
+      "resource_type": "secret",
+      "role": "roles/secretmanager.secretAccessor",
+      "tenant": "xyz"
+    },
+    "secret/t-xyz-prd/payroll-prd-smtp-password/xyz-payroll-prd@t-xyz-prd.iam.gserviceaccount.com": {
+      "member": "serviceAccount:xyz-payroll-prd@t-xyz-prd.iam.gserviceaccount.com",
+      "project": "t-xyz-prd",
+      "resource": "payroll-prd-smtp-password",
+      "resource_type": "secret",
+      "role": "roles/secretmanager.secretAccessor",
+      "tenant": "xyz"
+    }
+  },
+  "schema_version": "1.0",
+  "service_accounts": {
+    "p-ledger-nonprd/ledger-v4-dev": {
+      "account_id": "ledger-v4-dev",
+      "deployment_model": "cohort",
+      "display_name": "shared ledger dev app",
+      "email": "ledger-v4-dev@p-ledger-nonprd.iam.gserviceaccount.com",
+      "env": "dev",
+      "env_tier": "nonprd",
+      "isolation_boundary": "application",
+      "labels": {
+        "deployment_model": "cohort",
+        "env": "dev",
+        "env_tier": "nonprd",
+        "product": "ledger",
+        "tenant": "multi"
+      },
+      "product": "ledger",
+      "project": "p-ledger-nonprd",
+      "purpose": "app",
+      "runtime": "mig",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": null,
+      "tenant_scope": "multi"
+    },
+    "p-ledger-nonprd/ledger-v4-dev-mig": {
+      "account_id": "ledger-v4-dev-mig",
+      "deployment_model": "cohort",
+      "display_name": "shared ledger dev mig",
+      "email": "ledger-v4-dev-mig@p-ledger-nonprd.iam.gserviceaccount.com",
+      "env": "dev",
+      "env_tier": "nonprd",
+      "isolation_boundary": "application",
+      "labels": {
+        "deployment_model": "cohort",
+        "env": "dev",
+        "env_tier": "nonprd",
+        "product": "ledger",
+        "tenant": "multi"
+      },
+      "product": "ledger",
+      "project": "p-ledger-nonprd",
+      "purpose": "mig",
+      "runtime": "mig",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": null,
+      "tenant_scope": "multi"
+    },
+    "p-ledger-nonprd/ledger-v4-stg": {
+      "account_id": "ledger-v4-stg",
+      "deployment_model": "cohort",
+      "display_name": "shared ledger stg app",
+      "email": "ledger-v4-stg@p-ledger-nonprd.iam.gserviceaccount.com",
+      "env": "stg",
+      "env_tier": "nonprd",
+      "isolation_boundary": "application",
+      "labels": {
+        "deployment_model": "cohort",
+        "env": "stg",
+        "env_tier": "nonprd",
+        "product": "ledger",
+        "tenant": "multi"
+      },
+      "product": "ledger",
+      "project": "p-ledger-nonprd",
+      "purpose": "app",
+      "runtime": "mig",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": null,
+      "tenant_scope": "multi"
+    },
+    "p-ledger-nonprd/ledger-v4-stg-mig": {
+      "account_id": "ledger-v4-stg-mig",
+      "deployment_model": "cohort",
+      "display_name": "shared ledger stg mig",
+      "email": "ledger-v4-stg-mig@p-ledger-nonprd.iam.gserviceaccount.com",
+      "env": "stg",
+      "env_tier": "nonprd",
+      "isolation_boundary": "application",
+      "labels": {
+        "deployment_model": "cohort",
+        "env": "stg",
+        "env_tier": "nonprd",
+        "product": "ledger",
+        "tenant": "multi"
+      },
+      "product": "ledger",
+      "project": "p-ledger-nonprd",
+      "purpose": "mig",
+      "runtime": "mig",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": null,
+      "tenant_scope": "multi"
+    },
+    "p-ledger-nonprd/ledger-v4-uat": {
+      "account_id": "ledger-v4-uat",
+      "deployment_model": "cohort",
+      "display_name": "shared ledger uat app",
+      "email": "ledger-v4-uat@p-ledger-nonprd.iam.gserviceaccount.com",
+      "env": "uat",
+      "env_tier": "nonprd",
+      "isolation_boundary": "application",
+      "labels": {
+        "deployment_model": "cohort",
+        "env": "uat",
+        "env_tier": "nonprd",
+        "product": "ledger",
+        "tenant": "multi"
+      },
+      "product": "ledger",
+      "project": "p-ledger-nonprd",
+      "purpose": "app",
+      "runtime": "mig",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": null,
+      "tenant_scope": "multi"
+    },
+    "p-ledger-nonprd/ledger-v4-uat-mig": {
+      "account_id": "ledger-v4-uat-mig",
+      "deployment_model": "cohort",
+      "display_name": "shared ledger uat mig",
+      "email": "ledger-v4-uat-mig@p-ledger-nonprd.iam.gserviceaccount.com",
+      "env": "uat",
+      "env_tier": "nonprd",
+      "isolation_boundary": "application",
+      "labels": {
+        "deployment_model": "cohort",
+        "env": "uat",
+        "env_tier": "nonprd",
+        "product": "ledger",
+        "tenant": "multi"
+      },
+      "product": "ledger",
+      "project": "p-ledger-nonprd",
+      "purpose": "mig",
+      "runtime": "mig",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": null,
+      "tenant_scope": "multi"
+    },
+    "p-ledger-prd/ledger-v3-prd": {
+      "account_id": "ledger-v3-prd",
+      "deployment_model": "cohort",
+      "display_name": "shared ledger prd app",
+      "email": "ledger-v3-prd@p-ledger-prd.iam.gserviceaccount.com",
+      "env": "prd",
+      "env_tier": "prd",
+      "isolation_boundary": "application",
+      "labels": {
+        "deployment_model": "cohort",
+        "env": "prd",
+        "env_tier": "prd",
+        "product": "ledger",
+        "tenant": "multi"
+      },
+      "product": "ledger",
+      "project": "p-ledger-prd",
+      "purpose": "app",
+      "runtime": "mig",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": null,
+      "tenant_scope": "multi"
+    },
+    "p-ledger-prd/ledger-v3-prd-mig": {
+      "account_id": "ledger-v3-prd-mig",
+      "deployment_model": "cohort",
+      "display_name": "shared ledger prd mig",
+      "email": "ledger-v3-prd-mig@p-ledger-prd.iam.gserviceaccount.com",
+      "env": "prd",
+      "env_tier": "prd",
+      "isolation_boundary": "application",
+      "labels": {
+        "deployment_model": "cohort",
+        "env": "prd",
+        "env_tier": "prd",
+        "product": "ledger",
+        "tenant": "multi"
+      },
+      "product": "ledger",
+      "project": "p-ledger-prd",
+      "purpose": "mig",
+      "runtime": "mig",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": null,
+      "tenant_scope": "multi"
+    },
+    "p-notify-nonprd/notify-dev": {
+      "account_id": "notify-dev",
+      "deployment_model": "shared",
+      "display_name": "shared notify dev app",
+      "email": "notify-dev@p-notify-nonprd.iam.gserviceaccount.com",
+      "env": "dev",
+      "env_tier": "nonprd",
+      "isolation_boundary": "application",
+      "labels": {
+        "deployment_model": "shared",
+        "env": "dev",
+        "env_tier": "nonprd",
+        "product": "notify",
+        "tenant": "multi"
+      },
+      "product": "notify",
+      "project": "p-notify-nonprd",
+      "purpose": "app",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": null,
+      "tenant_scope": "multi"
+    },
+    "p-notify-nonprd/notify-dev-mig": {
+      "account_id": "notify-dev-mig",
+      "deployment_model": "shared",
+      "display_name": "shared notify dev mig",
+      "email": "notify-dev-mig@p-notify-nonprd.iam.gserviceaccount.com",
+      "env": "dev",
+      "env_tier": "nonprd",
+      "isolation_boundary": "application",
+      "labels": {
+        "deployment_model": "shared",
+        "env": "dev",
+        "env_tier": "nonprd",
+        "product": "notify",
+        "tenant": "multi"
+      },
+      "product": "notify",
+      "project": "p-notify-nonprd",
+      "purpose": "mig",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": null,
+      "tenant_scope": "multi"
+    },
+    "p-notify-nonprd/notify-stg": {
+      "account_id": "notify-stg",
+      "deployment_model": "shared",
+      "display_name": "shared notify stg app",
+      "email": "notify-stg@p-notify-nonprd.iam.gserviceaccount.com",
+      "env": "stg",
+      "env_tier": "nonprd",
+      "isolation_boundary": "application",
+      "labels": {
+        "deployment_model": "shared",
+        "env": "stg",
+        "env_tier": "nonprd",
+        "product": "notify",
+        "tenant": "multi"
+      },
+      "product": "notify",
+      "project": "p-notify-nonprd",
+      "purpose": "app",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": null,
+      "tenant_scope": "multi"
+    },
+    "p-notify-nonprd/notify-stg-mig": {
+      "account_id": "notify-stg-mig",
+      "deployment_model": "shared",
+      "display_name": "shared notify stg mig",
+      "email": "notify-stg-mig@p-notify-nonprd.iam.gserviceaccount.com",
+      "env": "stg",
+      "env_tier": "nonprd",
+      "isolation_boundary": "application",
+      "labels": {
+        "deployment_model": "shared",
+        "env": "stg",
+        "env_tier": "nonprd",
+        "product": "notify",
+        "tenant": "multi"
+      },
+      "product": "notify",
+      "project": "p-notify-nonprd",
+      "purpose": "mig",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": null,
+      "tenant_scope": "multi"
+    },
+    "p-notify-nonprd/notify-uat": {
+      "account_id": "notify-uat",
+      "deployment_model": "shared",
+      "display_name": "shared notify uat app",
+      "email": "notify-uat@p-notify-nonprd.iam.gserviceaccount.com",
+      "env": "uat",
+      "env_tier": "nonprd",
+      "isolation_boundary": "application",
+      "labels": {
+        "deployment_model": "shared",
+        "env": "uat",
+        "env_tier": "nonprd",
+        "product": "notify",
+        "tenant": "multi"
+      },
+      "product": "notify",
+      "project": "p-notify-nonprd",
+      "purpose": "app",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": null,
+      "tenant_scope": "multi"
+    },
+    "p-notify-nonprd/notify-uat-mig": {
+      "account_id": "notify-uat-mig",
+      "deployment_model": "shared",
+      "display_name": "shared notify uat mig",
+      "email": "notify-uat-mig@p-notify-nonprd.iam.gserviceaccount.com",
+      "env": "uat",
+      "env_tier": "nonprd",
+      "isolation_boundary": "application",
+      "labels": {
+        "deployment_model": "shared",
+        "env": "uat",
+        "env_tier": "nonprd",
+        "product": "notify",
+        "tenant": "multi"
+      },
+      "product": "notify",
+      "project": "p-notify-nonprd",
+      "purpose": "mig",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": null,
+      "tenant_scope": "multi"
+    },
+    "p-notify-prd/notify-prd": {
+      "account_id": "notify-prd",
+      "deployment_model": "shared",
+      "display_name": "shared notify prd app",
+      "email": "notify-prd@p-notify-prd.iam.gserviceaccount.com",
+      "env": "prd",
+      "env_tier": "prd",
+      "isolation_boundary": "application",
+      "labels": {
+        "deployment_model": "shared",
+        "env": "prd",
+        "env_tier": "prd",
+        "product": "notify",
+        "tenant": "multi"
+      },
+      "product": "notify",
+      "project": "p-notify-prd",
+      "purpose": "app",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": null,
+      "tenant_scope": "multi"
+    },
+    "p-notify-prd/notify-prd-mig": {
+      "account_id": "notify-prd-mig",
+      "deployment_model": "shared",
+      "display_name": "shared notify prd mig",
+      "email": "notify-prd-mig@p-notify-prd.iam.gserviceaccount.com",
+      "env": "prd",
+      "env_tier": "prd",
+      "isolation_boundary": "application",
+      "labels": {
+        "deployment_model": "shared",
+        "env": "prd",
+        "env_tier": "prd",
+        "product": "notify",
+        "tenant": "multi"
+      },
+      "product": "notify",
+      "project": "p-notify-prd",
+      "purpose": "mig",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": null,
+      "tenant_scope": "multi"
+    },
+    "t-abc-nonprd/abc-crm-dev": {
+      "account_id": "abc-crm-dev",
+      "deployment_model": "dedicated",
+      "display_name": "abc crm dev app",
+      "email": "abc-crm-dev@t-abc-nonprd.iam.gserviceaccount.com",
+      "env": "dev",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "dev",
+        "env_tier": "nonprd",
+        "product": "crm",
+        "tenant": "abc"
+      },
+      "product": "crm",
+      "project": "t-abc-nonprd",
+      "purpose": "app",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-abc-nonprd/abc-crm-dev-mig": {
+      "account_id": "abc-crm-dev-mig",
+      "deployment_model": "dedicated",
+      "display_name": "abc crm dev mig",
+      "email": "abc-crm-dev-mig@t-abc-nonprd.iam.gserviceaccount.com",
+      "env": "dev",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "dev",
+        "env_tier": "nonprd",
+        "product": "crm",
+        "tenant": "abc"
+      },
+      "product": "crm",
+      "project": "t-abc-nonprd",
+      "purpose": "mig",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-abc-nonprd/abc-crm-stg": {
+      "account_id": "abc-crm-stg",
+      "deployment_model": "dedicated",
+      "display_name": "abc crm stg app",
+      "email": "abc-crm-stg@t-abc-nonprd.iam.gserviceaccount.com",
+      "env": "stg",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "stg",
+        "env_tier": "nonprd",
+        "product": "crm",
+        "tenant": "abc"
+      },
+      "product": "crm",
+      "project": "t-abc-nonprd",
+      "purpose": "app",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-abc-nonprd/abc-crm-stg-mig": {
+      "account_id": "abc-crm-stg-mig",
+      "deployment_model": "dedicated",
+      "display_name": "abc crm stg mig",
+      "email": "abc-crm-stg-mig@t-abc-nonprd.iam.gserviceaccount.com",
+      "env": "stg",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "stg",
+        "env_tier": "nonprd",
+        "product": "crm",
+        "tenant": "abc"
+      },
+      "product": "crm",
+      "project": "t-abc-nonprd",
+      "purpose": "mig",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-abc-nonprd/abc-crm-uat": {
+      "account_id": "abc-crm-uat",
+      "deployment_model": "dedicated",
+      "display_name": "abc crm uat app",
+      "email": "abc-crm-uat@t-abc-nonprd.iam.gserviceaccount.com",
+      "env": "uat",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "uat",
+        "env_tier": "nonprd",
+        "product": "crm",
+        "tenant": "abc"
+      },
+      "product": "crm",
+      "project": "t-abc-nonprd",
+      "purpose": "app",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-abc-nonprd/abc-crm-uat-mig": {
+      "account_id": "abc-crm-uat-mig",
+      "deployment_model": "dedicated",
+      "display_name": "abc crm uat mig",
+      "email": "abc-crm-uat-mig@t-abc-nonprd.iam.gserviceaccount.com",
+      "env": "uat",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "uat",
+        "env_tier": "nonprd",
+        "product": "crm",
+        "tenant": "abc"
+      },
+      "product": "crm",
+      "project": "t-abc-nonprd",
+      "purpose": "mig",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-abc-nonprd/abc-payroll-dev": {
+      "account_id": "abc-payroll-dev",
+      "deployment_model": "dedicated",
+      "display_name": "abc payroll dev app",
+      "email": "abc-payroll-dev@t-abc-nonprd.iam.gserviceaccount.com",
+      "env": "dev",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "dev",
+        "env_tier": "nonprd",
+        "product": "payroll",
+        "tenant": "abc"
+      },
+      "product": "payroll",
+      "project": "t-abc-nonprd",
+      "purpose": "app",
+      "runtime": "gke",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-abc-nonprd/abc-payroll-dev-mig": {
+      "account_id": "abc-payroll-dev-mig",
+      "deployment_model": "dedicated",
+      "display_name": "abc payroll dev mig",
+      "email": "abc-payroll-dev-mig@t-abc-nonprd.iam.gserviceaccount.com",
+      "env": "dev",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "dev",
+        "env_tier": "nonprd",
+        "product": "payroll",
+        "tenant": "abc"
+      },
+      "product": "payroll",
+      "project": "t-abc-nonprd",
+      "purpose": "mig",
+      "runtime": "gke",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-abc-nonprd/abc-payroll-dev-ro": {
+      "account_id": "abc-payroll-dev-ro",
+      "deployment_model": "dedicated",
+      "display_name": "abc payroll dev ro",
+      "email": "abc-payroll-dev-ro@t-abc-nonprd.iam.gserviceaccount.com",
+      "env": "dev",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "dev",
+        "env_tier": "nonprd",
+        "product": "payroll",
+        "tenant": "abc"
+      },
+      "product": "payroll",
+      "project": "t-abc-nonprd",
+      "purpose": "ro",
+      "runtime": "gke",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-abc-nonprd/abc-payroll-stg": {
+      "account_id": "abc-payroll-stg",
+      "deployment_model": "dedicated",
+      "display_name": "abc payroll stg app",
+      "email": "abc-payroll-stg@t-abc-nonprd.iam.gserviceaccount.com",
+      "env": "stg",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "stg",
+        "env_tier": "nonprd",
+        "product": "payroll",
+        "tenant": "abc"
+      },
+      "product": "payroll",
+      "project": "t-abc-nonprd",
+      "purpose": "app",
+      "runtime": "gke",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-abc-nonprd/abc-payroll-stg-mig": {
+      "account_id": "abc-payroll-stg-mig",
+      "deployment_model": "dedicated",
+      "display_name": "abc payroll stg mig",
+      "email": "abc-payroll-stg-mig@t-abc-nonprd.iam.gserviceaccount.com",
+      "env": "stg",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "stg",
+        "env_tier": "nonprd",
+        "product": "payroll",
+        "tenant": "abc"
+      },
+      "product": "payroll",
+      "project": "t-abc-nonprd",
+      "purpose": "mig",
+      "runtime": "gke",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-abc-nonprd/abc-payroll-stg-ro": {
+      "account_id": "abc-payroll-stg-ro",
+      "deployment_model": "dedicated",
+      "display_name": "abc payroll stg ro",
+      "email": "abc-payroll-stg-ro@t-abc-nonprd.iam.gserviceaccount.com",
+      "env": "stg",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "stg",
+        "env_tier": "nonprd",
+        "product": "payroll",
+        "tenant": "abc"
+      },
+      "product": "payroll",
+      "project": "t-abc-nonprd",
+      "purpose": "ro",
+      "runtime": "gke",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-abc-nonprd/abc-payroll-uat": {
+      "account_id": "abc-payroll-uat",
+      "deployment_model": "dedicated",
+      "display_name": "abc payroll uat app",
+      "email": "abc-payroll-uat@t-abc-nonprd.iam.gserviceaccount.com",
+      "env": "uat",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "uat",
+        "env_tier": "nonprd",
+        "product": "payroll",
+        "tenant": "abc"
+      },
+      "product": "payroll",
+      "project": "t-abc-nonprd",
+      "purpose": "app",
+      "runtime": "gke",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-abc-nonprd/abc-payroll-uat-mig": {
+      "account_id": "abc-payroll-uat-mig",
+      "deployment_model": "dedicated",
+      "display_name": "abc payroll uat mig",
+      "email": "abc-payroll-uat-mig@t-abc-nonprd.iam.gserviceaccount.com",
+      "env": "uat",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "uat",
+        "env_tier": "nonprd",
+        "product": "payroll",
+        "tenant": "abc"
+      },
+      "product": "payroll",
+      "project": "t-abc-nonprd",
+      "purpose": "mig",
+      "runtime": "gke",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-abc-nonprd/abc-payroll-uat-ro": {
+      "account_id": "abc-payroll-uat-ro",
+      "deployment_model": "dedicated",
+      "display_name": "abc payroll uat ro",
+      "email": "abc-payroll-uat-ro@t-abc-nonprd.iam.gserviceaccount.com",
+      "env": "uat",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "uat",
+        "env_tier": "nonprd",
+        "product": "payroll",
+        "tenant": "abc"
+      },
+      "product": "payroll",
+      "project": "t-abc-nonprd",
+      "purpose": "ro",
+      "runtime": "gke",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-abc-prd/abc-crm-prd": {
+      "account_id": "abc-crm-prd",
+      "deployment_model": "dedicated",
+      "display_name": "abc crm prd app",
+      "email": "abc-crm-prd@t-abc-prd.iam.gserviceaccount.com",
+      "env": "prd",
+      "env_tier": "prd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "prd",
+        "env_tier": "prd",
+        "product": "crm",
+        "tenant": "abc"
+      },
+      "product": "crm",
+      "project": "t-abc-prd",
+      "purpose": "app",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-abc-prd/abc-crm-prd-mig": {
+      "account_id": "abc-crm-prd-mig",
+      "deployment_model": "dedicated",
+      "display_name": "abc crm prd mig",
+      "email": "abc-crm-prd-mig@t-abc-prd.iam.gserviceaccount.com",
+      "env": "prd",
+      "env_tier": "prd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "prd",
+        "env_tier": "prd",
+        "product": "crm",
+        "tenant": "abc"
+      },
+      "product": "crm",
+      "project": "t-abc-prd",
+      "purpose": "mig",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-abc-prd/abc-payroll-prd": {
+      "account_id": "abc-payroll-prd",
+      "deployment_model": "dedicated",
+      "display_name": "abc payroll prd app",
+      "email": "abc-payroll-prd@t-abc-prd.iam.gserviceaccount.com",
+      "env": "prd",
+      "env_tier": "prd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "prd",
+        "env_tier": "prd",
+        "product": "payroll",
+        "tenant": "abc"
+      },
+      "product": "payroll",
+      "project": "t-abc-prd",
+      "purpose": "app",
+      "runtime": "gke",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-abc-prd/abc-payroll-prd-mig": {
+      "account_id": "abc-payroll-prd-mig",
+      "deployment_model": "dedicated",
+      "display_name": "abc payroll prd mig",
+      "email": "abc-payroll-prd-mig@t-abc-prd.iam.gserviceaccount.com",
+      "env": "prd",
+      "env_tier": "prd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "prd",
+        "env_tier": "prd",
+        "product": "payroll",
+        "tenant": "abc"
+      },
+      "product": "payroll",
+      "project": "t-abc-prd",
+      "purpose": "mig",
+      "runtime": "gke",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-abc-prd/abc-payroll-prd-ro": {
+      "account_id": "abc-payroll-prd-ro",
+      "deployment_model": "dedicated",
+      "display_name": "abc payroll prd ro",
+      "email": "abc-payroll-prd-ro@t-abc-prd.iam.gserviceaccount.com",
+      "env": "prd",
+      "env_tier": "prd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "prd",
+        "env_tier": "prd",
+        "product": "payroll",
+        "tenant": "abc"
+      },
+      "product": "payroll",
+      "project": "t-abc-prd",
+      "purpose": "ro",
+      "runtime": "gke",
+      "served_tenants": [
+        "abc"
+      ],
+      "tenant": "abc",
+      "tenant_scope": "single"
+    },
+    "t-xyz-nonprd/xyz-crm-dev": {
+      "account_id": "xyz-crm-dev",
+      "deployment_model": "dedicated",
+      "display_name": "xyz crm dev app",
+      "email": "xyz-crm-dev@t-xyz-nonprd.iam.gserviceaccount.com",
+      "env": "dev",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "dev",
+        "env_tier": "nonprd",
+        "product": "crm",
+        "tenant": "xyz"
+      },
+      "product": "crm",
+      "project": "t-xyz-nonprd",
+      "purpose": "app",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    },
+    "t-xyz-nonprd/xyz-crm-dev-mig": {
+      "account_id": "xyz-crm-dev-mig",
+      "deployment_model": "dedicated",
+      "display_name": "xyz crm dev mig",
+      "email": "xyz-crm-dev-mig@t-xyz-nonprd.iam.gserviceaccount.com",
+      "env": "dev",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "dev",
+        "env_tier": "nonprd",
+        "product": "crm",
+        "tenant": "xyz"
+      },
+      "product": "crm",
+      "project": "t-xyz-nonprd",
+      "purpose": "mig",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    },
+    "t-xyz-nonprd/xyz-crm-stg": {
+      "account_id": "xyz-crm-stg",
+      "deployment_model": "dedicated",
+      "display_name": "xyz crm stg app",
+      "email": "xyz-crm-stg@t-xyz-nonprd.iam.gserviceaccount.com",
+      "env": "stg",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "stg",
+        "env_tier": "nonprd",
+        "product": "crm",
+        "tenant": "xyz"
+      },
+      "product": "crm",
+      "project": "t-xyz-nonprd",
+      "purpose": "app",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    },
+    "t-xyz-nonprd/xyz-crm-stg-mig": {
+      "account_id": "xyz-crm-stg-mig",
+      "deployment_model": "dedicated",
+      "display_name": "xyz crm stg mig",
+      "email": "xyz-crm-stg-mig@t-xyz-nonprd.iam.gserviceaccount.com",
+      "env": "stg",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "stg",
+        "env_tier": "nonprd",
+        "product": "crm",
+        "tenant": "xyz"
+      },
+      "product": "crm",
+      "project": "t-xyz-nonprd",
+      "purpose": "mig",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    },
+    "t-xyz-nonprd/xyz-crm-uat": {
+      "account_id": "xyz-crm-uat",
+      "deployment_model": "dedicated",
+      "display_name": "xyz crm uat app",
+      "email": "xyz-crm-uat@t-xyz-nonprd.iam.gserviceaccount.com",
+      "env": "uat",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "uat",
+        "env_tier": "nonprd",
+        "product": "crm",
+        "tenant": "xyz"
+      },
+      "product": "crm",
+      "project": "t-xyz-nonprd",
+      "purpose": "app",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    },
+    "t-xyz-nonprd/xyz-crm-uat-mig": {
+      "account_id": "xyz-crm-uat-mig",
+      "deployment_model": "dedicated",
+      "display_name": "xyz crm uat mig",
+      "email": "xyz-crm-uat-mig@t-xyz-nonprd.iam.gserviceaccount.com",
+      "env": "uat",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "uat",
+        "env_tier": "nonprd",
+        "product": "crm",
+        "tenant": "xyz"
+      },
+      "product": "crm",
+      "project": "t-xyz-nonprd",
+      "purpose": "mig",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    },
+    "t-xyz-nonprd/xyz-payroll-dev": {
+      "account_id": "xyz-payroll-dev",
+      "deployment_model": "dedicated",
+      "display_name": "xyz payroll dev app",
+      "email": "xyz-payroll-dev@t-xyz-nonprd.iam.gserviceaccount.com",
+      "env": "dev",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "dev",
+        "env_tier": "nonprd",
+        "product": "payroll",
+        "tenant": "xyz"
+      },
+      "product": "payroll",
+      "project": "t-xyz-nonprd",
+      "purpose": "app",
+      "runtime": "gke",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    },
+    "t-xyz-nonprd/xyz-payroll-dev-mig": {
+      "account_id": "xyz-payroll-dev-mig",
+      "deployment_model": "dedicated",
+      "display_name": "xyz payroll dev mig",
+      "email": "xyz-payroll-dev-mig@t-xyz-nonprd.iam.gserviceaccount.com",
+      "env": "dev",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "dev",
+        "env_tier": "nonprd",
+        "product": "payroll",
+        "tenant": "xyz"
+      },
+      "product": "payroll",
+      "project": "t-xyz-nonprd",
+      "purpose": "mig",
+      "runtime": "gke",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    },
+    "t-xyz-nonprd/xyz-payroll-dev-ro": {
+      "account_id": "xyz-payroll-dev-ro",
+      "deployment_model": "dedicated",
+      "display_name": "xyz payroll dev ro",
+      "email": "xyz-payroll-dev-ro@t-xyz-nonprd.iam.gserviceaccount.com",
+      "env": "dev",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "dev",
+        "env_tier": "nonprd",
+        "product": "payroll",
+        "tenant": "xyz"
+      },
+      "product": "payroll",
+      "project": "t-xyz-nonprd",
+      "purpose": "ro",
+      "runtime": "gke",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    },
+    "t-xyz-nonprd/xyz-payroll-stg": {
+      "account_id": "xyz-payroll-stg",
+      "deployment_model": "dedicated",
+      "display_name": "xyz payroll stg app",
+      "email": "xyz-payroll-stg@t-xyz-nonprd.iam.gserviceaccount.com",
+      "env": "stg",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "stg",
+        "env_tier": "nonprd",
+        "product": "payroll",
+        "tenant": "xyz"
+      },
+      "product": "payroll",
+      "project": "t-xyz-nonprd",
+      "purpose": "app",
+      "runtime": "gke",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    },
+    "t-xyz-nonprd/xyz-payroll-stg-mig": {
+      "account_id": "xyz-payroll-stg-mig",
+      "deployment_model": "dedicated",
+      "display_name": "xyz payroll stg mig",
+      "email": "xyz-payroll-stg-mig@t-xyz-nonprd.iam.gserviceaccount.com",
+      "env": "stg",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "stg",
+        "env_tier": "nonprd",
+        "product": "payroll",
+        "tenant": "xyz"
+      },
+      "product": "payroll",
+      "project": "t-xyz-nonprd",
+      "purpose": "mig",
+      "runtime": "gke",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    },
+    "t-xyz-nonprd/xyz-payroll-stg-ro": {
+      "account_id": "xyz-payroll-stg-ro",
+      "deployment_model": "dedicated",
+      "display_name": "xyz payroll stg ro",
+      "email": "xyz-payroll-stg-ro@t-xyz-nonprd.iam.gserviceaccount.com",
+      "env": "stg",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "stg",
+        "env_tier": "nonprd",
+        "product": "payroll",
+        "tenant": "xyz"
+      },
+      "product": "payroll",
+      "project": "t-xyz-nonprd",
+      "purpose": "ro",
+      "runtime": "gke",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    },
+    "t-xyz-nonprd/xyz-payroll-uat": {
+      "account_id": "xyz-payroll-uat",
+      "deployment_model": "dedicated",
+      "display_name": "xyz payroll uat app",
+      "email": "xyz-payroll-uat@t-xyz-nonprd.iam.gserviceaccount.com",
+      "env": "uat",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "uat",
+        "env_tier": "nonprd",
+        "product": "payroll",
+        "tenant": "xyz"
+      },
+      "product": "payroll",
+      "project": "t-xyz-nonprd",
+      "purpose": "app",
+      "runtime": "gke",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    },
+    "t-xyz-nonprd/xyz-payroll-uat-mig": {
+      "account_id": "xyz-payroll-uat-mig",
+      "deployment_model": "dedicated",
+      "display_name": "xyz payroll uat mig",
+      "email": "xyz-payroll-uat-mig@t-xyz-nonprd.iam.gserviceaccount.com",
+      "env": "uat",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "uat",
+        "env_tier": "nonprd",
+        "product": "payroll",
+        "tenant": "xyz"
+      },
+      "product": "payroll",
+      "project": "t-xyz-nonprd",
+      "purpose": "mig",
+      "runtime": "gke",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    },
+    "t-xyz-nonprd/xyz-payroll-uat-ro": {
+      "account_id": "xyz-payroll-uat-ro",
+      "deployment_model": "dedicated",
+      "display_name": "xyz payroll uat ro",
+      "email": "xyz-payroll-uat-ro@t-xyz-nonprd.iam.gserviceaccount.com",
+      "env": "uat",
+      "env_tier": "nonprd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "uat",
+        "env_tier": "nonprd",
+        "product": "payroll",
+        "tenant": "xyz"
+      },
+      "product": "payroll",
+      "project": "t-xyz-nonprd",
+      "purpose": "ro",
+      "runtime": "gke",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    },
+    "t-xyz-prd/xyz-crm-prd": {
+      "account_id": "xyz-crm-prd",
+      "deployment_model": "dedicated",
+      "display_name": "xyz crm prd app",
+      "email": "xyz-crm-prd@t-xyz-prd.iam.gserviceaccount.com",
+      "env": "prd",
+      "env_tier": "prd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "prd",
+        "env_tier": "prd",
+        "product": "crm",
+        "tenant": "xyz"
+      },
+      "product": "crm",
+      "project": "t-xyz-prd",
+      "purpose": "app",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    },
+    "t-xyz-prd/xyz-crm-prd-mig": {
+      "account_id": "xyz-crm-prd-mig",
+      "deployment_model": "dedicated",
+      "display_name": "xyz crm prd mig",
+      "email": "xyz-crm-prd-mig@t-xyz-prd.iam.gserviceaccount.com",
+      "env": "prd",
+      "env_tier": "prd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "prd",
+        "env_tier": "prd",
+        "product": "crm",
+        "tenant": "xyz"
+      },
+      "product": "crm",
+      "project": "t-xyz-prd",
+      "purpose": "mig",
+      "runtime": "cloudrun",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    },
+    "t-xyz-prd/xyz-payroll-prd": {
+      "account_id": "xyz-payroll-prd",
+      "deployment_model": "dedicated",
+      "display_name": "xyz payroll prd app",
+      "email": "xyz-payroll-prd@t-xyz-prd.iam.gserviceaccount.com",
+      "env": "prd",
+      "env_tier": "prd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "prd",
+        "env_tier": "prd",
+        "product": "payroll",
+        "tenant": "xyz"
+      },
+      "product": "payroll",
+      "project": "t-xyz-prd",
+      "purpose": "app",
+      "runtime": "gke",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    },
+    "t-xyz-prd/xyz-payroll-prd-mig": {
+      "account_id": "xyz-payroll-prd-mig",
+      "deployment_model": "dedicated",
+      "display_name": "xyz payroll prd mig",
+      "email": "xyz-payroll-prd-mig@t-xyz-prd.iam.gserviceaccount.com",
+      "env": "prd",
+      "env_tier": "prd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "prd",
+        "env_tier": "prd",
+        "product": "payroll",
+        "tenant": "xyz"
+      },
+      "product": "payroll",
+      "project": "t-xyz-prd",
+      "purpose": "mig",
+      "runtime": "gke",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    },
+    "t-xyz-prd/xyz-payroll-prd-ro": {
+      "account_id": "xyz-payroll-prd-ro",
+      "deployment_model": "dedicated",
+      "display_name": "xyz payroll prd ro",
+      "email": "xyz-payroll-prd-ro@t-xyz-prd.iam.gserviceaccount.com",
+      "env": "prd",
+      "env_tier": "prd",
+      "isolation_boundary": "identity-and-database",
+      "labels": {
+        "deployment_model": "dedicated",
+        "env": "prd",
+        "env_tier": "prd",
+        "product": "payroll",
+        "tenant": "xyz"
+      },
+      "product": "payroll",
+      "project": "t-xyz-prd",
+      "purpose": "ro",
+      "runtime": "gke",
+      "served_tenants": [
+        "xyz"
+      ],
+      "tenant": "xyz",
+      "tenant_scope": "single"
+    }
+  },
+  "workload_identity_bindings": {
+    "gke-dev-as1-01/abc-payroll-dev/payroll": {
+      "cluster": "gke-dev-as1-01",
+      "ksa": "payroll",
+      "member": "serviceAccount:plt-gke-nonprd.svc.id.goog[abc-payroll-dev/payroll]",
+      "namespace": "abc-payroll-dev",
+      "role": "roles/iam.workloadIdentityUser",
+      "service_account_email": "abc-payroll-dev@t-abc-nonprd.iam.gserviceaccount.com"
+    },
+    "gke-dev-as1-01/abc-payroll-dev/payroll-migrate": {
+      "cluster": "gke-dev-as1-01",
+      "ksa": "payroll-migrate",
+      "member": "serviceAccount:plt-gke-nonprd.svc.id.goog[abc-payroll-dev/payroll-migrate]",
+      "namespace": "abc-payroll-dev",
+      "role": "roles/iam.workloadIdentityUser",
+      "service_account_email": "abc-payroll-dev-mig@t-abc-nonprd.iam.gserviceaccount.com"
+    },
+    "gke-dev-as1-01/xyz-payroll-dev/payroll": {
+      "cluster": "gke-dev-as1-01",
+      "ksa": "payroll",
+      "member": "serviceAccount:plt-gke-nonprd.svc.id.goog[xyz-payroll-dev/payroll]",
+      "namespace": "xyz-payroll-dev",
+      "role": "roles/iam.workloadIdentityUser",
+      "service_account_email": "xyz-payroll-dev@t-xyz-nonprd.iam.gserviceaccount.com"
+    },
+    "gke-dev-as1-01/xyz-payroll-dev/payroll-migrate": {
+      "cluster": "gke-dev-as1-01",
+      "ksa": "payroll-migrate",
+      "member": "serviceAccount:plt-gke-nonprd.svc.id.goog[xyz-payroll-dev/payroll-migrate]",
+      "namespace": "xyz-payroll-dev",
+      "role": "roles/iam.workloadIdentityUser",
+      "service_account_email": "xyz-payroll-dev-mig@t-xyz-nonprd.iam.gserviceaccount.com"
+    },
+    "gke-prd-as1-01/abc-payroll-prd/payroll": {
+      "cluster": "gke-prd-as1-01",
+      "ksa": "payroll",
+      "member": "serviceAccount:plt-gke-prd.svc.id.goog[abc-payroll-prd/payroll]",
+      "namespace": "abc-payroll-prd",
+      "role": "roles/iam.workloadIdentityUser",
+      "service_account_email": "abc-payroll-prd@t-abc-prd.iam.gserviceaccount.com"
+    },
+    "gke-prd-as1-01/abc-payroll-prd/payroll-migrate": {
+      "cluster": "gke-prd-as1-01",
+      "ksa": "payroll-migrate",
+      "member": "serviceAccount:plt-gke-prd.svc.id.goog[abc-payroll-prd/payroll-migrate]",
+      "namespace": "abc-payroll-prd",
+      "role": "roles/iam.workloadIdentityUser",
+      "service_account_email": "abc-payroll-prd-mig@t-abc-prd.iam.gserviceaccount.com"
+    },
+    "gke-prd-as1-01/xyz-payroll-prd/payroll": {
+      "cluster": "gke-prd-as1-01",
+      "ksa": "payroll",
+      "member": "serviceAccount:plt-gke-prd.svc.id.goog[xyz-payroll-prd/payroll]",
+      "namespace": "xyz-payroll-prd",
+      "role": "roles/iam.workloadIdentityUser",
+      "service_account_email": "xyz-payroll-prd@t-xyz-prd.iam.gserviceaccount.com"
+    },
+    "gke-prd-as1-01/xyz-payroll-prd/payroll-migrate": {
+      "cluster": "gke-prd-as1-01",
+      "ksa": "payroll-migrate",
+      "member": "serviceAccount:plt-gke-prd.svc.id.goog[xyz-payroll-prd/payroll-migrate]",
+      "namespace": "xyz-payroll-prd",
+      "role": "roles/iam.workloadIdentityUser",
+      "service_account_email": "xyz-payroll-prd-mig@t-xyz-prd.iam.gserviceaccount.com"
+    },
+    "gke-stg-as1-01/abc-payroll-stg/payroll": {
+      "cluster": "gke-stg-as1-01",
+      "ksa": "payroll",
+      "member": "serviceAccount:plt-gke-nonprd.svc.id.goog[abc-payroll-stg/payroll]",
+      "namespace": "abc-payroll-stg",
+      "role": "roles/iam.workloadIdentityUser",
+      "service_account_email": "abc-payroll-stg@t-abc-nonprd.iam.gserviceaccount.com"
+    },
+    "gke-stg-as1-01/abc-payroll-stg/payroll-migrate": {
+      "cluster": "gke-stg-as1-01",
+      "ksa": "payroll-migrate",
+      "member": "serviceAccount:plt-gke-nonprd.svc.id.goog[abc-payroll-stg/payroll-migrate]",
+      "namespace": "abc-payroll-stg",
+      "role": "roles/iam.workloadIdentityUser",
+      "service_account_email": "abc-payroll-stg-mig@t-abc-nonprd.iam.gserviceaccount.com"
+    },
+    "gke-stg-as1-01/xyz-payroll-stg/payroll": {
+      "cluster": "gke-stg-as1-01",
+      "ksa": "payroll",
+      "member": "serviceAccount:plt-gke-nonprd.svc.id.goog[xyz-payroll-stg/payroll]",
+      "namespace": "xyz-payroll-stg",
+      "role": "roles/iam.workloadIdentityUser",
+      "service_account_email": "xyz-payroll-stg@t-xyz-nonprd.iam.gserviceaccount.com"
+    },
+    "gke-stg-as1-01/xyz-payroll-stg/payroll-migrate": {
+      "cluster": "gke-stg-as1-01",
+      "ksa": "payroll-migrate",
+      "member": "serviceAccount:plt-gke-nonprd.svc.id.goog[xyz-payroll-stg/payroll-migrate]",
+      "namespace": "xyz-payroll-stg",
+      "role": "roles/iam.workloadIdentityUser",
+      "service_account_email": "xyz-payroll-stg-mig@t-xyz-nonprd.iam.gserviceaccount.com"
+    },
+    "gke-uat-as1-01/abc-payroll-uat/payroll": {
+      "cluster": "gke-uat-as1-01",
+      "ksa": "payroll",
+      "member": "serviceAccount:plt-gke-nonprd.svc.id.goog[abc-payroll-uat/payroll]",
+      "namespace": "abc-payroll-uat",
+      "role": "roles/iam.workloadIdentityUser",
+      "service_account_email": "abc-payroll-uat@t-abc-nonprd.iam.gserviceaccount.com"
+    },
+    "gke-uat-as1-01/abc-payroll-uat/payroll-migrate": {
+      "cluster": "gke-uat-as1-01",
+      "ksa": "payroll-migrate",
+      "member": "serviceAccount:plt-gke-nonprd.svc.id.goog[abc-payroll-uat/payroll-migrate]",
+      "namespace": "abc-payroll-uat",
+      "role": "roles/iam.workloadIdentityUser",
+      "service_account_email": "abc-payroll-uat-mig@t-abc-nonprd.iam.gserviceaccount.com"
+    },
+    "gke-uat-as1-01/xyz-payroll-uat/payroll": {
+      "cluster": "gke-uat-as1-01",
+      "ksa": "payroll",
+      "member": "serviceAccount:plt-gke-nonprd.svc.id.goog[xyz-payroll-uat/payroll]",
+      "namespace": "xyz-payroll-uat",
+      "role": "roles/iam.workloadIdentityUser",
+      "service_account_email": "xyz-payroll-uat@t-xyz-nonprd.iam.gserviceaccount.com"
+    },
+    "gke-uat-as1-01/xyz-payroll-uat/payroll-migrate": {
+      "cluster": "gke-uat-as1-01",
+      "ksa": "payroll-migrate",
+      "member": "serviceAccount:plt-gke-nonprd.svc.id.goog[xyz-payroll-uat/payroll-migrate]",
+      "namespace": "xyz-payroll-uat",
+      "role": "roles/iam.workloadIdentityUser",
+      "service_account_email": "xyz-payroll-uat-mig@t-xyz-nonprd.iam.gserviceaccount.com"
+    }
+  }
+}

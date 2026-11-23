@@ -1,0 +1,50 @@
+# IP address plan (Stage 4 N1). Input for tools/network/ipam.py, which allocates every range and checks it.
+# Status: PROPOSED; allocator and checks locally tested; nothing created in GCP.
+#
+# Principles: RFC 1918 only; one /10 per tier so prod and non-prod never overlap (they are not peered, but unique
+# ranges keep logs, firewall rules and any future connectivity unambiguous); one /11 per region inside a tier;
+# per-cell GKE slots so a new cell never needs re-planning; sized for the capacity-model upper bound.
+schema_version: "1.0"
+
+reserved:
+  - { cidr: 10.0.0.0/10,   purpose: "corporate network / hybrid connectivity / future (A10, Q9) – never used by the platform" }
+  - { cidr: 10.192.0.0/10, purpose: "future tiers or regions" }
+  - { cidr: 172.16.0.0/12, purpose: "not used (avoids clashes with container tooling defaults)" }
+  - { cidr: 192.168.0.0/16, purpose: "not used (common on-premises / home ranges)" }
+
+tiers:
+  prd:    { supernet: 10.64.0.0/10,  vpc: vpc-prd,    host_project: net-host-prd,    envs: [prd] }
+  nonprd: { supernet: 10.128.0.0/10, vpc: vpc-nonprd, host_project: net-host-nonprd, envs: [dev, stg, uat] }
+
+regions:                                   # /11 per region inside each tier /10, in this order
+  asia-south1: { short: as1, status: active }
+  asia-south2: { short: as2, status: reserved, note: "DR region (pilot-light, Q10); mirrors the as1 layout when activated" }
+
+# Blocks inside an active region /11, allocated in this order on aligned boundaries.
+region_layout:
+  - { block: gke_pods,     prefix: 12, note: "per-cell Pod ranges + reserve for an additional Pod range" }
+  - { block: gke_services, prefix: 15 }
+  - { block: gke_nodes,    prefix: 16 }
+  - { block: run,          prefix: 16, note: "Cloud Run Direct VPC egress (services and jobs)" }
+  - { block: psa,          prefix: 16, note: "private services access allocated range (Cloud SQL); Google recommends /16" }
+  - { block: mig,          prefix: 17 }
+  - { block: proxy_only,   prefix: 23, status: reserved, note: "only if a regional/internal Application LB is introduced; global external ALBs do not use it" }
+  - { block: ci,           prefix: 16, status: reserved, note: "runner cluster ranges if self-hosted runners run on GKE (Q14)" }
+
+cell_slots:                                # slot = env_index * per_env + (cell number - 1)
+  per_env: 16
+  prd:    { pods: 17, pods_reserve: 17, services: 20, nodes: 22 }
+  nonprd: { pods: 19, pods_reserve: 19, services: 21, nodes: 22 }
+
+planning:                                  # capacity-model upper bound (500 customers x 20 products) + assumptions
+  cells_per_env: 10                        # capacity model T2, 100% GKE
+  namespaces_per_cell: 1000                # planning heuristic (Stage 2)
+  pods_per_namespace: { prd: 3, nonprd: 2 }          # A-N1-1
+  services_per_namespace: { prd: 3, nonprd: 2 }      # A-N1-1
+  autopilot_pods_per_node: 32              # Autopilot default -> /26 per node (Autopilot may choose 8-256, R-N1-1)
+  node_fill: 0.6                           # average fraction of node Pod capacity used
+  sql_instances: { prd: 160, nonprd: 195 } # capacity model upper bound per tier (prod pools; DR replicas in as2)
+  sql_instances_per_24: 50                 # Cloud SQL PSA sizing table
+  cloud_run_peak_instances: { prd: 20000, nonprd: 8000 }   # A-N1-2
+  cloud_run_ips_per_instance: 2            # Cloud Run Direct VPC egress guidance
+  mig_peak_vms: { prd: 4500, nonprd: 7000 }  # capacity-model MIG floor x autoscaling headroom (A-N1-3)

@@ -1,0 +1,135 @@
+# Terraform stack catalogue (Stage 5). One root module per stack in terraform/stacks/<stack>/, one state per instance.
+# Status: IMPLEMENTED (HCL written, statically checked by tools/iac/hclcheck.py); not run (no terraform binary) – T-TF1..T-TF6.
+#
+# instances: how many states exist; inputs: generated tfvars (tools/iac/tfvars.py); requires: IAM the stack identity
+# must hold (checked against the access matrix by tools/iac/stacks.py, SK02); after: stacks that must be applied first.
+schema_version: "1.0"
+
+state_buckets: { org: tfstate-org, prd: tfstate-prd, nonprd: tfstate-nonprd }
+
+stacks:
+  bootstrap:
+    instances: once
+    state: local-then-migrated
+    identity: human:grp-hum-platform-admins     # applied once by hand (Stage 2: bootstrap-seed is the only hand-made project)
+    creates: [bootstrap-seed project, state buckets tfstate-org/-prd/-nonprd]
+    after: []
+  org:
+    instances: once
+    state: "tfstate-org/org"
+    identity: "sa:tf-org@bootstrap-seed"
+    creates: [folders, org policies (D5), hierarchical firewall policies (N3), groups, access-matrix IAM outside runtime scopes (D3), PAM entitlements (D7), WIF pool/providers/bindings (D6), audit sink, bucket and alerts (D10), shared and host projects, Artifact Registry, attestor and signing key (D9)]
+    requires:
+      - { scope: org, role: roles/resourcemanager.folderAdmin }
+      - { scope: org, role: roles/orgpolicy.policyAdmin }
+      - { scope: org, role: roles/iam.securityAdmin }
+      - { scope: org, role: roles/privilegedaccessmanager.admin }
+      - { scope: org, role: roles/compute.orgFirewallPolicyAdmin }
+      - { scope: org, role: roles/logging.configWriter }
+      - { scope: org, role: roles/compute.xpnAdmin }
+      - { scope: folder:shared, role: roles/resourcemanager.projectCreator }
+      - { scope: folder:network, role: roles/resourcemanager.projectCreator }
+      - { scope: billing, role: roles/billing.user }
+      - { scope: "groups:*", role: cloudidentity/groups-admin }
+    after: [bootstrap]
+  network:
+    instances: per-tier
+    state: "tfstate-{tier}/network"
+    identity: "sa:tf-{tier}@shr-cicd-{tier}"
+    creates: [VPC, subnets, PSA range + connection, Cloud Router + NAT, network firewall policy + rules, secure tags, private DNS zones, public DNS zones, subnet IAM]
+    requires:
+      - { scope: "project:net-host-{tier}", role: roles/compute.networkAdmin }
+      - { scope: "project:net-host-{tier}", role: roles/compute.securityAdmin }
+      - { scope: "project:net-host-{tier}", role: roles/dns.admin }
+      - { scope: "project:net-host-{tier}", role: roles/resourcemanager.tagAdmin }
+      - { scope: "project:net-host-{tier}", role: roles/servicenetworking.networksAdmin }
+    after: [org]
+  platform:
+    instances: per-tier
+    state: "tfstate-{tier}/platform"
+    identity: "sa:tf-{tier}@shr-cicd-{tier}"
+    creates: [plt-gke / plt-sql / plt-ingress / product projects, GKE Autopilot cells, Cloud SQL pools + CMEK keys, DBA IAM group users, db-bootstrap and db-isotest jobs, Binary Authorization project policies]
+    requires:
+      - { scope: "folder:platform-{tier}", role: roles/resourcemanager.projectCreator }
+      - { scope: "folder:platform-{tier}", role: roles/container.admin }
+      - { scope: "folder:platform-{tier}", role: roles/cloudsql.admin }
+      - { scope: "folder:platform-{tier}", role: roles/run.developer }
+      - { scope: "folder:platform-{tier}", role: roles/binaryauthorization.policyEditor }
+      - { scope: "kms:shr-security/kr-plt-{tier}-as1", role: roles/cloudkms.admin }
+    after: [network]
+  edge:
+    instances: per-tier
+    state: "tfstate-{tier}/edge"
+    identity: "sa:tf-{tier}@shr-cicd-{tier}"
+    creates: [global addresses, certificates + DNS authorisations, URL maps, HTTPS proxies, forwarding rules, Cloud Armor policies, DNS records]
+    requires:
+      - { scope: "project:plt-ingress-{tier}", role: roles/compute.loadBalancerAdmin }
+      - { scope: "project:plt-ingress-{tier}", role: roles/compute.securityAdmin }
+      - { scope: "project:plt-ingress-{tier}", role: roles/certificatemanager.owner }
+      - { scope: "project:net-host-{tier}", role: roles/dns.admin }
+    after: [platform, tenant]
+  cluster-config:
+    instances: per-cell
+    state: "tfstate-{tier}/cluster-config/{cell}"
+    identity: "sa:tf-{tier}@shr-cicd-{tier}"
+    creates: [platform-tenant-edit ClusterRole, Policy Controller templates + constraints, gateway-infra namespace + Gateways, namespace baselines (D8)]
+    requires:
+      - { scope: "folder:platform-{tier}", role: roles/container.admin }
+    after: [platform, tenant]
+  tenant:
+    instances: per-tenant-per-tier
+    state: "tfstate-{tier}/tenants/{tenant}"
+    identity: "sa:tf-{tier}@shr-cicd-{tier}"
+    creates: [t-<tenant>-<tier> project + Shared VPC attachment, workload SAs + Workload Identity, Cloud SQL IAM users, buckets, secret containers, KMS keys, resource IAM, Cloud Run services, MIGs, backend services, Binary Authorization policy, isotest impersonation, uptime checks of the prd host names (Stage 8)]
+    requires:
+      - { scope: "folder:tenants-{tier}", role: roles/resourcemanager.projectCreator }
+      - { scope: "folder:tenants-{tier}", role: roles/iam.serviceAccountAdmin }
+      - { scope: "folder:tenants-{tier}", role: roles/storage.admin }
+      - { scope: "folder:tenants-{tier}", role: roles/secretmanager.admin }
+      - { scope: "folder:tenants-{tier}", role: roles/cloudkms.admin }
+      - { scope: "folder:tenants-{tier}", role: roles/run.developer }
+      - { scope: "folder:tenants-{tier}", role: roles/compute.instanceAdmin.v1 }
+      - { scope: "folder:tenants-{tier}", role: roles/compute.loadBalancerAdmin }
+      - { scope: "folder:tenants-{tier}", role: roles/binaryauthorization.policyEditor }
+      - { scope: "folder:platform-{tier}", role: roles/cloudsql.admin }
+      - { scope: "project:net-host-{tier}", role: roles/compute.xpnAdmin }
+      - { scope: "folder:tenants-{tier}", role: roles/monitoring.admin }       # Stage 8 uptime checks
+    after: [network, platform]
+  product:
+    instances: per-shared-product-per-tier
+    state: "tfstate-{tier}/products/{product}"
+    identity: "sa:tf-{tier}@shr-cicd-{tier}"
+    creates: [Shared/Cohort deployments in p-<product>-<tier> (same module as tenant)]
+    requires:
+      - { scope: "folder:platform-{tier}", role: roles/run.developer }
+      - { scope: "folder:platform-{tier}", role: roles/cloudsql.admin }
+    after: [platform]
+  memberships:
+    instances: per-tier
+    state: "tfstate-{tier}/memberships"
+    identity: "sa:groups-mgr-{tier}@shr-cicd-{tier}"
+    creates: [grp-wl-* memberships (D2 plan, N2 service agents)]
+    requires:
+      - { scope: "groups:grp-wl-*-{tier}*", role: cloudidentity/group-manager }
+    after: [tenant, platform]
+
+  observability:
+    instances: per-tier
+    state: "tfstate-{tier}/observability"
+    identity: "sa:tf-{tier}@shr-cicd-{tier}"
+    creates: [plt-obs-<tier>-NN scoping projects (K27), metrics-scope membership, notification channels, log-based SLI metrics, custom services + SLOs per customer per product, burn-rate / uptime / platform alert policies, dashboards (Stage 8)]
+    requires:
+      - { scope: "folder:platform-{tier}", role: roles/resourcemanager.projectCreator }
+      - { scope: "folder:platform-{tier}", role: roles/monitoring.admin }
+      - { scope: "folder:tenants-{tier}", role: roles/monitoring.admin }
+      - { scope: "project:plt-ingress-{tier}", role: roles/logging.configWriter }
+      - { scope: billing, role: roles/billing.user }
+    after: [platform, tenant, edge]
+
+# Access-matrix scope -> stack that applies the binding (every binding in exactly one place, SK01).
+binding_owner:
+  "k8s:": cluster-config          # RoleBindings in the namespace baselines (D8)
+  "mysql:": db-bootstrap          # SQL grants by the bootstrap job (D4); DBA groups as IAM group users: platform
+  "subnet:": network
+  "sa-set:": tenant
+  default: org

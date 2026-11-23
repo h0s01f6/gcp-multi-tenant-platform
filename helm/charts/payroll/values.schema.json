@@ -1,0 +1,346 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "payroll chart values (merged)",
+  "description": "Validated by Helm on install. The generated part is the contract in interfaces/helm-release.schema.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tenant",
+    "product",
+    "env",
+    "image",
+    "serviceAccount",
+    "service",
+    "resources",
+    "autoscaling",
+    "pdb",
+    "probes",
+    "route",
+    "database",
+    "cloudSqlProxy",
+    "migration",
+    "config",
+    "secrets",
+    "buckets",
+    "isolation",
+    "replicas"
+  ],
+  "properties": {
+    "tenant": {
+      "type": "string",
+      "pattern": "^([a-z][a-z0-9]{2,9}|multi)$"
+    },
+    "product": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]{1,10}$"
+    },
+    "env": {
+      "enum": [
+        "dev",
+        "stg",
+        "uat",
+        "prd"
+      ]
+    },
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "digest",
+        "version"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+-docker\\.pkg\\.dev/shr-artifacts/(release|snapshot)/"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "serviceAccount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "migrationName"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "migrationName": {
+          "type": "string"
+        }
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gateway",
+        "hostnames"
+      ],
+      "properties": {
+        "gateway": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "namespace"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^gw-"
+            },
+            "namespace": {
+              "const": "gateway-infra"
+            }
+          }
+        },
+        "hostnames": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "database": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "instanceConnectionName",
+        "name",
+        "user",
+        "migrationUser",
+        "port"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "instanceConnectionName": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]+:[a-z0-9-]+:[a-z0-9-]+$"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]{2,9}_[a-z][a-z0-9]{1,10}$"
+        },
+        "user": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "migrationUser": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "port": {
+          "type": "integer"
+        }
+      }
+    },
+    "secrets": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^projects/[a-z0-9-]+/secrets/[a-z0-9-]+$"
+      }
+    },
+    "buckets": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "config": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "number",
+          "boolean"
+        ]
+      }
+    },
+    "isolation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dedicatedNodes",
+        "key"
+      ],
+      "properties": {
+        "dedicatedNodes": {
+          "type": "boolean"
+        },
+        "key": {
+          "type": "string"
+        }
+      }
+    },
+    "service": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "port",
+        "containerPort"
+      ],
+      "properties": {
+        "port": {
+          "type": "integer"
+        },
+        "containerPort": {
+          "const": 8080
+        }
+      }
+    },
+    "replicas": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cpu",
+        "memory"
+      ],
+      "properties": {
+        "cpu": {
+          "type": "string"
+        },
+        "memory": {
+          "type": "string"
+        }
+      }
+    },
+    "autoscaling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "minReplicas",
+        "maxReplicas",
+        "targetCPU"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "minReplicas": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxReplicas": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "targetCPU": {
+          "type": "integer"
+        }
+      }
+    },
+    "pdb": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "minAvailable"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "minAvailable": {
+          "type": "integer"
+        }
+      }
+    },
+    "probes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "readinessPath",
+        "livenessPath"
+      ],
+      "properties": {
+        "readinessPath": {
+          "type": "string"
+        },
+        "livenessPath": {
+          "type": "string"
+        }
+      }
+    },
+    "cloudSqlProxy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "image",
+        "resources"
+      ],
+      "properties": {
+        "image": {
+          "type": "object",
+          "required": [
+            "repository",
+            "digest"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "repository": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]+-docker\\.pkg\\.dev/shr-artifacts/release/"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            }
+          }
+        },
+        "resources": {
+          "$ref": "#/properties/resources"
+        }
+      }
+    },
+    "migration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "command",
+        "backoffLimit",
+        "timeoutSeconds"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "backoffLimit": {
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+}

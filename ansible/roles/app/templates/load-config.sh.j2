@@ -1,0 +1,13 @@
+#!/bin/bash
+# Reads instance metadata written by Terraform (tenant, env, DB connection, secret *names*) and writes the runtime
+# environment. Secret values are fetched by the application from Secret Manager with the VM's service account.
+set -euo pipefail
+MD=http://metadata.google.internal/computeMetadata/v1/instance/attributes
+mkdir -p /run/{{ product }}
+{
+  for key in tenant env db-connection-name db-name db-user; do
+    echo "$(echo "$key" | tr 'a-z-' 'A-Z_')=$(curl -sf -H 'Metadata-Flavor: Google' "$MD/$key")"
+  done
+  echo "HEALTH_PATH={{ health_path }}"
+} > /run/{{ product }}/env
+chmod 0640 /run/{{ product }}/env

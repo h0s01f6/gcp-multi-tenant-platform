@@ -1,0 +1,397 @@
+---
+# Source: configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payroll-config
+  namespace: abc-payroll-prd
+  labels:
+    app.kubernetes.io/name: payroll
+    app.kubernetes.io/instance: payroll
+    app.kubernetes.io/version: "2.0.2"
+    app.kubernetes.io/managed-by: Helm
+    tenant: abc
+    product: payroll
+    env: prd
+data:
+  CURRENCY: "INR"
+  PAY_CYCLE: "monthly"
+---
+# Source: deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payroll
+  namespace: abc-payroll-prd
+  labels:
+    app.kubernetes.io/name: payroll
+    app.kubernetes.io/instance: payroll
+    app.kubernetes.io/version: "2.0.2"
+    app.kubernetes.io/managed-by: Helm
+    tenant: abc
+    product: payroll
+    env: prd
+spec:
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: payroll
+      app.kubernetes.io/instance: payroll
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: "25%"
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: payroll
+        app.kubernetes.io/instance: payroll
+        app.kubernetes.io/version: "2.0.2"
+        app.kubernetes.io/managed-by: Helm
+        tenant: abc
+        product: payroll
+        env: prd
+      annotations:
+        checksum/config: e007745e61d1aeab8693483beb7b4b2b67e5003d8d5803b3bfdfa7651c5a4ffe
+    spec:
+      serviceAccountName: payroll
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: cloud-sql-proxy
+          image: asia-south1-docker.pkg.dev/shr-artifacts/release/platform/cloud-sql-proxy@sha256:094449ffdbb2b1adcfd35154a35115bff3b42028fd467053d2e955e5cafc7647
+          restartPolicy: Always
+          args:
+            - "--auto-iam-authn"
+            - "--private-ip"
+            - "--structured-logs"
+            - "--port=3306"
+            - "plt-sql-prd-01:asia-south1:sql-prd-payroll-01"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+      containers:
+        - name: app
+          image: asia-south1-docker.pkg.dev/shr-artifacts/release/payroll@sha256:aef969236636a9a81fa922cc8b271f0709b731ddfb7d774218ee80c171d65d82
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: TENANT
+              value: "abc"
+            - name: PRODUCT
+              value: "payroll"
+            - name: ENVIRONMENT
+              value: "prd"
+            - name: DB_HOST
+              value: "127.0.0.1"
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_NAME
+              value: "abc_payroll"
+            - name: DB_USER
+              value: "abc-payroll-prd"
+            - name: SECRET_SMTP_PASSWORD
+              value: "projects/t-abc-prd/secrets/payroll-prd-smtp-password/versions/latest"
+            - name: BUCKET_DATA
+              value: "abc-payroll-prd-data"
+          envFrom:
+            - configMapRef:
+                name: payroll-config
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            failureThreshold: 30
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "1"
+              memory: "2Gi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+# Source: healthcheckpolicy.yaml
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: payroll
+  namespace: abc-payroll-prd
+  labels:
+    app.kubernetes.io/name: payroll
+    app.kubernetes.io/instance: payroll
+    app.kubernetes.io/version: "2.0.2"
+    app.kubernetes.io/managed-by: Helm
+    tenant: abc
+    product: payroll
+    env: prd
+spec:
+  default:
+    config:
+      type: HTTP
+      httpHealthCheck:
+        port: 8080
+        requestPath: /readyz
+  targetRef:
+    group: ""
+    kind: Service
+    name: payroll
+---
+# Source: hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: payroll
+  namespace: abc-payroll-prd
+  labels:
+    app.kubernetes.io/name: payroll
+    app.kubernetes.io/instance: payroll
+    app.kubernetes.io/version: "2.0.2"
+    app.kubernetes.io/managed-by: Helm
+    tenant: abc
+    product: payroll
+    env: prd
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: payroll
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+---
+# Source: httproute.yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: payroll
+  namespace: abc-payroll-prd
+  labels:
+    app.kubernetes.io/name: payroll
+    app.kubernetes.io/instance: payroll
+    app.kubernetes.io/version: "2.0.2"
+    app.kubernetes.io/managed-by: Helm
+    tenant: abc
+    product: payroll
+    env: prd
+spec:
+  parentRefs:
+    - name: gw-payroll-prd-01
+      namespace: gateway-infra
+      sectionName: https
+  hostnames:
+    - "abc.payroll.example.com"
+  rules:
+    - backendRefs:
+        - name: payroll
+          port: 80
+---
+# Source: migration-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: payroll-migrate
+  namespace: abc-payroll-prd
+  labels:
+    app.kubernetes.io/name: payroll
+    app.kubernetes.io/instance: payroll
+    app.kubernetes.io/version: "2.0.2"
+    app.kubernetes.io/managed-by: Helm
+    tenant: abc
+    product: payroll
+    env: prd
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 1800
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: payroll
+        app.kubernetes.io/instance: payroll
+        app.kubernetes.io/version: "2.0.2"
+        app.kubernetes.io/managed-by: Helm
+        tenant: abc
+        product: payroll
+        env: prd
+    spec:
+      restartPolicy: Never
+      serviceAccountName: payroll-migrate
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: cloud-sql-proxy
+          image: asia-south1-docker.pkg.dev/shr-artifacts/release/platform/cloud-sql-proxy@sha256:094449ffdbb2b1adcfd35154a35115bff3b42028fd467053d2e955e5cafc7647
+          restartPolicy: Always
+          args:
+            - "--auto-iam-authn"
+            - "--private-ip"
+            - "--structured-logs"
+            - "--port=3306"
+            - "plt-sql-prd-01:asia-south1:sql-prd-payroll-01"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+      containers:
+        - name: migrate
+          image: asia-south1-docker.pkg.dev/shr-artifacts/release/payroll@sha256:aef969236636a9a81fa922cc8b271f0709b731ddfb7d774218ee80c171d65d82
+          command:
+            - "/app/migrate"
+            - "up"
+          env:
+            - name: TENANT
+              value: "abc"
+            - name: PRODUCT
+              value: "payroll"
+            - name: ENVIRONMENT
+              value: "prd"
+            - name: DB_HOST
+              value: "127.0.0.1"
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_NAME
+              value: "abc_payroll"
+            - name: DB_USER
+              value: "abc-payroll-prd-mig"
+            - name: SECRET_SMTP_PASSWORD
+              value: "projects/t-abc-prd/secrets/payroll-prd-smtp-password/versions/latest"
+            - name: BUCKET_DATA
+              value: "abc-payroll-prd-data"
+          resources:
+            requests:
+              cpu: "1"
+              memory: "2Gi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+# Source: pdb.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: payroll
+  namespace: abc-payroll-prd
+  labels:
+    app.kubernetes.io/name: payroll
+    app.kubernetes.io/instance: payroll
+    app.kubernetes.io/version: "2.0.2"
+    app.kubernetes.io/managed-by: Helm
+    tenant: abc
+    product: payroll
+    env: prd
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: payroll
+      app.kubernetes.io/instance: payroll
+---
+# Source: service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: payroll
+  namespace: abc-payroll-prd
+  labels:
+    app.kubernetes.io/name: payroll
+    app.kubernetes.io/instance: payroll
+    app.kubernetes.io/version: "2.0.2"
+    app.kubernetes.io/managed-by: Helm
+    tenant: abc
+    product: payroll
+    env: prd
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: payroll
+    app.kubernetes.io/instance: payroll
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

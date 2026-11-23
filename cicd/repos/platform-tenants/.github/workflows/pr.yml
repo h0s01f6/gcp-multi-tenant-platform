@@ -1,0 +1,18 @@
+# platform-tenants – self-service: a customer, subscription, placement or version change is a pull request on
+# tenants/<customer>.yaml (CODEOWNERS: account team + platform). Validation (D1 registry rules, PL01 promotion,
+# PL05 capacity) and read-only plans run here; nothing changes in Google Cloud before the merge.
+name: pr
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  pipeline:
+    uses: example-org/platform-workflows/.github/workflows/pr-pipeline.yml@v1
+    secrets: inherit
+    with:
+      allow_org: false

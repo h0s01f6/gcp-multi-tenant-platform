@@ -1,0 +1,43 @@
+{
+  "tenant": "abc",
+  "product": "payroll",
+  "env": "prd",
+  "image": {
+    "repository": "asia-south1-docker.pkg.dev/shr-artifacts/release/payroll",
+    "digest": "sha256:aef969236636a9a81fa922cc8b271f0709b731ddfb7d774218ee80c171d65d82",
+    "version": "2.0.2"
+  },
+  "serviceAccount": {
+    "name": "payroll",
+    "migrationName": "payroll-migrate"
+  },
+  "route": {
+    "gateway": {
+      "name": "gw-payroll-prd-01",
+      "namespace": "gateway-infra"
+    },
+    "hostnames": [
+      "abc.payroll.example.com"
+    ]
+  },
+  "database": {
+    "enabled": true,
+    "instanceConnectionName": "plt-sql-prd-01:asia-south1:sql-prd-payroll-01",
+    "name": "abc_payroll",
+    "user": "abc-payroll-prd",
+    "migrationUser": "abc-payroll-prd-mig"
+  },
+  "secrets": {
+    "smtp-password": "projects/t-abc-prd/secrets/payroll-prd-smtp-password"
+  },
+  "buckets": {
+    "data": "abc-payroll-prd-data"
+  },
+  "config": {
+    "pay_cycle": "monthly",
+    "currency": "INR"
+  },
+  "isolation": {
+    "dedicatedNodes": false
+  }
+}

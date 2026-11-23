@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/platform/registry/product.schema.json",
+  "title": "Product catalogue entry (schema v2.1)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "product",
+    "runtime",
+    "deployment_model",
+    "owner_group",
+    "supported_versions"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "2.1"
+    },
+    "product": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]{1,10}$"
+    },
+    "runtime": {
+      "enum": [
+        "gke",
+        "cloudrun",
+        "mig"
+      ]
+    },
+    "deployment_model": {
+      "enum": [
+        "dedicated",
+        "shared",
+        "cohort"
+      ]
+    },
+    "owner_group": {
+      "type": "string",
+      "pattern": "^grp-hum-product-[a-z][a-z0-9]{1,10}-dev$"
+    },
+    "chart": {
+      "type": "string"
+    },
+    "database": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "engine",
+        "major_version",
+        "pool_group"
+      ],
+      "properties": {
+        "engine": {
+          "const": "mysql"
+        },
+        "major_version": {
+          "enum": [
+            "8.4"
+          ]
+        },
+        "pool_group": {
+          "type": "string",
+          "pattern": "^g[0-9]{1,2}$"
+        },
+        "approx_tables": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "readonly_identity": {
+          "type": "boolean",
+          "default": false,
+          "description": "Create a <cust>-<product>-<env>-ro identity with a read-only role"
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "buckets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{1,14}$"
+          },
+          "uniqueItems": true
+        },
+        "secrets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{1,30}$"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "supported_versions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9]+\\.[0-9]+\\.(x|[0-9]+)$"
+      }
+    },
+    "blocked_versions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+      }
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "cohorts": {
+      "type": "object",
+      "minProperties": 1,
+      "patternProperties": {
+        "^v[0-9]{1,3}$": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "deployment_model": {
+            "const": "shared"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "version"
+        ],
+        "not": {
+          "required": [
+            "cohorts"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "deployment_model": {
+            "const": "cohort"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "cohorts"
+        ],
+        "not": {
+          "required": [
+            "version"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "deployment_model": {
+            "const": "dedicated"
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "version"
+              ]
+            },
+            {
+              "required": [
+                "cohorts"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

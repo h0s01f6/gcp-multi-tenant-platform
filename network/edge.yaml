@@ -1,0 +1,74 @@
+# DNS, certificates, ingress and Cloud NAT egress (Stage 4 N4). Input for tools/network/edge.py.
+# Status: PROPOSED; generator and checks locally tested; nothing created in GCP.
+# Everything per customer is generated from the registry, so hostnames, records, host rules and backends cannot
+# be typed by hand (review A6 / X2 / X3).
+schema_version: "1.0"
+
+domain: example.com                         # A11 placeholder
+
+dns:
+  public_zones:                              # one public zone per product per tier, in the tier host project
+    prd: "{product}.{domain}"
+    nonprd: "{product}.nonprod.{domain}"
+  dnssec: true
+  record_ttl: 300
+  private_zones:                             # attached to each tier VPC: Private Google Access (private.googleapis.com)
+    - { name: googleapis, dns_name: googleapis.com., records: [{ name: "*", type: CNAME, value: private.googleapis.com. }, { name: private, type: A, value: "@pga_vip_ips" }] }
+    - { name: pkg-dev, dns_name: pkg.dev., records: [{ name: "*", type: CNAME, value: private.googleapis.com. }] }   # Artifact Registry
+  pga_vip_ips: [199.36.153.8, 199.36.153.9, 199.36.153.10, 199.36.153.11]
+
+certificates:                                # Certificate Manager, DNS authorisation, one wildcard per product per tier
+  prd: "*.{product}.{domain}"
+  nonprd: "*.{product}.nonprod.{domain}"
+
+ingress:
+  gke:                                       # GKE Gateway per product per environment per cell (Stage 2 §2A)
+    gateway_class: gke-l7-global-external-managed
+    namespace: gateway-infra
+    name: "gw-{product}-{env}-{nn}"
+    address: "ip-gw-{product}-{env}-{nn}"    # global static address in plt-gke-<tier>
+    allowed_route_namespace_labels: [product, env]
+  alb:                                       # Cloud Run and MIG products: global external ALB in plt-ingress-<tier>
+    project: "plt-ingress-{tier}"
+    url_map: "um-{product}-{env}"            # one URL map per product per environment (review B7)
+    address: "ip-alb-{product}-{env}"
+    backend_service: "bs-{owner}-{product}-{env}"     # Dedicated: in the customer's project; Shared/Cohort: bs-<deployment> in the product project
+  tls_policy: { min_tls_version: TLS_1_2, profile: MODERN }
+  http_to_https_redirect: true
+
+cloud_armor:
+  policies:
+    ca-prd:
+      default_action: allow
+      rules:
+        - { priority: 1000, action: "deny(403)", expression: "evaluatePreconfiguredWaf('sqli-v33-stable', {'sensitivity': 1})" }
+        - { priority: 1010, action: "deny(403)", expression: "evaluatePreconfiguredWaf('xss-v33-stable', {'sensitivity': 1})" }
+        - { priority: 1020, action: "deny(403)", expression: "evaluatePreconfiguredWaf('lfi-v33-stable', {'sensitivity': 1})" }
+        - { priority: 1030, action: "deny(403)", expression: "evaluatePreconfiguredWaf('rce-v33-stable', {'sensitivity': 1})" }
+        - { priority: 2000, action: throttle, rate_limit: { count: 600, interval_sec: 60, key: IP } }   # A-N4-2
+    ca-nonprd:
+      default_action: allow
+      inherits: ca-prd
+    ca-nonprd-uat:                           # UAT: customer IP allow-lists (diagram 11)
+      default_action: "deny(403)"
+      inherits: ca-prd
+      rules:
+        - { priority: 500, action: allow, src_ip_ranges: "@customer_uat_allowlist" }   # per-tenant list supplied by onboarding (A-N4-3)
+  attach:                                    # which policy each environment's backends use
+    prd: ca-prd
+    dev: ca-nonprd
+    stg: ca-nonprd
+    uat: ca-nonprd-uat
+
+nat:
+  name: "nat-{tier}-{short}"
+  router: "cr-{tier}-{short}"
+  subnets: [run, mig, gke]                   # GKE: node primary and Pod secondary ranges (private nodes)
+  ip_allocation: MANUAL                      # static egress IPs that customers / partners can allow-list
+  min_ports_per_vm: 64
+  max_ports_per_vm: 4096
+  dynamic_port_allocation: true
+  endpoint_independent_mapping: false
+  log_filter: ERRORS_ONLY
+  ports_per_ip: 64512
+  headroom: 1.5

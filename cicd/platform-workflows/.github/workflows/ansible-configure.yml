@@ -1,0 +1,34 @@
+# Stage 7 – day-2 configuration of MIG VMs with Ansible over IAP + OS Login (Stage 6 configure.yml, T-AN1).
+# Identity ansible-<tier> (osAdminLogin + IAP tunnel on tenant projects of the tier); never used for image builds.
+name: ansible-configure
+on:
+  workflow_call:
+    inputs:
+      tier: { type: string, required: true }
+      limit: { type: string, default: "all" }       # inventory pattern, e.g. a product or one customer
+permissions:
+  contents: read
+jobs:
+  configure:
+    runs-on: [self-hosted, "${{ inputs.tier }}"]
+    environment: ${{ inputs.tier }}
+    concurrency:
+      group: ansible-${{ inputs.tier }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ansible-${{ inputs.tier }}@shr-cicd-${{ inputs.tier }}.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Run configure.yml
+        working-directory: ansible
+        env: { ENV_TIER: "${{ inputs.tier }}" }
+        run: |
+          pip install ansible-core==2.17.5 google-auth requests
+          ansible-galaxy collection install google.cloud
+          ansible-playbook -i inventories/gcp.yml playbooks/configure.yml --limit "${{ inputs.limit }}" --diff

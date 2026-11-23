@@ -1,0 +1,15 @@
+# Dynamic inventory (google.cloud.gcp_compute). One run per tier; the pipeline identity ansible-<tier> only sees its
+# tier's projects (access matrix D3). Hosts are grouped by product and environment labels.
+plugin: google.cloud.gcp_compute
+auth_kind: application        # Workload Identity Federation credentials of the pipeline (D6), no key files
+projects: "{{ lookup('env', 'MIG_PROJECTS').split(',') }}"
+filters:
+  - labels.managed_by = terraform
+  - status = RUNNING
+keyed_groups:
+  - key: labels.product
+    prefix: product
+  - key: labels.env
+    prefix: env
+compose:
+  ansible_host: name

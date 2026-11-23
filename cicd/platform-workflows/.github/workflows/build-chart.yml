@@ -1,0 +1,37 @@
+# Stage 7 – publish a Helm chart (product chart + platform-lib dependency) to the release repository as OCI.
+# The version is the one in Chart.yaml; a version that already exists is never overwritten (charts are promoted
+# like images: a chart change is a new version, referenced from the tenant registry through the product version).
+name: build-chart
+on:
+  workflow_call:
+    inputs:
+      chart: { type: string, required: true }
+permissions:
+  contents: read
+jobs:
+  chart:
+    runs-on: [self-hosted, build]
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      REPO: oci://asia-south1-docker.pkg.dev/shr-artifacts/release/charts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: builder@shr-build.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@v2
+      - uses: azure/setup-helm@v4
+        with: { version: "v3.16.2" }
+      - name: Lint, package, push (skip an existing version)
+        run: |
+          c="charts/${{ inputs.chart }}"
+          v=$(yq -r .version "$c/Chart.yaml")
+          gcloud auth print-access-token | helm registry login -u oauth2accesstoken --password-stdin asia-south1-docker.pkg.dev
+          if helm show chart "$REPO/${{ inputs.chart }}" --version "$v" >/dev/null 2>&1; then
+            echo "${{ inputs.chart }} $v already published"; exit 0
+          fi
+          helm dependency build "$c" && helm lint "$c"
+          helm package "$c" && helm push "${{ inputs.chart }}-$v.tgz" "$REPO"

@@ -1,0 +1,97 @@
+# Organisation and folder-level security policies (Stage 3 D5).
+# Status: PROPOSED configuration, checked locally by tools/policy/orgpolicy.py (OP01-OP08).
+#         Not applied to any organisation. Applied by Terraform (google_org_policy_policy) in Stage 5,
+#         after the dry-run / validation items listed in documentation (T-O1..T-O6).
+#
+# Folder tree = approved Stage 2 hierarchy (env-first, ADR-002). Policies are set at the highest node where they
+# hold and are inherited; a child policy REPLACES the parent value (no inheritFromParent merging – explicit is
+# easier to review). Placeholders: ${ORG_ID}, ${CUSTOMER_ID}, ${GH_ORG}, ${BB_WORKSPACE_UUID}.
+schema_version: "1.0"
+
+nodes:
+  org:                  { parent: null }
+  fldr-bootstrap:       { parent: org }
+  fldr-shared:          { parent: org }
+  fldr-network:         { parent: org }
+  fldr-platform:        { parent: org }
+  fldr-platform/prd:    { parent: fldr-platform, tier: prd }
+  fldr-platform/nonprd: { parent: fldr-platform, tier: nonprd }
+  fldr-tenants:         { parent: org }
+  fldr-tenants/prd:     { parent: fldr-tenants, tier: prd }
+  fldr-tenants/nonprd:  { parent: fldr-tenants, tier: nonprd }
+
+# Constraint catalogue. type: boolean | list. impact: high => must start in dry-run (OP06).
+# mandatory: may never be relaxed anywhere below the org (OP07). verify: what T-O1 confirms at apply time.
+# tier_scoped: prd and nonprd get DIFFERENT values (not stricter/looser) – each value must name its own tier (OP04).
+constraints:
+  iam.managed.disableServiceAccountKeyCreation: { type: boolean, mandatory: true, baseline: true, why: "No SA keys – WIF and attached SAs only (ADR-009)", verify: "managed name vs legacy iam.disableServiceAccountKeyCreation in this org" }
+  iam.disableServiceAccountKeyUpload:          { type: boolean, mandatory: true, baseline: true, why: "No externally generated keys" }
+  iam.automaticIamGrantsForDefaultServiceAccounts: { type: boolean, mandatory: true, baseline: true, why: "Default SAs get no Editor role" }
+  iam.disableCrossProjectServiceAccountUsage:  { type: boolean, mandatory: true, why: "A tenant SA can only be attached to resources in its own project" }
+  iam.allowedPolicyMemberDomains:              { type: list, mandatory: true, baseline: true, why: "Only principals of our Cloud Identity customer in IAM policies" }
+  iam.workloadIdentityPoolProviders:           { type: list, why: "Only the GitHub / Bitbucket OIDC issuers may federate (issuers finalised in D6)" }
+  essentialcontacts.managed.allowedContactDomains: { type: list, baseline: true, why: "Security notifications only to our domain" }
+  compute.skipDefaultNetworkCreation:          { type: boolean, mandatory: true, why: "No default VPC with open firewall rules" }
+  compute.vmExternalIpAccess:                  { type: list, mandatory: true, why: "MIG VMs have no external IPs; access via LB / IAP" }
+  compute.requireOsLogin:                      { type: boolean, mandatory: true, why: "VM SSH via IAM (Ansible osAdminLogin, B15)" }
+  compute.requireShieldedVm:                   { type: boolean, why: "Secure boot / vTPM for MIG images" }
+  compute.disableSerialPortAccess:             { type: boolean, mandatory: true, why: "No interactive serial console" }
+  compute.managed.restrictProtocolForwardingCreationForTypes: { type: list, baseline: true, why: "Internal protocol forwarding only" }
+  compute.restrictSharedVpcHostProjects:       { type: list, why: "Only the two host projects may be Shared VPC hosts" }
+  compute.restrictSharedVpcSubnetworks:        { type: list, impact: high, tier_scoped: true, why: "Tier boundary: prd folders can only use prd subnets and vice versa", verify: "value format under:projects/... accepted; Stage 4 subnet names" }
+  compute.restrictVpcPeering:                  { type: list, impact: high, why: "No ad-hoc peering; private services access for Cloud SQL must keep working", verify: "PSA (servicenetworking) peering allowed with this value set" }
+  gcp.resourceLocations:                       { type: list, impact: high, why: "Data residency: Mumbai + DR region only (Q10)", verify: "every service used supports the value group; global resources unaffected" }
+  storage.uniformBucketLevelAccess:            { type: boolean, mandatory: true, baseline: true, why: "IAM-only bucket access, no object ACLs" }
+  storage.publicAccessPrevention:              { type: boolean, mandatory: true, why: "No public buckets" }
+  sql.restrictPublicIp:                        { type: boolean, mandatory: true, why: "Cloud SQL private IP only (ADR-011)" }
+  sql.restrictAuthorizedNetworks:              { type: boolean, mandatory: true, why: "No authorised-network bypass of the connectors" }
+  run.allowedIngress:                          { type: list, why: "Cloud Run reachable only internally or through the platform load balancers" }
+  run.allowedVPCEgress:                        { type: list, impact: high, why: "Prod Cloud Run egress routed through the VPC (firewall / NAT, Stage 4)", verify: "Direct VPC egress / connector in every Cloud Run service first" }
+  gcp.restrictNonCmekServices:                 { type: list, impact: high, why: "Prod data services must use CMEK (D9 decision)", verify: "CMEK keys exist for every prod SQL pool and bucket" }
+  gcp.restrictCmekCryptoKeyProjects:           { type: list, impact: high, why: "CMEK keys only from the security project / dedicated tenant projects (D9)" }
+  compute.trustedImageProjects:                { type: list, impact: high, why: "D9: MIG VMs boot only images baked and scanned in shr-build", verify: "GKE (Autopilot, dedicated-tier) node creation is unaffected or its image projects are added" }
+  run.allowedBinaryAuthorizationPolicies:      { type: list, impact: high, why: "D9: prod Cloud Run services must use the project Binary Authorization policy", verify: "value 'default' accepted; existing services redeployed with binary authorization enabled" }
+
+policies:
+  # ---------------- organisation baseline ----------------
+  - { node: org, constraint: iam.managed.disableServiceAccountKeyCreation, enforce: true }
+  - { node: org, constraint: iam.disableServiceAccountKeyUpload, enforce: true }
+  - { node: org, constraint: iam.automaticIamGrantsForDefaultServiceAccounts, enforce: true }
+  - { node: org, constraint: iam.disableCrossProjectServiceAccountUsage, enforce: true }
+  - { node: org, constraint: iam.allowedPolicyMemberDomains, allow: ["${CUSTOMER_ID}"] }
+  - { node: org, constraint: iam.workloadIdentityPoolProviders, allow: ["https://token.actions.githubusercontent.com", "https://api.bitbucket.org/2.0/workspaces/${BB_WORKSPACE}/pipelines-config/identity/oidc"] }
+  - { node: org, constraint: essentialcontacts.managed.allowedContactDomains, allow: ["@example.com"] }
+  - { node: org, constraint: compute.skipDefaultNetworkCreation, enforce: true }
+  - { node: org, constraint: compute.vmExternalIpAccess, deny_all: true }
+  - { node: org, constraint: compute.requireOsLogin, enforce: true }
+  - { node: org, constraint: compute.requireShieldedVm, enforce: true }
+  - { node: org, constraint: compute.disableSerialPortAccess, enforce: true }
+  - { node: org, constraint: compute.managed.restrictProtocolForwardingCreationForTypes, allow: [INTERNAL] }
+  - { node: org, constraint: compute.restrictSharedVpcHostProjects, allow: ["projects/net-host-prd", "projects/net-host-nonprd"] }
+  - { node: org, constraint: compute.restrictVpcPeering, allow: ["under:organizations/${ORG_ID}"], dry_run: true, validation: T-O3 }
+  - { node: org, constraint: gcp.resourceLocations, allow: ["in:asia-south1-locations", "in:asia-south2-locations"], dry_run: true, validation: T-O4 }
+  - { node: org, constraint: storage.uniformBucketLevelAccess, enforce: true }
+  - { node: org, constraint: storage.publicAccessPrevention, enforce: true }
+  - { node: org, constraint: sql.restrictPublicIp, enforce: true }
+  - { node: org, constraint: sql.restrictAuthorizedNetworks, enforce: true }
+  - { node: org, constraint: run.allowedIngress, allow: ["internal", "internal-and-cloud-load-balancing"] }
+
+  # ---------------- tier boundary (env-first folders) ----------------
+  - { node: fldr-tenants/prd,     constraint: compute.restrictSharedVpcSubnetworks, allow: ["under:projects/net-host-prd"], dry_run: true, validation: T-O5 }
+  - { node: fldr-platform/prd,    constraint: compute.restrictSharedVpcSubnetworks, allow: ["under:projects/net-host-prd"], dry_run: true, validation: T-O5 }
+  - { node: fldr-tenants/nonprd,  constraint: compute.restrictSharedVpcSubnetworks, allow: ["under:projects/net-host-nonprd"], dry_run: true, validation: T-O5 }
+  - { node: fldr-platform/nonprd, constraint: compute.restrictSharedVpcSubnetworks, allow: ["under:projects/net-host-nonprd"], dry_run: true, validation: T-O5 }
+
+  # ---------------- prod is stricter ----------------
+  - { node: fldr-tenants/prd,     constraint: run.allowedVPCEgress, allow: ["all-traffic"], dry_run: true, validation: T-O6 }
+  - { node: fldr-platform/prd,    constraint: run.allowedVPCEgress, allow: ["all-traffic"], dry_run: true, validation: T-O6 }
+  - { node: fldr-tenants/prd,     constraint: gcp.restrictNonCmekServices, deny: ["sqladmin.googleapis.com", "storage.googleapis.com", "secretmanager.googleapis.com"], dry_run: true, validation: T-S1 }
+  - { node: fldr-platform/prd,    constraint: gcp.restrictNonCmekServices, deny: ["sqladmin.googleapis.com", "storage.googleapis.com", "secretmanager.googleapis.com"], dry_run: true, validation: T-S1 }
+  - { node: fldr-tenants/prd,     constraint: gcp.restrictCmekCryptoKeyProjects, allow: ["projects/shr-security", "under:folders/fldr-tenants/prd"], dry_run: true, validation: T-S1 }
+  - { node: fldr-platform/prd,    constraint: gcp.restrictCmekCryptoKeyProjects, allow: ["projects/shr-security"], dry_run: true, validation: T-S1 }
+
+  # ---------------- supply chain (D9) ----------------
+  - { node: fldr-tenants,         constraint: compute.trustedImageProjects, allow: ["projects/shr-build"], dry_run: true, validation: T-S3 }
+  - { node: fldr-platform,        constraint: compute.trustedImageProjects, allow: ["projects/shr-build"], dry_run: true, validation: T-S3 }
+  - { node: fldr-tenants/prd,     constraint: run.allowedBinaryAuthorizationPolicies, allow: ["default"], dry_run: true, validation: T-S2 }
+  - { node: fldr-platform/prd,    constraint: run.allowedBinaryAuthorizationPolicies, allow: ["default"], dry_run: true, validation: T-S2 }

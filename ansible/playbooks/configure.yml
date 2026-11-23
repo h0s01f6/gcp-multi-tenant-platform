@@ -1,0 +1,8 @@
+# Day-2 configuration of running MIG VMs (patches, agent config) – never customer data or secrets.
+- name: Configure running MIG VMs
+  hosts: "product_{{ product }}:&env_{{ env }}"
+  become: true
+  serial: "20%"                 # rolling, like the MIG update policy
+  max_fail_percentage: 0
+  roles:
+    - base

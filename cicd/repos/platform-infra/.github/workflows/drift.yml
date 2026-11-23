@@ -1,0 +1,21 @@
+# platform-infra – nightly drift detection with the read identities (Terraform plans of every instance, DR01/DR02).
+name: drift
+on:
+  schedule:
+    - cron: "17 21 * * *"          # 02:47 IST, outside the Cloud SQL maintenance window
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  org:
+    uses: example-org/platform-workflows/.github/workflows/drift.yml@v1
+    secrets: inherit
+    with: { tier: org }
+  nonprd:
+    uses: example-org/platform-workflows/.github/workflows/drift.yml@v1
+    secrets: inherit
+    with: { tier: nonprd }
+  prd:
+    uses: example-org/platform-workflows/.github/workflows/drift.yml@v1
+    secrets: inherit
+    with: { tier: prd }

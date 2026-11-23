@@ -1,0 +1,4 @@
+# UAT mirrors prod topology at smaller size (release rehearsal).
+autoscaling: { enabled: true, minReplicas: 2, maxReplicas: 3, targetCPU: 70 }
+pdb: { enabled: true, minAvailable: 1 }
+resources: { cpu: 500m, memory: 1Gi }

@@ -1,0 +1,119 @@
+# Stage 7 – deploy registry versions to customer environments (one tier per call), after the infrastructure jobs.
+# Identity deploy-<tier> (k8s edit in tenant namespaces, run.developer + instanceAdmin in tenant projects).
+# Only release images (by digest) are deployed; the promotion rule (PL01) is re-checked on the merged registry.
+#   GKE       helm upgrade --install --atomic (migration = pre-upgrade hook Job, Stage 6) -> auto-rollback on failure
+#   Cloud Run migrate job, new revision without traffic, canary 10 % + smoke test, then 100 % (else revert)
+#   MIG       new regional template pinned to image <product>-<version>, rolling update (max_unavailable 0)
+# prd: on-demand Cloud SQL backup of the pool before the release (Stage 2 §6.6), as tf-prd (holds cloudsql.admin).
+name: deploy-release
+on:
+  workflow_call:
+    inputs:
+      tier: { type: string, required: true }         # nonprd | prd
+      matrix: { type: string, required: true }       # planner releases {"include": [...]}
+      platform_ref: { type: string, default: main }
+permissions:
+  contents: read
+jobs:
+  backup:
+    name: pre-release backup ${{ matrix.pool }}
+    if: inputs.tier == 'prd'
+    runs-on: [self-hosted, prd]
+    environment: prd
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      matrix: ${{ fromJSON(inputs.matrix) }}
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: tf-prd@shr-cicd-prd.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: On-demand backup
+        if: matrix.pre_backup
+        run: |
+          gcloud sql backups create --instance "${{ matrix.pool }}" --project "${{ matrix.pool_project }}" \
+            --description "pre-release ${{ matrix.tenant }}/${{ matrix.product }} ${{ matrix.from }}->${{ matrix.to }} run ${{ github.run_id }}"
+  deploy:
+    name: ${{ matrix.tenant }}/${{ matrix.product }}/${{ matrix.env }} ${{ matrix.to }}
+    needs: backup
+    if: ${{ !failure() && !cancelled() }}
+    runs-on: [self-hosted, "${{ inputs.tier }}"]
+    environment: ${{ inputs.tier }}
+    concurrency:
+      group: deploy-${{ matrix.tenant }}-${{ matrix.product }}-${{ matrix.env }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix: ${{ fromJSON(inputs.matrix) }}
+    env:
+      RELEASE: asia-south1-docker.pkg.dev/shr-artifacts/release
+    steps:
+      - uses: example-org/platform-workflows/.github/actions/workspace@v1
+        with:
+          app-id: ${{ vars.PLATFORM_READER_APP_ID }}
+          private-key: ${{ secrets.PLATFORM_READER_APP_KEY }}
+          platform-ref: ${{ inputs.platform_ref }}
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: deploy-${{ inputs.tier }}@shr-cicd-${{ inputs.tier }}.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Resolve the release digest (immutable tag -> digest)
+        id: img
+        run: |
+          d=$(gcloud artifacts docker images describe "$RELEASE/${{ matrix.product }}:${{ matrix.to }}" --format='value(image_summary.digest)')
+          [ -n "$d" ] || { echo "::error::${{ matrix.product }}:${{ matrix.to }} not in the release repository"; exit 1; }
+          echo "digest=$d" >> "$GITHUB_OUTPUT"
+      - name: GKE – helm upgrade --atomic
+        if: matrix.runtime == 'gke'
+        working-directory: platform
+        run: |
+          python -m tools.iac.helmvalues -o build/helm
+          gcloud container clusters get-credentials "${{ matrix.cell }}" --project "${{ matrix.cell_project }}" --region asia-south1 --dns-endpoint
+          gcloud auth print-access-token | helm registry login -u oauth2accesstoken --password-stdin asia-south1-docker.pkg.dev
+          helm upgrade --install "${{ matrix.product }}" "oci://$RELEASE/charts/${{ matrix.product }}" --version "${{ matrix.to }}" \
+            --namespace "${{ matrix.namespace }}" -f "build/helm/${{ matrix.cell }}/${{ matrix.namespace }}/${{ matrix.product }}.values.json" \
+            --set image.digest="${{ steps.img.outputs.digest }}" --set image.version="${{ matrix.to }}" \
+            --atomic --wait --timeout 15m --history-max 10
+      - name: Cloud Run – migrate, canary, promote
+        if: matrix.runtime == 'cloudrun'
+        working-directory: platform
+        run: |
+          set -euo pipefail
+          p="${{ matrix.project }}"; svc="${{ matrix.service }}"; ref="$RELEASE/${{ matrix.product }}@${{ steps.img.outputs.digest }}"
+          sa="$(gcloud run services describe "$svc" --project "$p" --region asia-south1 --format='value(spec.template.spec.serviceAccountName)')"
+          prev="$(gcloud run services describe "$svc" --project "$p" --region asia-south1 --format='value(status.traffic[0].revisionName)')"
+          gcloud run jobs deploy "migrate-$svc" --project "$p" --region asia-south1 --image "$ref" --service-account "$sa" \
+            --command migrate --binary-authorization default --set-cloudsql-instances "${{ matrix.pool_project }}:asia-south1:${{ matrix.pool }}" \
+            --vpc-egress all-traffic --subnet "projects/net-host-${{ inputs.tier }}/regions/asia-south1/subnetworks/snet-${{ inputs.tier }}-as1-run" \
+            --execute-now --wait
+          tag="v$(echo "${{ matrix.to }}" | tr . -)"
+          gcloud run deploy "$svc" --project "$p" --region asia-south1 --image "$ref" --no-traffic --tag "$tag"
+          gcloud run services update-traffic "$svc" --project "$p" --region asia-south1 --to-tags "$tag=10"
+          if ! python -m tools.cicd.smoke --tenant "${{ matrix.tenant }}" --product "${{ matrix.product }}" --env "${{ matrix.env }}" --attempts 20; then
+            gcloud run services update-traffic "$svc" --project "$p" --region asia-south1 --to-revisions "$prev=100"; exit 1
+          fi
+          gcloud run services update-traffic "$svc" --project "$p" --region asia-south1 --to-latest
+      - name: MIG – pinned template + rolling update
+        if: matrix.runtime == 'mig'
+        run: |
+          set -euo pipefail
+          p="${{ matrix.project }}"; mig="${{ matrix.mig }}"; v="${{ matrix.to }}"
+          cur="$(gcloud compute instance-groups managed describe "$mig" --project "$p" --region asia-south1 --format='value(versions[0].instanceTemplate)')"
+          new="it-${{ matrix.tenant }}-${{ matrix.product }}-${{ matrix.env }}-${v//./-}"
+          gcloud compute instance-templates create "$new" --project "$p" --instance-template-region asia-south1 \
+            --source-instance-template "$cur" --image "projects/shr-build/global/images/${{ matrix.product }}-${v//./-}"
+          gcloud compute instance-groups managed rolling-action start-update "$mig" --project "$p" --region asia-south1 \
+            --version "template=projects/$p/regions/asia-south1/instanceTemplates/$new" --max-unavailable 0 --max-surge 3
+          gcloud compute instance-groups managed wait-until "$mig" --project "$p" --region asia-south1 --version-target-reached --timeout 1800 \
+            || { gcloud compute instance-groups managed rolling-action start-update "$mig" --project "$p" --region asia-south1 --version "template=$cur" --max-unavailable 0; exit 1; }
+      - name: Smoke test through the load balancer
+        working-directory: platform
+        run: python -m tools.cicd.smoke --tenant "${{ matrix.tenant }}" --product "${{ matrix.product }}" --env "${{ matrix.env }}"

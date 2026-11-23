@@ -1,0 +1,51 @@
+# Stage 7 – planner job: which stack instances, database gates and releases a change touches (tools/cicd/planner.py).
+# Offline: no cloud identity. Outputs drive every later job (fromJSON). PL01 promotion and PL05 capacity fail here.
+name: plan
+on:
+  workflow_call:
+    inputs:
+      base_sha: { type: string, required: true }
+      platform_ref: { type: string, default: main }
+    outputs:
+      run: { description: "job -> bool", value: "${{ jobs.plan.outputs.run }}" }
+      matrix: { description: "job -> {include: [...]}", value: "${{ jobs.plan.outputs.matrix }}" }
+      tiers: { description: "tier -> {include: [...]} (all stack instances of a tier, for PR plans)", value: "${{ jobs.plan.outputs.tiers }}" }
+permissions:
+  contents: read
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      run: ${{ steps.plan.outputs.run }}
+      matrix: ${{ steps.plan.outputs.matrix }}
+      tiers: ${{ steps.plan.outputs.tiers }}
+    steps:
+      - uses: example-org/platform-workflows/.github/actions/workspace@v1
+        with:
+          app-id: ${{ vars.PLATFORM_READER_APP_ID }}
+          private-key: ${{ secrets.PLATFORM_READER_APP_KEY }}
+          platform-ref: ${{ inputs.platform_ref }}
+      - name: Base tree and changed files
+        env: { BASE: "${{ inputs.base_sha }}" }
+        run: |
+          cp -r platform base
+          if [ -d caller/tenants ] && [ "${{ github.event.repository.name }}" != platform-infra ]; then
+            rm -rf base/registry/tenants && mkdir -p base/registry/tenants
+            git -C caller archive "$BASE" tenants | tar -x -C base/registry
+            git -C caller diff --name-only "$BASE" HEAD | sed 's#^tenants/#registry/tenants/#' > changed.txt
+          else
+            rm -rf base && mkdir base && git -C platform archive "$BASE" | tar -x -C base
+            rm -rf base/registry/tenants && cp -r platform/registry/tenants base/registry/tenants
+            git -C platform diff --name-only "$BASE" HEAD > changed.txt
+          fi
+      - id: plan
+        name: Plan jobs (PL01-PL05)
+        working-directory: platform
+        run: |
+          python -m tools.cicd.planner diff --base ../base --head . --changed $(cat ../changed.txt) -o build/cicd/plan.json
+          echo "run=$(jq -c .run build/cicd/plan.json)" >> "$GITHUB_OUTPUT"
+          echo "matrix=$(jq -c .matrix build/cicd/plan.json)" >> "$GITHUB_OUTPUT"
+          echo "tiers=$(jq -c .tiers build/cicd/plan.json)" >> "$GITHUB_OUTPUT"
+          jq -r '.order[] as $j | select(.run[$j]) | "- \($j): \(.matrix[$j].include | length) item(s)"' build/cicd/plan.json >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,28 @@
+- name: Create service user
+  ansible.builtin.user:
+    name: "{{ app_user }}"
+    system: true
+    shell: /usr/sbin/nologin
+
+- name: Install pinned product version from the release repository
+  ansible.builtin.apt:
+    name: "{{ product }}={{ app_version }}"
+    state: present
+
+- name: Boot-time configuration loader (customer config is data, read with the VM identity)
+  ansible.builtin.template:
+    src: load-config.sh.j2
+    dest: /usr/local/bin/load-config
+    mode: "0755"
+
+- name: systemd unit
+  ansible.builtin.template:
+    src: app.service.j2
+    dest: "/etc/systemd/system/{{ product }}.service"
+    mode: "0644"
+  notify: Reload systemd
+
+- name: Enable service
+  ansible.builtin.service:
+    name: "{{ product }}"
+    enabled: true

@@ -1,0 +1,14 @@
+# platform-infra – merge to main: apply everything the change touches (org stack included); no releases.
+name: apply
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  pipeline:
+    uses: example-org/platform-workflows/.github/workflows/apply-pipeline.yml@v1
+    secrets: inherit
+    with:
+      allow_org: true
+      allow_deploy: false

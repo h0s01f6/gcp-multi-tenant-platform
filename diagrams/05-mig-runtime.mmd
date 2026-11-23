@@ -1,0 +1,53 @@
+%% 05 - Compute Engine MIG-based product runtime
+%% "Ledger" is an ILLUSTRATIVE VM-based product (not part of the ABC/XYZ Payroll/CRM example).
+%% Revised in Stage 2 review: A5 (images built in shr-build, not on a non-prod runner).
+flowchart LR
+  U["ABC users<br/>abc.ledger.example.com"]
+
+  subgraph BUILD["Build (shr-build + shr-artifacts)"]
+    PK["Packer + Ansible playbook<br/>bakes OS hardening + ledger 4.2.1"]
+    IMG["Image family ledger<br/>image img-ledger-4-2-1-20261120<br/>scanned + signed, shared via grp-wl-ar-readers"]
+  end
+
+  subgraph ING["plt-ingress-prd"]
+    ALB["Global external ALB + Cloud Armor"]
+  end
+
+  subgraph TA["t-abc-prd"]
+    BS["backend service bs-ledger-prd<br/>health check GET /healthz"]
+    IT_OLD["instance template<br/>it-ledger-prd-4-2-0"]
+    IT_NEW["instance template<br/>it-ledger-prd-4-2-1<br/>machine e2-standard-4, no public IP<br/>SA abc-ledger-prd@t-abc-prd<br/>metadata: tenant=abc env=prd<br/>config=secret ledger-prd-config"]
+    MIG["Regional MIG mig-ledger-prd<br/>3 zones, autoscale 3..9 on CPU/LB util<br/>autohealing on /healthz<br/>rolling update maxSurge 1 maxUnavailable 0"]
+    VM1["vm-1 zone a"]
+    VM2["vm-2 zone b"]
+    VM3["vm-3 zone c"]
+    SA["SA abc-ledger-prd@t-abc-prd"]
+    SM["Secret Manager ledger-prd-*"]
+    GCS["Bucket abc-ledger-prd-data"]
+    SNAP["(only if stateful disks)<br/>snapshot schedule"]
+  end
+
+  subgraph SQL["plt-sql-prd-01 / sql-prd-ledger-01 (MySQL 8.4)"]
+    DB["database abc_ledger<br/>account abc-ledger-prd"]
+  end
+
+  subgraph OPS["Operations access"]
+    ANS["Ansible controller (shr-cicd-prd)<br/>config drift + one-off ops"]
+    IAP["IAP TCP forwarding<br/>+ OS Login (2FA, no SSH keys in metadata)"]
+  end
+
+  PK --> IMG --> IT_NEW
+  U --> ALB --> BS --> MIG
+  IT_OLD -. "previous version, kept for rollback" .-> MIG
+  IT_NEW -- "rolling update target" --> MIG
+  MIG --> VM1
+  MIG --> VM2
+  MIG --> VM3
+  VM1 --- SA
+  VM2 --- SA
+  VM3 --- SA
+  SA -- "startup: fetch config" --> SM
+  SA --> GCS
+  SA -- "IAM DB auth" --> DB
+  ANS --> IAP --> VM2
+  VM3 -.- SNAP

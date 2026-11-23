@@ -1,0 +1,49 @@
+# Kubernetes namespace security baseline (Stage 3 D8) – inputs for tools/k8s/baseline.py.
+# Status: PROPOSED values. Cloud SQL ranges come from the Stage 4 IP plan (network/ip-plan.yaml; test keeps them equal).
+schema_version: "1.0"
+
+domain: example.com                       # A11 placeholder
+label_prefix: platform.example.com
+
+pod_security: restricted                  # Pod Security Admission level enforced on every tenant namespace
+
+registry:                                 # shr-artifacts (ADR-010); dev may also use the snapshot repository
+  release: asia-south1-docker.pkg.dev/shr-artifacts/release
+  snapshot: asia-south1-docker.pkg.dev/shr-artifacts/snapshot
+
+network:
+  dns: { namespace: kube-system, pod_label: { k8s-app: kube-dns } }
+  # GKE metadata server (Workload Identity). GKE troubleshooting docs: 169.254.169.252/32:988; on Dataplane V2
+  # (Autopilot default) 169.254.169.254/32:80. Both are allowed until T-K20 confirms which one Autopilot needs.
+  metadata:
+    - { cidr: 169.254.169.252/32, port: 988 }
+    - { cidr: 169.254.169.254/32, port: 80 }
+  google_apis: { cidr: 199.36.153.8/30, port: 443 }        # private.googleapis.com; restricted (199.36.153.4/30) once VPC-SC is enforced (K6)
+  cloud_sql:                                              # private services access range per tier (Stage 4 N1)
+    prd: { cidr: 10.84.0.0/16, port: 3307 }
+    nonprd: { cidr: 10.148.0.0/16, port: 3307 }
+  load_balancer_sources: [35.191.0.0/16, 130.211.0.0/22]  # Google front ends / health checks (container-native LB)
+  app_port_name: http                                     # charts must expose the serving port with this name
+
+quota:                                    # representative per-namespace budgets; product overrides come later (capacity model)
+  dev: { requests.cpu: "4",  requests.memory: 8Gi,  limits.memory: 8Gi,  pods: "30",  persistentvolumeclaims: "2" }
+  stg: { requests.cpu: "8",  requests.memory: 16Gi, limits.memory: 16Gi, pods: "50",  persistentvolumeclaims: "4" }
+  uat: { requests.cpu: "8",  requests.memory: 16Gi, limits.memory: 16Gi, pods: "50",  persistentvolumeclaims: "4" }
+  prd: { requests.cpu: "32", requests.memory: 64Gi, limits.memory: 64Gi, pods: "200", persistentvolumeclaims: "10" }
+quota_always: { services.loadbalancers: "0", services.nodeports: "0" }   # front doors only via the platform Gateway
+
+limit_range:
+  default_request: { cpu: 250m, memory: 512Mi }
+  default_limit: { memory: 512Mi }
+  max: { cpu: "4", memory: 16Gi }
+
+# Access-matrix role -> Kubernetes ClusterRole. k8s/edit is NOT the built-in `edit`: that role can delete
+# NetworkPolicies and edit ServiceAccounts, which would let a deployer remove the baseline.
+rbac_roles:
+  k8s/view: view
+  k8s/edit: platform-tenant-edit
+group_domain: example.com                 # Google Groups for RBAC (members of gke-security-groups@<domain>)
+
+# Workload separation (Autopilot) for the enhanced / dedicated isolation tiers (ADR-004)
+separation_key: platform.example.com/tenant
+separation_tiers: [enhanced, dedicated]

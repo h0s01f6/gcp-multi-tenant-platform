@@ -1,0 +1,27 @@
+# Illustrative tenant (Stage 2 worked example)
+schema_version: "2.1"
+tenant: abc
+display_name: "ABC Ltd"
+isolation_tier: standard
+status: active
+owners: { business: abc-account-team, technical: grp-hum-cust-abc-support }
+subscriptions:
+  payroll:
+    versions: { dev: 2.1.0, stg: 2.0.3, uat: 2.0.3, prd: 2.0.2 }
+    placement:
+      dev: { gke: gke-dev-as1-01, sql: sql-dev-01 }
+      stg: { gke: gke-stg-as1-01, sql: sql-stg-01 }
+      uat: { gke: gke-uat-as1-01, sql: sql-uat-01 }
+      prd: { gke: gke-prd-as1-01, sql: sql-prd-payroll-01 }
+    config: { pay_cycle: monthly, currency: INR }
+  crm:
+    versions: { dev: 3.2.0, stg: 3.1.1, uat: 3.1.1, prd: 3.1.0 }
+    placement:
+      dev: { sql: sql-dev-01 }
+      stg: { sql: sql-stg-01 }
+      uat: { sql: sql-uat-01 }
+      prd: { sql: sql-prd-crm-01 }
+  notify:
+    config: { sender_domain: abc.example.com }
+  ledger:
+    cohort: { dev: v4, stg: v4, uat: v4, prd: v3 }

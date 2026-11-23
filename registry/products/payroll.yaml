@@ -1,0 +1,11 @@
+# Illustrative product catalogue entry
+schema_version: "2.1"
+product: payroll
+runtime: gke
+deployment_model: dedicated
+owner_group: grp-hum-product-payroll-dev
+chart: oci://asia-south1-docker.pkg.dev/SHR_ARTIFACTS_PROJECT/release/charts/payroll
+database: { engine: mysql, major_version: "8.4", pool_group: g1, approx_tables: 300, readonly_identity: true }
+resources: { buckets: [data], secrets: [smtp-password] }
+supported_versions: [1.5.x, 2.0.x, 2.1.x]
+blocked_versions: [2.0.0]

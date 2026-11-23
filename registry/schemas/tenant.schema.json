@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/platform/registry/tenant.schema.json",
+  "title": "Tenant registry file (schema v2.1)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "tenant", "display_name", "isolation_tier", "status", "owners", "subscriptions"],
+  "properties": {
+    "schema_version": { "const": "2.1" },
+    "tenant": { "type": "string", "pattern": "^[a-z][a-z0-9]{2,9}$" },
+    "display_name": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "isolation_tier": { "enum": ["standard", "enhanced", "dedicated"] },
+    "status": { "enum": ["active", "offboarding"] },
+    "owners": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["business", "technical"],
+      "properties": {
+        "business": { "type": "string", "minLength": 1 },
+        "technical": { "type": "string", "pattern": "^grp-hum-cust-[a-z][a-z0-9]{2,9}-support$" }
+      }
+    },
+    "subscriptions": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9]{1,10}$" },
+      "additionalProperties": { "$ref": "#/$defs/subscription" }
+    }
+  },
+  "$defs": {
+    "env": { "enum": ["dev", "stg", "uat", "prd"] },
+    "semver": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "subscription": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "versions": {
+          "type": "object", "minProperties": 1, "additionalProperties": false,
+          "properties": { "dev": {"$ref": "#/$defs/semver"}, "stg": {"$ref": "#/$defs/semver"},
+                          "uat": {"$ref": "#/$defs/semver"}, "prd": {"$ref": "#/$defs/semver"} }
+        },
+        "cohort": {
+          "type": "object", "minProperties": 1, "additionalProperties": false,
+          "patternProperties": { "^(dev|stg|uat|prd)$": { "type": "string", "pattern": "^v[0-9]{1,3}$" } }
+        },
+        "placement": {
+          "type": "object", "additionalProperties": false,
+          "patternProperties": {
+            "^(dev|stg|uat|prd)$": {
+              "type": "object", "additionalProperties": false, "minProperties": 1,
+              "properties": {
+                "gke": { "type": "string", "pattern": "^gke-(dev|stg|uat|prd)-[a-z0-9]+-[0-9]{2}$" },
+                "sql": { "type": "string", "pattern": "^sql-[a-z0-9-]+-[0-9]{2}$" }
+              }
+            }
+          }
+        },
+        "config": { "type": "object" }
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+# Illustrative Cohort product (VM-based)
+schema_version: "2.1"
+product: ledger
+runtime: mig
+deployment_model: cohort
+owner_group: grp-hum-product-ledger-dev
+database: { engine: mysql, major_version: "8.4", pool_group: g3, approx_tables: 120 }
+supported_versions: [3.9.x, 4.2.x]
+cohorts: { v3: 3.9.4, v4: 4.2.1 }

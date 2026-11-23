@@ -1,0 +1,100 @@
+# Stage 7 – scheduled drift detection (read identities only, no state lock).
+#   tier org|nonprd|prd : terraform plan -detailed-exitcode of every stack instance of the tier
+#   tier org            : also DR01 cross-tenant IAM + DR02 workload-group drift (D10) from fresh exports
+# Any drift fails the run; the alert is the failed scheduled workflow (pipeline success rate, S8 platform alerts).
+name: drift
+on:
+  workflow_call:
+    inputs:
+      tier: { type: string, required: true }
+permissions:
+  contents: read
+jobs:
+  list:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.all.outputs.matrix }}
+    steps:
+      - uses: example-org/platform-workflows/.github/actions/workspace@v1
+        with:
+          app-id: ${{ vars.PLATFORM_READER_APP_ID }}
+          private-key: ${{ secrets.PLATFORM_READER_APP_KEY }}
+      - id: all
+        working-directory: platform
+        run: echo "matrix=$(python -m tools.cicd.planner all --tier '${{ inputs.tier }}')" >> "$GITHUB_OUTPUT"
+  terraform:
+    name: drift ${{ matrix.stack }}/${{ matrix.instance }}
+    needs: list
+    runs-on: [self-hosted, "${{ inputs.tier == 'nonprd' && 'nonprd' || 'prd' }}"]
+    environment: plan-${{ inputs.tier }}
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix: ${{ fromJSON(needs.list.outputs.matrix) }}
+    steps:
+      - uses: example-org/platform-workflows/.github/actions/workspace@v1
+        with:
+          app-id: ${{ vars.PLATFORM_READER_APP_ID }}
+          private-key: ${{ secrets.PLATFORM_READER_APP_KEY }}
+      - name: Authenticate (org read identity)
+        if: inputs.tier == 'org'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: tf-plan-org@bootstrap-seed.iam.gserviceaccount.com
+      - name: Authenticate (tier read identity)
+        if: inputs.tier != 'org'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: tf-plan-${{ inputs.tier }}@shr-cicd-${{ inputs.tier }}.iam.gserviceaccount.com
+      - uses: hashicorp/setup-terraform@v3
+        with: { terraform_version: "1.9.8", terraform_wrapper: false }
+      - name: terraform plan -detailed-exitcode
+        working-directory: platform
+        env:
+          STACK: ${{ matrix.stack }}
+          INSTANCE: ${{ matrix.instance }}
+          STATE: ${{ matrix.state }}
+          TFSTATE_BUCKET_SUFFIX: ${{ vars.TFSTATE_BUCKET_SUFFIX }}
+          TF_VAR_org_state_bucket: tfstate-org-${{ vars.TFSTATE_BUCKET_SUFFIX }}
+          TF_VAR_github_org_id: ${{ vars.GH_ORG_ID }}
+          TF_VAR_github_org: ${{ github.repository_owner }}
+        run: |
+          python -m tools.check_all > /dev/null
+          tools/cicd/tf.sh drift
+  iam:
+    name: DR01 / DR02
+    if: inputs.tier == 'org'
+    runs-on: [self-hosted, prd]
+    environment: plan-org
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: example-org/platform-workflows/.github/actions/workspace@v1
+        with:
+          app-id: ${{ vars.PLATFORM_READER_APP_ID }}
+          private-key: ${{ secrets.PLATFORM_READER_APP_KEY }}
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: tf-plan-org@bootstrap-seed.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Export IAM policies and workload-group memberships
+        working-directory: platform
+        run: |
+          python -m tools.identity.derive registry -o build/identity-plan.json
+          gcloud asset search-all-iam-policies --scope="organizations/${{ vars.GCP_ORG_ID }}" --format=json > build/iam-export.json
+          for g in $(python -c "import json;print(' '.join(sorted({m['group'] for m in json.load(open('build/identity-plan.json'))['group_memberships'].values()})))"); do
+            gcloud identity groups memberships list --group-email="$g@${{ vars.GCP_DOMAIN }}" --format=json \
+              | jq --arg g "$g" '{($g): [.[].preferredMemberKey.id]}'
+          done | jq -s 'add // {}' > build/memberships-export.json
+      - name: DR01 cross-tenant IAM, DR02 group drift
+        working-directory: platform
+        run: python -m tools.monitoring.drift --plan build/identity-plan.json --iam build/iam-export.json --memberships build/memberships-export.json

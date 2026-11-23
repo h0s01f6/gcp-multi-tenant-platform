@@ -1,0 +1,62 @@
+# Privileged access: PAM entitlements, time-bound group membership, break-glass (Stage 3 D7).
+# Status: PROPOSED configuration, checked locally by tools/access/privileged.py (PA01-PA07). Not applied.
+#
+# The roles, scopes and durations come from the access matrix (access: jit / expiring / breakglass); this file adds
+# only HOW they are obtained. PAM entitlements are created per resource (org, folder or project), so one matrix
+# entitlement on two folders becomes two PAM entitlements. Applied by tf-org (roles/privilegedaccessmanager.admin).
+schema_version: "1.0"
+
+# --- 1. PAM entitlements (IAM roles, just in time) ---
+entitlements:
+  pam-org-admin:
+    eligible: [grp-hum-platform-admins]
+    approvers: [grp-hum-security-audit]          # a different group: requesters cannot approve themselves
+    approvals_required: 1
+    justification: required
+    notify: [grp-hum-security-audit]
+  pam-prd-support-write:
+    eligible: [grp-hum-platform-prd-operators]
+    approvers: [grp-hum-platform-admins]
+    approvals_required: 1
+    justification: required                      # incident / change ticket id
+    notify: [grp-hum-security-audit]
+  "pam-prd-secret-write-{product}":
+    eligible: ["grp-hum-product-{product}-prd-viewers"]
+    approvers: [grp-hum-platform-prd-operators]
+    approvals_required: 1
+    justification: required
+    notify: [grp-hum-security-audit]
+
+# --- 2. Time-bound group membership (K21: PAM cannot grant group membership) ---
+expiring_groups:
+  grp-hum-dba-prd-admin:
+    approved_by: dba-lead                        # group owner (groups.yaml); approval recorded on the ticket
+    added_by: grp-hum-security-audit             # Cloud Identity group manager of this group only (access matrix)
+    expiry: mandatory                            # membership created with an expiry time, never permanent
+    max_hours: 4
+    notify: [grp-hum-security-audit]
+
+# --- 3. Break-glass (Stage 2 §5.1 + identity model, reconciled) ---
+# Two emergency accounts, usable when the IdP or PAM is unavailable. They are the Cloud Identity SUPER ADMIN
+# accounts (not federated to the IdP), hold NO IAM role bindings, and are never members of any group.
+# In an emergency one of them adds a named engineer (or itself) to grp-hum-prd-breakglass with an expiry;
+# that group holds the org-level role (access matrix). So the group stays empty by default (AC11).
+breakglass:
+  group: grp-hum-prd-breakglass
+  accounts:
+    - { id: bg-01, federated: false, mfa: hardware-key, credential_storage: sealed-envelope-safe-1, iam_bindings: [] }
+    - { id: bg-02, federated: false, mfa: hardware-key, credential_storage: sealed-envelope-safe-2, iam_bindings: [] }
+  membership_expiry_hours: 8
+  two_person_rule: true                          # credential opened by one person, witnessed by a second (security)
+  post_incident_review_days: 2
+  credential_rotation: after-every-use
+  test_schedule: quarterly                       # login + membership change exercised, alerts verified
+
+# Alerts that D10 must implement. Each break-glass / privileged path above must be covered (PA06).
+required_alerts:
+  AL-BG-LOGIN:      "Any login by a break-glass account"
+  AL-BG-MEMBERSHIP: "Membership change of grp-hum-prd-breakglass"
+  AL-BG-USE:        "Any API call by a member of grp-hum-prd-breakglass"
+  AL-PAM-GRANT:     "PAM grant approved or activated for an org-level or prd entitlement"
+  AL-DBA-MEMBERSHIP: "Membership added to grp-hum-dba-prd-admin without an expiry, or longer than max_hours"
+  AL-BINAUTHZ-BREAKGLASS: "Binary Authorization break-glass deployment (D9)"

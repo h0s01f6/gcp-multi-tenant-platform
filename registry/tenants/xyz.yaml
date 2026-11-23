@@ -1,0 +1,21 @@
+schema_version: "2.1"
+tenant: xyz
+display_name: "XYZ Corp"
+isolation_tier: standard
+status: active
+owners: { business: xyz-account-team, technical: grp-hum-cust-xyz-support }
+subscriptions:
+  payroll:
+    versions: { dev: 2.0.2, stg: 1.5.4, uat: 1.5.4, prd: 1.5.3 }
+    placement:
+      dev: { gke: gke-dev-as1-01, sql: sql-dev-01 }
+      stg: { gke: gke-stg-as1-01, sql: sql-stg-01 }
+      uat: { gke: gke-uat-as1-01, sql: sql-uat-01 }
+      prd: { gke: gke-prd-as1-01, sql: sql-prd-payroll-01 }
+  crm:
+    versions: { dev: 3.1.1, stg: 3.0.5, uat: 3.0.5, prd: 3.0.5 }
+    placement:
+      dev: { sql: sql-dev-01 }
+      stg: { sql: sql-stg-01 }
+      uat: { sql: sql-uat-01 }
+      prd: { sql: sql-prd-crm-01 }

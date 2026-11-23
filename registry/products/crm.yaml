@@ -1,0 +1,8 @@
+schema_version: "2.1"
+product: crm
+runtime: cloudrun
+deployment_model: dedicated
+owner_group: grp-hum-product-crm-dev
+database: { engine: mysql, major_version: "8.4", pool_group: g2, approx_tables: 180 }
+resources: { buckets: [files], secrets: [api-key] }
+supported_versions: [3.0.x, 3.1.x, 3.2.x]

@@ -1,0 +1,56 @@
+%% 01 - GCP resource hierarchy (environment-first)
+%% Status: PROPOSED baseline, revised in Stage 2 review (A1, A5, A7, K2, K16); Stage 8 K27 (plt-obs-<tier>-NN).
+%% Project IDs get a random suffix in reality, e.g. t-abc-prd-x7k2. NN = shard number (01, 02 ...).
+flowchart TB
+  ORG["Organization: example.com<br/>org policies: no SA keys, no default network,<br/>allowed regions, uniform bucket access, OS Login"]
+
+  ORG --> FB["fldr-bootstrap"]
+  ORG --> FS["fldr-shared"]
+  ORG --> FN["fldr-network"]
+  ORG --> FP["fldr-platform"]
+  ORG --> FT["fldr-tenants"]
+
+  FB --> P_SEED["bootstrap-seed<br/>state buckets: tfstate-org, tfstate-nonprd, tfstate-prd<br/>(separate IAM per tier)<br/>WIF pool for GitHub OIDC"]
+
+  FS --> P_BLD["shr-build<br/>build runners, builder SA,<br/>signing / attestations"]
+  FS --> P_ART["shr-artifacts<br/>Artifact Registry: release (build-only write),<br/>snapshot (Dev only)"]
+  FS --> P_CIN["shr-cicd-nonprd<br/>runner pool + deploy-nonprd"]
+  FS --> P_CIP["shr-cicd-prd<br/>runner pool + deploy-prd"]
+  FS --> P_SEC["shr-security<br/>audit log bucket (locked), SCC exports"]
+
+  FN --> P_NHP["net-host-prd<br/>Shared VPC host: vpc-prd"]
+  FN --> P_NHN["net-host-nonprd<br/>Shared VPC host: vpc-nonprd"]
+
+  FP --> FPP["prd"]
+  FP --> FPN["nonprd"]
+  FPP --> P_GKEP["plt-gke-prd<br/>gke-prd-as1-01 (+ cells -02 ...)<br/>only platform cells in this project"]
+  FPP --> P_SQLP["plt-sql-prd-NN<br/>prod pools per product group / product<br/>e.g. sql-prd-payroll-01, sql-prd-crm-01"]
+  FPP --> P_INGP["plt-ingress-prd<br/>global external ALBs + Cloud Armor<br/>(Cloud Run and MIG products)"]
+  FPP --> P_PRODP["p-product-prd<br/>only for Shared / Cohort products"]
+  FPP --> P_OBP["plt-obs-prd-NN<br/>metrics scope, SLOs, alerts (K27)<br/>sharded at ~375 projects"]
+  FPN --> P_GKEN["plt-gke-nonprd<br/>gke-dev-as1-01, gke-stg-as1-01,<br/>gke-uat-as1-01 (+ cells)"]
+  FPN --> P_SQLN["plt-sql-nonprd-NN<br/>sql-dev-NN, sql-stg-NN, sql-uat-NN"]
+  FPN --> P_INGN["plt-ingress-nonprd"]
+  FPN --> P_PRODN["p-product-nonprd<br/>only for Shared / Cohort products"]
+  FPN --> P_OBN["plt-obs-nonprd-NN<br/>metrics scope (K27)"]
+
+  FT --> FTP["prd<br/>strict prod policies + prod access groups"]
+  FT --> FTN["nonprd"]
+  FTP --> T_ABCP["t-abc-prd<br/>tag isolation_tier=standard"]
+  FTP --> T_XYZP["t-xyz-prd<br/>tag isolation_tier=standard"]
+  FTP --> T_BIGP["t-bigco-prd<br/>tag isolation_tier=dedicated<br/>own GKE cluster + own Cloud SQL"]
+  FTN --> T_ABCN["t-abc-nonprd<br/>Dev + Stage + UAT"]
+  FTN --> T_XYZN["t-xyz-nonprd<br/>Dev + Stage + UAT"]
+  FTN --> T_BIGN["t-bigco-nonprd<br/>uses shared non-prod tiers by default (Q18)"]
+
+  P_NHP -. "subnets shared with service projects in" .-> FPP
+  P_NHP -. "subnets shared with service projects in" .-> FTP
+  P_NHN -. "subnets shared with service projects in" .-> FPN
+  P_NHN -. "subnets shared with service projects in" .-> FTN
+
+  classDef prd fill:#fde2e1,stroke:#c0392b,color:#000
+  classDef nonprd fill:#e1ecfd,stroke:#2c6fbb,color:#000
+  classDef shared fill:#eeeeee,stroke:#555,color:#000
+  class FPP,FTP,P_GKEP,P_SQLP,P_INGP,P_PRODP,T_ABCP,T_XYZP,T_BIGP,P_NHP,P_CIP,P_OBP prd
+  class FPN,FTN,P_GKEN,P_SQLN,P_INGN,P_PRODN,T_ABCN,T_XYZN,T_BIGN,P_NHN,P_CIN,P_OBN nonprd
+  class FB,FS,FN,FP,FT,P_SEED,P_ART,P_SEC,P_BLD shared

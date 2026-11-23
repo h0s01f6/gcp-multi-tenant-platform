@@ -1,0 +1,40 @@
+{
+  "tenant": "xyz",
+  "product": "payroll",
+  "env": "prd",
+  "image": {
+    "repository": "asia-south1-docker.pkg.dev/shr-artifacts/release/payroll",
+    "digest": "sha256:f9f5ae236b8fa371921800c04b75426063180f297355a64a60f27ee10ed7ba65",
+    "version": "1.5.3"
+  },
+  "serviceAccount": {
+    "name": "payroll",
+    "migrationName": "payroll-migrate"
+  },
+  "route": {
+    "gateway": {
+      "name": "gw-payroll-prd-01",
+      "namespace": "gateway-infra"
+    },
+    "hostnames": [
+      "xyz.payroll.example.com"
+    ]
+  },
+  "database": {
+    "enabled": true,
+    "instanceConnectionName": "plt-sql-prd-01:asia-south1:sql-prd-payroll-01",
+    "name": "xyz_payroll",
+    "user": "xyz-payroll-prd",
+    "migrationUser": "xyz-payroll-prd-mig"
+  },
+  "secrets": {
+    "smtp-password": "projects/t-xyz-prd/secrets/payroll-prd-smtp-password"
+  },
+  "buckets": {
+    "data": "xyz-payroll-prd-data"
+  },
+  "config": {},
+  "isolation": {
+    "dedicatedNodes": false
+  }
+}

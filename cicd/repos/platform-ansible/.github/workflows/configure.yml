@@ -1,0 +1,25 @@
+# platform-ansible – day-2 configuration of MIG VMs: nonprd on merge, prd after the prd environment approval.
+name: configure
+on:
+  push:
+    branches: [main]
+    paths: ["roles/**", "playbooks/configure.yml", "inventories/**"]
+  workflow_dispatch:
+    inputs:
+      limit: { type: string, default: all }
+permissions:
+  contents: read
+jobs:
+  nonprd:
+    uses: example-org/platform-workflows/.github/workflows/ansible-configure.yml@v1
+    secrets: inherit
+    with:
+      tier: nonprd
+      limit: ${{ inputs.limit || 'all' }}
+  prd:
+    needs: nonprd
+    uses: example-org/platform-workflows/.github/workflows/ansible-configure.yml@v1
+    secrets: inherit
+    with:
+      tier: prd
+      limit: ${{ inputs.limit || 'all' }}

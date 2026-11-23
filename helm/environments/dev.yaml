@@ -1,0 +1,5 @@
+# Environment sizing shared by all releases in dev (cost: small, scale down; Stage 2 §6.2).
+replicas: 1
+autoscaling: { enabled: false, minReplicas: 1, maxReplicas: 2, targetCPU: 70 }
+pdb: { enabled: false, minAvailable: 1 }
+resources: { cpu: 250m, memory: 512Mi }

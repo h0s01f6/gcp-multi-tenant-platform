@@ -1,0 +1,50 @@
+# Stage 7 – database gate after tenant/product/memberships stacks: run the db-bootstrap job of every touched pool
+# (D4 databases, roles, grants) and then the isolation test job (ISO-01..10). A failed isolation test stops the
+# pipeline before any release of that tier is deployed.
+# Identity: tf-<tier>, which holds run.invoker on plt-sql-<tier>-NN and shr-cicd-<tier> (CI09); the jobs run as
+# sqlboot-<tier> / isotest-<tier> inside the VPC.
+name: db-jobs
+on:
+  workflow_call:
+    inputs:
+      tier: { type: string, required: true }
+      matrix: { type: string, required: true }      # planner matrix of pools {pool, project, tier}
+permissions:
+  contents: read
+jobs:
+  bootstrap:
+    name: bootstrap ${{ matrix.pool }}
+    runs-on: [self-hosted, "${{ inputs.tier }}"]
+    environment: ${{ inputs.tier }}
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: true
+      matrix: ${{ fromJSON(inputs.matrix) }}
+    concurrency:
+      group: db-${{ matrix.pool }}
+      cancel-in-progress: false
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: tf-${{ inputs.tier }}@shr-cicd-${{ inputs.tier }}.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: db-bootstrap (idempotent; plans from build/sql are baked into the job image)
+        run: gcloud run jobs execute db-bootstrap --project "${{ matrix.project }}" --region asia-south1 --args="--pool=${{ matrix.pool }}" --wait
+  isolation:
+    needs: bootstrap
+    runs-on: [self-hosted, "${{ inputs.tier }}"]
+    environment: ${{ inputs.tier }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: tf-${{ inputs.tier }}@shr-cicd-${{ inputs.tier }}.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: db-isotest gate (ISO-01..ISO-10, D4)
+        run: gcloud run jobs execute db-isotest --project "shr-cicd-${{ inputs.tier }}" --region asia-south1 --wait

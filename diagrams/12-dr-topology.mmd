@@ -1,0 +1,39 @@
+%% 12 - High availability and disaster recovery (production)
+%% Regions are ASSUMPTION A4 (asia-south1 primary, asia-south2 DR). RPO/RTO are placeholder targets (A8).
+flowchart LR
+  USERS["Users"] --> GLB["Global external ALBs<br/>backends in both regions<br/>health-based failover"]
+
+  subgraph R1["asia-south1 (primary, active)"]
+    direction TB
+    G1["gke-prd-as1-01 (+ cells) Autopilot<br/>regional: pods spread over 3 zones"]
+    C1["Cloud Run services<br/>multi-zone by default"]
+    M1["Regional MIGs<br/>3 zones, autohealing"]
+    SQL1["Cloud SQL HA pools (plt-sql-prd-NN)<br/>primary + standby in 2 zones<br/>automated backups + PITR"]
+  end
+
+  subgraph R2["asia-south2 (DR, pilot light)"]
+    direction TB
+    G2["gke-prd-as2-01 Autopilot<br/>created, no tenant pods<br/>(Helm releases applied on failover)"]
+    C2["Cloud Run services deployed<br/>min instances 0"]
+    M2["MIGs from same templates<br/>target size 0"]
+    SQL2["Cloud SQL cross-region<br/>read replicas (async, count as instances)<br/>promote on regional failure"]
+  end
+
+  subgraph GLOBALDATA["Region-independent data"]
+    GCS["Prod buckets: dual-region or<br/>replicated (to be confirmed per region pair)"]
+    BKP["Backup vault / exported backups<br/>in second region, immutable retention"]
+    AR["Artifact Registry multi-region repo"]
+    TFS["Terraform state bucket (dual-region, versioned)"]
+  end
+
+  GLB --> G1
+  GLB --> C1
+  GLB --> M1
+  GLB -. "failover" .-> G2
+  GLB -. "failover" .-> C2
+  GLB -. "failover" .-> M2
+  SQL1 -- "async replication" --> SQL2
+  SQL1 -- "daily backups" --> BKP
+  G1 & C1 & M1 --> SQL1
+  G2 & C2 & M2 -.-> SQL2
+  G1 & C1 & M1 --> GCS

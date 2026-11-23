@@ -1,0 +1,94 @@
+# Stage 8 – service levels, monitoring and alerting (Stage 2 §6.5 made concrete; A8 targets).
+# Generated into Terraform inputs by tools/slo/observability.py (observability stack per tier + uptime checks in the
+# tenant stack). Status: implemented + locally checked (SL01-SL06); nothing created in a project (T-SL1..T-SL6).
+schema_version: "1.0"
+
+# Availability / latency objectives per customer per product (A8: 99.9 % in prd). Rolling 28-day windows.
+objectives:
+  prd:
+    availability: { goal: 0.999, window_days: 28 }            # error budget = 40.3 min / 28 days
+    latency:      { goal: 0.95, threshold_ms: 1000, window_days: 28 }
+  nonprd:         # measured on the dashboards, no SLO objects and no paging (A-S8-1)
+    availability: { goal: 0.99, window_days: 28 }
+
+# SLI = load-balancer view of the customer's requests (Stage 2 §6.5), good = not 5xx; latency = total LB latency.
+# Dedicated deployments have their own backend; Shared/Cohort backends serve many customers, so their per-customer
+# SLI comes from a log-based metric on the LB request logs, labelled by the customer extracted from the host name.
+sli:
+  dedicated:
+    request_count: loadbalancing.googleapis.com/https/request_count
+    latency: loadbalancing.googleapis.com/https/total_latencies
+    resource: https_lb_rule
+    backend_match:
+      cloudrun: "bs-{tenant}-{product}-prd"                     # N4 backend service (tenant project)
+      mig: "bs-{tenant}-{product}-prd"
+      gke: ".*-{tenant}-{product}-prd-.*"                       # Gateway-generated backend name contains the namespace
+  shared:
+    request_count: logging.googleapis.com/user/lb_requests_by_tenant
+    latency: logging.googleapis.com/user/lb_latency_by_tenant
+    resource: https_lb_rule
+    log_filter: 'resource.type="http_load_balancer" AND httpRequest.requestUrl=~"^https://[a-z0-9]+\\.[a-z0-9]+\\."'
+    labels:                                                       # label extractors of the log-based metrics
+      tenant: 'REGEXP_EXTRACT(httpRequest.requestUrl, "^https://([a-z0-9]+)\\.")'
+      product: 'REGEXP_EXTRACT(httpRequest.requestUrl, "^https://[a-z0-9]+\\.([a-z0-9]+)\\.")'
+      response_code_class: 'REGEXP_EXTRACT(httpRequest.status, "^([0-9])")'
+    bad_response_class: "5"
+  bad_response_class: "500"                                      # 4xx = client errors, count as good
+
+# One custom service per product per tier (sharded at `capacity.slos_per_service`): SLOs of every customer under it.
+services: { id: "svc-{product}-{tier}-{nn}" }
+
+# Multi-window, multi-burn-rate alerts (SRE workbook). One PromQL condition per pair of windows, grouped by customer,
+# one policy per product and severity -> alert count does not grow with customers.
+burn_rate_alerts:
+  - { id: page-fast, long: 1h,  short: 5m,  burn_rate: 14.4, severity: page,   route: product }
+  - { id: page-slow, long: 6h,  short: 30m, burn_rate: 6.0,  severity: page,   route: product }
+  - { id: ticket,    long: 3d,  short: 6h,  burn_rate: 1.0,  severity: ticket, route: product }
+latency_alert: { id: latency, window: 1h, threshold_fraction_slow: 0.10, severity: ticket, route: product }
+
+# Error-budget policy (applied by the product teams and the pipeline)
+error_budget_policy:
+  - "Budget left: releases proceed normally."
+  - "A customer's budget for a product exhausted: only fixes and rollbacks to that customer's prd until it recovers (release PRs are labelled budget-exhausted by the weekly report; prd approvers enforce)."
+  - "More than 10 % of a product's customers exhausted: product-wide release freeze and post-incident review."
+  - "Budget burned by the platform (cluster, SQL pool, LB): platform freeze on non-urgent platform changes in that tier."
+
+# Uptime checks per customer host name in prd (Stage 2 §6.5). They live in the customer's own prd project, so the
+# 100-checks-per-scope limit is never shared (<= 20 products per customer) and each project's free executions apply.
+uptime:
+  path: /readyz
+  period_seconds: 300
+  timeout_seconds: 10
+  regions: [ASIA_PACIFIC, EUROPE, USA_OREGON]
+  alert: { failing_regions: 2, duration: 300s, severity: page, route: product }
+
+# Platform alerts (Stage 2 §6.5 platform level), routed to the platform on-call. `covers` maps to the Stage 2 list.
+# Exactly one of: filter + comparison + threshold (metric threshold), promql, log_filter (log-match), or
+# outside_monitoring (raised by another system). Metric names / filters are validated in GCP (T-SL3).
+platform_alerts:
+  - { id: PA-GKE-UNSCHEDULABLE, covers: cluster-health, severity: page, log_filter: 'resource.type="k8s_pod" jsonPayload.reason="FailedScheduling"' }
+  - { id: PA-GKE-RESTARTS,    covers: cluster-health, severity: ticket, filter: 'metric.type="kubernetes.io/container/restart_count" resource.type="k8s_container"', aligner: ALIGN_DELTA, comparison: GT, threshold: 5 }
+  - { id: PA-MIG-AUTOHEAL,    covers: cluster-health, severity: ticket, log_filter: 'protoPayload.methodName="compute.instances.repair.recreateInstance"' }
+  - { id: PA-SQL-CPU,         covers: sql-saturation, severity: ticket, filter: 'metric.type="cloudsql.googleapis.com/database/cpu/utilization" resource.type="cloudsql_database"', comparison: GT, threshold: 0.8 }
+  - { id: PA-SQL-CONNECTIONS, covers: sql-saturation, severity: page,   filter: 'metric.type="cloudsql.googleapis.com/database/network/connections" resource.type="cloudsql_database"', comparison: GT, threshold: 2800 }   # 70 % of max_connections 4000 (capacity model)
+  - { id: PA-SQL-DISK,        covers: sql-saturation, severity: ticket, filter: 'metric.type="cloudsql.googleapis.com/database/disk/utilization" resource.type="cloudsql_database"', comparison: GT, threshold: 0.8 }
+  - { id: PA-SQL-REPLICA-LAG, covers: dr-readiness,   severity: page,   filter: 'metric.type="cloudsql.googleapis.com/database/replication/replica_lag" resource.type="cloudsql_database"', comparison: GT, threshold: 300 }   # = slo/dr.yaml replica_lag_alert_s
+  - { id: PA-SQL-BACKUP,      covers: dr-readiness,   severity: page,   log_filter: 'resource.type="cloudsql_database" protoPayload.methodName=~"backupRuns" severity>=ERROR' }
+  - { id: PA-QUOTA,           covers: quota,          severity: ticket, promql: 'max by (quota_metric, project_id) (serviceruntime_googleapis_com:quota_allocation_usage) / max by (quota_metric, project_id) (serviceruntime_googleapis_com:quota_limit) > 0.8' }
+  - { id: PA-NAT-ALLOC,       covers: quota,          severity: page,   filter: 'metric.type="router.googleapis.com/nat/nat_allocation_failed" resource.type="nat_gateway"', comparison: GT, threshold: 0 }
+  - { id: PA-PIPELINE-JOBS,   covers: pipeline,       severity: ticket, filter: 'metric.type="run.googleapis.com/job/completed_execution_count" resource.type="cloud_run_job" metric.label.result="failed"', aligner: ALIGN_DELTA, comparison: GT, threshold: 0 }
+  - { id: PA-PIPELINE-GITHUB, covers: pipeline,       severity: ticket, outside_monitoring: "GitHub workflow failure notifications (apply, drift) to the platform channel (T-SL5)" }
+  - { id: PA-CERT-EXPIRY,     covers: cert-expiry,    severity: ticket, filter: 'metric.type="monitoring.googleapis.com/uptime_check/time_until_ssl_cert_expires" resource.type="uptime_url"', comparison: LT, threshold: 21 }
+
+required_platform_coverage: [cluster-health, sql-saturation, quota, pipeline, cert-expiry, dr-readiness]
+
+channels:          # notification channels per scoping project (email placeholders; pager integration via email/webhook)
+  platform-oncall:   { type: email, address: "platform-oncall@example.com" }
+  security:          { type: email, address: "security-alerts@example.com" }      # D10 channel
+  product:           { type: email, address: "{owner_group}@example.com" }        # product owner group (registry)
+
+# Dashboards (Stage 2 §6.5): one dashboard per level with a template filter, not one per customer.
+dashboards:
+  - { id: customer, filter: tenant,  widgets: [availability per product, latency per product, error budget, uptime, deploy versions by environment] }
+  - { id: product-fleet, per: product, filter: tenant, widgets: [requests, 5xx ratio, latency p95, budget remaining per customer, versions] }
+  - { id: platform, widgets: [cells pods/pending, SQL pool CPU/connections/disk, replica lag, NAT ports, quotas, pipeline job failures] }

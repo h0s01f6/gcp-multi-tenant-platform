@@ -1,0 +1,128 @@
+# Audit logging, security monitoring and alerts (Stage 3 D10).
+# Status: PROPOSED configuration, checked locally by tools/monitoring/audit.py (AU01-AU07). Not applied.
+# Products: Cloud Audit Logs, Cloud Logging (aggregated sink + locked bucket), Cloud Monitoring (log-based alert
+# policies), Cloud Asset Inventory exports for the nightly drift checks – all already part of the Stage 2 design
+# (shr-security: "organization audit-log sink into a locked log bucket"). No additional monitoring product.
+schema_version: "1.0"
+
+# --- 1. Audit logs ---
+# Admin Activity and System Event audit logs are always on and cannot be disabled.
+# Data Access logs are off by default (except BigQuery) and are enabled here where customer data, secrets, keys,
+# identities or tokens are touched. No exempted principals.
+data_access_logs:
+  - { node: org, service: iamcredentials.googleapis.com, log_types: [DATA_READ, DATA_WRITE], why: "token minting / impersonation (isotest R-D4-1, tf-org R-D6-2)" }
+  - { node: org, service: sts.googleapis.com, log_types: [DATA_READ, DATA_WRITE], why: "WIF token exchange by pipelines (D6)" }
+  - { node: org, service: cloudkms.googleapis.com, log_types: [ADMIN_READ, DATA_READ, DATA_WRITE], why: "CMEK use and the attestor signing key (D9)" }
+  - { node: org, service: secretmanager.googleapis.com, log_types: [ADMIN_READ, DATA_READ, DATA_WRITE], why: "secret value reads and new versions (D9)" }
+  - { node: org, service: cloudsql.googleapis.com, log_types: [ADMIN_READ, DATA_READ, DATA_WRITE], why: "instance logins via IAM, connect (ADR-011)" }
+  - { node: fldr-tenants/prd, service: storage.googleapis.com, log_types: [DATA_READ, DATA_WRITE], why: "object access to prod customer buckets (volume: prod only, A-D10-2)" }
+  - { node: fldr-platform/prd, service: storage.googleapis.com, log_types: [DATA_READ, DATA_WRITE], why: "object access in prod product projects" }
+# Google Workspace / Cloud Identity audit events (group membership changes, admin logins) reach Cloud Logging only
+# when "share data with Google Cloud" is enabled in the Admin console (T-A1).
+workspace_audit_sharing: required
+
+# --- 2. Central, tamper-resistant storage ---
+log_bucket:
+  project: shr-security
+  name: org-audit-locked
+  location: asia-south1                          # D5 gcp.resourceLocations
+  retention_days: 400                            # placeholder: > 1 year for annual reviews (A-D10-1, Q11)
+  locked: true                                   # retention cannot be reduced and the bucket cannot be deleted early
+  readers: [grp-hum-security-audit]              # access matrix: logging.privateLogViewer on shr-security
+sink:
+  name: org-audit-to-shr-security
+  parent: org
+  include_children: true
+  filter: 'logName:"/logs/cloudaudit.googleapis.com" OR protoPayload.serviceName="login.googleapis.com" OR protoPayload.serviceName="admin.googleapis.com"'
+  destination_bucket: org-audit-locked
+  # The sink's writer identity gets roles/logging.bucketWriter on the bucket (generated, not a human grant).
+
+# --- 3. Notification channels (Cloud Monitoring) ---
+channels:
+  security-page:   { kind: pagerduty-or-phone, owner: security-team }   # integration chosen by the company (Q25)
+  security-ticket: { kind: email, address: "security-alerts@example.com" }
+  platform-ticket: { kind: email, address: "platform-alerts@example.com" }
+severity_channels: { page: [security-page, security-ticket], ticket: [security-ticket], info: [security-ticket] }
+
+# --- 4. Log-based alert policies (in shr-security, evaluated on the central bucket) ---
+# covers: the D7 required_alerts, the Stage 2 detection row (§3 "IAM grant crossing tenants") and the Stage 3 risks
+# whose treatment relies on detection. Cloud Logging query precedence is NOT > OR > AND, so filters mixing AND and OR
+# use explicit parentheses (AU02).
+alerts:
+  AL-BG-LOGIN:
+    severity: page
+    filter: 'protoPayload.serviceName="login.googleapis.com" AND protoPayload.authenticationInfo.principalEmail=~"^(bg-01|bg-02)@example\.com$"'
+    runbook: "Confirm a declared emergency and the two-person rule; if not declared, suspend the account and start incident response."
+    covers: [D7, R-D7-2]
+  AL-BG-MEMBERSHIP:
+    severity: page
+    filter: 'protoPayload.serviceName="admin.googleapis.com" AND protoPayload.metadata.event.parameter.value="grp-hum-prd-breakglass@example.com"'
+    runbook: "Check the membership has an expiry <= 8 h and matches a declared emergency; remove otherwise."
+    covers: [D7, R-D7-2]
+  AL-BG-USE:
+    severity: page
+    # Humans hold no standing write at org/folder level (AC03); a human write there is PAM-activated or break-glass.
+    filter: 'logName:"cloudaudit.googleapis.com%2Factivity" AND (resource.type="organization" OR resource.type="folder") AND NOT protoPayload.authenticationInfo.principalEmail:"gserviceaccount.com"'
+    runbook: "Match against an active PAM grant (AL-PAM-GRANT) or a break-glass membership; any unmatched change is an incident."
+    covers: [D7, R-D7-2]
+  AL-PAM-GRANT:
+    severity: ticket
+    filter: 'protoPayload.serviceName="privilegedaccessmanager.googleapis.com" AND protoPayload.methodName=~"(CreateGrant|ApproveGrant)$"'
+    runbook: "Review justification and approver; confirm the grant ends at its maximum duration."
+    covers: [D7]
+  AL-DBA-MEMBERSHIP:
+    severity: ticket
+    filter: 'protoPayload.serviceName="admin.googleapis.com" AND protoPayload.metadata.event.parameter.value="grp-hum-dba-prd-admin@example.com"'
+    runbook: "Verify the approval ticket (dba-lead) and that the membership has an expiry <= 4 h; remove if not. Adder must not be the member (R-D7-1)."
+    covers: [D7, R-D7-1, K21]
+  AL-BINAUTHZ-BREAKGLASS:
+    severity: page
+    filter: '(resource.type="k8s_cluster" AND protoPayload.request.metadata.annotations."alpha.image-policy.k8s.io/break-glass"="true") OR (resource.type="cloud_run_revision" AND protoPayload.request.metadata.annotations."run.googleapis.com/binary-authorization-breakglass":*)'
+    runbook: "Deploy bypassed attestation verification: confirm incident ticket, image digest from the release repository, and redeploy a signed image afterwards."
+    covers: [D9]
+  AL-ISOTEST-TOKEN:
+    severity: info
+    filter: 'protoPayload.serviceName="iamcredentials.googleapis.com" AND protoPayload.authenticationInfo.principalEmail=~"^isotest-(prd|nonprd)@shr-cicd-(prd|nonprd)\.iam\.gserviceaccount\.com$"'
+    runbook: "Daily: correlate token minting with isolation-test job executions; tokens outside a run are an incident."
+    covers: [D4, R-D4-1]
+  AL-TF-ORG-USE:
+    severity: ticket
+    filter: 'logName:"cloudaudit.googleapis.com%2Factivity" AND protoPayload.authenticationInfo.principalEmail="tf-org@bootstrap-seed.iam.gserviceaccount.com"'
+    runbook: "Each change must correspond to a merged platform-infra PR run in environment org."
+    covers: [D6, R-D6-2]
+  AL-SA-KEY-CREATED:
+    severity: page
+    filter: 'protoPayload.methodName="google.iam.admin.v1.CreateServiceAccountKey" OR protoPayload.methodName="google.iam.admin.v1.UploadServiceAccountKey"'
+    runbook: "Keys are blocked by org policy (D5); a successful key means the policy was bypassed – delete key, investigate."
+    covers: [D5, D6]
+  AL-ORG-POLICY-CHANGE:
+    severity: page
+    filter: 'protoPayload.serviceName="orgpolicy.googleapis.com" AND protoPayload.methodName=~"(Create|Update|Delete)Policy$" AND protoPayload.authenticationInfo.principalEmail!="tf-org@bootstrap-seed.iam.gserviceaccount.com"'
+    runbook: "Org policies change only through tf-org; revert and investigate."
+    covers: [D5]
+  AL-AUDIT-CONFIG-CHANGE:
+    severity: page
+    filter: '(protoPayload.serviceName="logging.googleapis.com" AND protoPayload.methodName=~"(UpdateSink|DeleteSink|UpdateBucket|DeleteBucket|UpdateExclusion|CreateExclusion|DeleteView)$") OR (protoPayload.methodName=~"SetIamPolicy$" AND protoPayload.serviceData.policyDelta.auditConfigDeltas:*)'
+    runbook: "Audit trail tampering suspected; restore sink / Data Access config from Terraform and investigate the principal."
+    covers: [D10]
+  AL-SECRET-READ-HUMAN:
+    severity: page
+    filter: 'protoPayload.methodName="google.cloud.secretmanager.v1.SecretManagerService.AccessSecretVersion" AND resource.labels.project_id=~"^(t-.*-prd|p-.*-prd)$" AND NOT protoPayload.authenticationInfo.principalEmail:"gserviceaccount.com"'
+    runbook: "Humans never read prod secret values (D9); identify the grant that allowed it and rotate the secret."
+    covers: [D9]
+  AL-KEY-DESTROY:
+    severity: page
+    filter: 'protoPayload.serviceName="cloudkms.googleapis.com" AND protoPayload.methodName=~"(DestroyCryptoKeyVersion|UpdateCryptoKeyVersion)$" AND protoPayload.request.cryptoKeyVersion.state!="ENABLED"'
+    runbook: "Disabling or destroying a CMEK key makes customer data unreadable (K23); confirm an approved offboarding / crypto-shredding change, otherwise restore within the 30-day window."
+    covers: [D9, K23]
+  AL-IAM-OUT-OF-PIPELINE:
+    severity: ticket
+    # Tenant and platform IAM changes only through Terraform identities; anything else is drift (Stage 2 §3 detection).
+    filter: 'protoPayload.methodName=~"SetIamPolicy$" AND resource.labels.project_id=~"^(t-|p-|plt-)" AND NOT protoPayload.authenticationInfo.principalEmail=~"^tf-(prd|nonprd)@shr-cicd-(prd|nonprd)\.iam\.gserviceaccount\.com$"'
+    runbook: "Compare with the identity plan; the nightly drift check (DR01) reports any cross-tenant member."
+    covers: [D2, D3]
+
+# --- 5. Nightly drift checks (Cloud Asset Inventory export -> tools/monitoring/drift.py) ---
+drift_checks:
+  DR01: { name: cross-tenant-iam, source: "Cloud Asset Inventory IAM policy export", alert_severity: page, covers: [D2, "Stage 2 §3 detection"] }
+  DR02: { name: workload-group-membership, source: "Cloud Identity membership export", alert_severity: ticket, covers: [D2, "identity model drift detection"] }

@@ -1,0 +1,18 @@
+# {{ ansible_managed | default('Managed by Ansible') }}
+[Unit]
+Description={{ product }} {{ app_version }}
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User={{ app_user }}
+ExecStartPre=/usr/local/bin/load-config
+EnvironmentFile=/run/{{ product }}/env
+ExecStart={{ app_dir }}/bin/{{ product }} --port {{ app_port }}
+Restart=on-failure
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/run/{{ product }} /tmp
+
+[Install]
+WantedBy=multi-user.target

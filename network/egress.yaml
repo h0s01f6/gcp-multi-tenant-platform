@@ -1,0 +1,8 @@
+# Internet egress allow-list per product (Stage 4 N3/N4). Everything not listed is denied (firewall default deny).
+# Status: PROPOSED – the destinations below are illustrative placeholders (A-N4-1); product teams supply real ones.
+schema_version: "1.0"
+products:
+  payroll: [{ fqdn: smtp.mail-provider.example, port: 587 }]        # sends payslip e-mails (secret smtp-password)
+  crm:     [{ fqdn: api.crm-partner.example, port: 443 }]           # partner API (secret api-key)
+  notify:  [{ fqdn: push.notify-provider.example, port: 443 }]
+  ledger:  []                                                        # no internet egress

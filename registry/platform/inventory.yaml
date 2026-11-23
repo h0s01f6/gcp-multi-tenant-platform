@@ -1,0 +1,32 @@
+# Platform inventory (illustrative) – the only GKE cells and Cloud SQL pools placement may reference.
+# Maintained by platform PRs (new cell / pool), never by tenant PRs.
+schema_version: "2.1"
+product_groups:          # capacity model C1 – illustrative grouping
+  g1: [payroll]
+  g2: [crm]
+  g3: [ledger, notify]
+gke_cells:
+  gke-dev-as1-01: { env: dev, project: plt-gke-nonprd }
+  gke-stg-as1-01: { env: stg, project: plt-gke-nonprd }
+  gke-uat-as1-01: { env: uat, project: plt-gke-nonprd }
+  gke-prd-as1-01: { env: prd, project: plt-gke-prd }
+sql_pools:
+  # non-prod pools: shared by all products on the same MySQL major version (A17)
+  sql-dev-01: { env: dev, project: plt-sql-nonprd-01, mysql: "8.4" }
+  sql-stg-01: { env: stg, project: plt-sql-nonprd-01, mysql: "8.4" }
+  sql-uat-01: { env: uat, project: plt-sql-nonprd-01, mysql: "8.4" }
+  # prod pools: per product group, or per product once split (capacity model split rule)
+  sql-prd-payroll-01: { env: prd, project: plt-sql-prd-01, mysql: "8.4", pool_group: g1, products: [payroll] }
+  sql-prd-crm-01:     { env: prd, project: plt-sql-prd-01, mysql: "8.4", pool_group: g2, products: [crm] }
+  sql-prd-g3-01:      { env: prd, project: plt-sql-prd-01, mysql: "8.4", pool_group: g3 }
+# product-owned instances for Shared / Cohort products (ADR-006 rev. 3), one database per tenant.
+# Tenant placement can never reference these (tenant placement only accepts sql-* pools).
+product_sql_pools:
+  psql-notify-dev-01: { env: dev, project: p-notify-nonprd, mysql: "8.4", owner_product: notify }
+  psql-notify-stg-01: { env: stg, project: p-notify-nonprd, mysql: "8.4", owner_product: notify }
+  psql-notify-uat-01: { env: uat, project: p-notify-nonprd, mysql: "8.4", owner_product: notify }
+  psql-notify-prd-01: { env: prd, project: p-notify-prd,    mysql: "8.4", owner_product: notify }
+  psql-ledger-dev-01: { env: dev, project: p-ledger-nonprd, mysql: "8.4", owner_product: ledger }
+  psql-ledger-stg-01: { env: stg, project: p-ledger-nonprd, mysql: "8.4", owner_product: ledger }
+  psql-ledger-uat-01: { env: uat, project: p-ledger-nonprd, mysql: "8.4", owner_product: ledger }
+  psql-ledger-prd-01: { env: prd, project: p-ledger-prd,    mysql: "8.4", owner_product: ledger }

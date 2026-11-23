@@ -1,0 +1,62 @@
+%% 13 - Cloud SQL for MySQL 8.4: identities, accounts, roles and the isolation gate on a shared pool
+%% Final reconciliation (M1-M8, G1-G5). Illustrative names. Nothing tested yet (see T-M*, T-G* tests).
+flowchart LR
+  subgraph IAMLAYER["IAM layer (project plt-sql-prd-01)"]
+    direction TB
+    GC["grp-wl-sqlconn-prd-01<br/>mechanism 1: project IAM policy only<br/>cloudsql.client + cloudsql.instanceUser<br/>= may ATTEMPT to log in (T-G2, mandatory)<br/>never added to the instance"]
+    GD["grp-hum-dba-prd-ro / -admin (expiring membership, K21)<br/>mechanism 2: added to instance as<br/>IAM group DB user (humans only,<br/>max 3 of 200 groups per instance)"]
+    BOOT["sqlboot-prd@plt-sql-prd-01<br/>individual IAM user"]
+  end
+
+  subgraph IDS["Workload identities (individual SAs)"]
+    direction TB
+    A_APP["abc-payroll-prd@t-abc-prd"]
+    A_MIG["abc-payroll-prd-mig@t-abc-prd"]
+    X_APP["xyz-payroll-prd@t-xyz-prd"]
+  end
+
+  subgraph INST["sql-prd-payroll-01 - Cloud SQL for MySQL 8.4 (HA, private IP, IAM auth on, mandatory_roles empty)"]
+    direction TB
+    subgraph ACC["MySQL accounts (username = SA local part, max 32 chars)"]
+      U1["'abc-payroll-prd'@'%'<br/>default role r_abc_payroll_app"]
+      U2["'abc-payroll-prd-mig'@'%'<br/>default role r_abc_payroll_ddl"]
+      U3["'xyz-payroll-prd'@'%'<br/>default role r_xyz_payroll_app"]
+      U4["'sqlboot-prd'@'%'<br/>cloudsqlsuperuser"]
+      U5["group account for grp-hum-dba-prd-ro<br/>diagnostics read-only role"]
+      ROOT["'root'@'%'<br/>sealed password, break-glass only"]
+    end
+    subgraph ROLES["Per-database roles (no *.* grants, no PROCESS, no GRANT OPTION)"]
+      R1["r_abc_payroll_app<br/>SELECT INSERT UPDATE DELETE EXECUTE<br/>ON abc\_payroll.*"]
+      R2["r_abc_payroll_ddl<br/>app privileges + CREATE ALTER DROP INDEX ...<br/>ON abc\_payroll.*"]
+      R3["r_xyz_payroll_app<br/>ON xyz\_payroll.*"]
+    end
+    DB1[("abc_payroll")]
+    DB2[("xyz_payroll")]
+    CAN[("canary databases<br/>incl. wildcard trap")]
+  end
+
+  TEST["Isolation test ISO-01..10<br/>mandatory gate on onboarding,<br/>grant change, new pool, nightly sample"]
+
+  A_APP -. "member" .-> GC
+  A_MIG -. "member" .-> GC
+  X_APP -. "member" .-> GC
+  A_APP -- "Auth Proxy, automatic IAM auth" --> U1
+  A_MIG -- "migration Job only" --> U2
+  X_APP --> U3
+  BOOT --> U4
+  GD --> U5
+  U1 --> R1 --> DB1
+  U2 --> R2 --> DB1
+  U3 --> R3 --> DB2
+  U1 -. "DENIED (error 1142)" .-x DB2
+  U3 -. "DENIED" .-x DB1
+  U1 -. "DENIED" .-x CAN
+  U4 -- "creates roles, grants,<br/>verifies SHOW GRANTS" --> ROLES
+  U4 --> TEST
+
+  classDef abc fill:#fff3cd,stroke:#b8860b,color:#000
+  classDef xyz fill:#d4edda,stroke:#2e7d32,color:#000
+  classDef plat fill:#eeeeee,stroke:#555,color:#000
+  class A_APP,A_MIG,U1,U2,R1,R2,DB1 abc
+  class X_APP,U3,R3,DB2 xyz
+  class GC,GD,BOOT,U4,U5,ROOT,CAN,TEST plat

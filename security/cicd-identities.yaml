@@ -1,0 +1,99 @@
+# CI/CD identities and Workload Identity Federation (Stage 3 D6).
+# Status: PROPOSED configuration, checked locally by tools/cicd/federation.py (CI01-CI09). Not applied.
+#
+# Every pipeline service account in the access matrix (persona automated-deployment-pipelines) appears here exactly
+# once, with HOW it authenticates. No pipeline uses a service-account key (org policy, D5).
+#   wif         – a CI job exchanges its OIDC token through the WIF pool (ADR-010)
+#   attached    – the identity is attached to a Cloud Run job inside the VPC; the job is started by a WIF identity
+# Placeholders: ${GH_ORG_ID} (numeric owner id), ${REPO_ID_*} (numeric repository ids), ${BB_*} (Bitbucket UUIDs).
+schema_version: "1.0"
+
+federation:
+  pool: { project: bootstrap-seed, id: ci-pool }            # Stage 2: one WIF pool in bootstrap-seed
+  providers:
+    github:
+      enabled: true
+      issuer: https://token.actions.githubusercontent.com
+      # Only tokens from our GitHub organisation (by numeric id – names can be re-registered) are accepted, and a
+      # prd-environment job must run the central reusable workflow, so a repository cannot write its own prod job.
+      attribute_condition: >-
+        assertion.repository_owner_id == '${GH_ORG_ID}' &&
+        (!has(assertion.environment) || assertion.environment != 'prd' ||
+         assertion.job_workflow_ref.startsWith('${GH_ORG}/platform-workflows/.github/workflows/'))
+      attribute_mapping:
+        google.subject: assertion.sub
+        attribute.repository_id: assertion.repository_id
+        # Composite "gate" = <repository id>:<environment or none>:<ref class>. A principalSet binds ONE attribute
+        # value, and attributes are pool-wide, so the repository, environment and ref are bound together here.
+        attribute.gate: >-
+          assertion.repository_id + ':' + (has(assertion.environment) ? assertion.environment : 'none') + ':' +
+          (assertion.ref == 'refs/heads/main' ? 'main' :
+           (assertion.ref.startsWith('refs/tags/v') ? 'release-tag' : 'other'))
+    bitbucket:
+      enabled: false                                        # A6: GitHub assumed; enable if Bitbucket Pipelines is used
+      issuer: https://api.bitbucket.org/2.0/workspaces/${BB_WORKSPACE}/pipelines-config/identity/oidc
+      attribute_condition: "assertion.workspaceUuid == '${BB_WORKSPACE_UUID}'"
+      attribute_mapping:
+        google.subject: assertion.sub
+        attribute.repository_id: assertion.repositoryUuid
+        attribute.gate: >-
+          assertion.repositoryUuid + ':' + (has(assertion.deploymentEnvironment) ? assertion.deploymentEnvironment : 'none') +
+          ':' + (assertion.branchName == 'main' ? 'main' : 'other')
+
+# Repositories allowed to federate at all (Stage 2 §1 repository list + one application repository per product).
+repositories:
+  platform-infra:     { id: "${REPO_ID_PLATFORM_INFRA}", kind: platform }   # Terraform: org, platform and network stacks
+  platform-tenants:   { id: "${REPO_ID_PLATFORM_TENANTS}", kind: platform } # tenant registry -> tenant stacks + deploys
+  platform-charts:    { id: "${REPO_ID_PLATFORM_CHARTS}", kind: platform }  # Helm charts (built by builder)
+  platform-ansible:   { id: "${REPO_ID_PLATFORM_ANSIBLE}", kind: platform } # Ansible playbooks + Packer VM images
+  platform-workflows: { id: "${REPO_ID_PLATFORM_WORKFLOWS}", kind: platform, federates: false }  # reusable workflows only
+  app-payroll:        { id: "${REPO_ID_APP_PAYROLL}", kind: product, product: payroll }
+  app-crm:            { id: "${REPO_ID_APP_CRM}", kind: product, product: crm }
+  app-ledger:         { id: "${REPO_ID_APP_LEDGER}", kind: product, product: ledger }
+  app-notify:         { id: "${REPO_ID_APP_NOTIFY}", kind: product, product: notify }
+
+# GitHub side (configured by the org stack; Stage 7 writes the workflows).
+github:
+  environments:
+    org:    { required_reviewers: 2, reviewer_groups: [grp-hum-platform-admins], branches: [main], prevent_self_review: true }
+    prd:    { required_reviewers: 2, reviewer_groups: [grp-hum-platform-prd-operators], branches: [main], prevent_self_review: true }
+    nonprd: { required_reviewers: 1, reviewer_groups: [grp-hum-platform-nonprd-operators], branches: [main], prevent_self_review: true }
+    # read-only PR plans: any branch, no reviewers; separate per tier so a plan job gets only its tier's read identity
+    plan-org:    { required_reviewers: 0, branches: any }
+    plan-prd:    { required_reviewers: 0, branches: any }
+    plan-nonprd: { required_reviewers: 0, branches: any }
+  runner_groups:                                            # self-hosted, ephemeral (Q14)
+    build:  { project: shr-build,       runner_sa: "sa:runner-build@shr-build",        repositories: [platform-charts, platform-ansible, app-payroll, app-crm, app-ledger, app-notify] }
+    nonprd: { project: shr-cicd-nonprd, runner_sa: "sa:runner-nonprd@shr-cicd-nonprd", repositories: [platform-infra, platform-tenants, platform-ansible] }
+    prd:    { project: shr-cicd-prd,    runner_sa: "sa:runner-prd@shr-cicd-prd",       repositories: [platform-infra, platform-tenants, platform-ansible], workflows_only_from: platform-workflows }
+  branch_protection: { branch: main, required_approvals: 1, codeowners: true, no_force_push: true }
+
+# Runner machines' own identities: no deploy, data or IAM permissions (ADR-010). CI06 checks they hold no grant.
+runner_identities: ["sa:runner-build@shr-build", "sa:runner-nonprd@shr-cicd-nonprd", "sa:runner-prd@shr-cicd-prd"]
+
+# Who may become which pipeline identity. allow: list of {repo, environment, ref} -> bound as attribute.gate values.
+# repos: "@product" expands to every product application repository (registry-checked, CI08).
+pipeline_identities:
+  "sa:builder@shr-build":
+    auth: wif
+    tier: shared
+    allow:
+      - { repos: ["@product", platform-charts, platform-ansible], environment: none, ref: main }
+      - { repos: ["@product", platform-charts, platform-ansible], environment: none, ref: release-tag }
+  "sa:tf-plan-org@bootstrap-seed":    { auth: wif, tier: org,    allow: [{ repos: [platform-infra], environment: plan-org, ref: other }, { repos: [platform-infra], environment: plan-org, ref: main }] }
+  "sa:tf-org@bootstrap-seed":         { auth: wif, tier: org,    allow: [{ repos: [platform-infra], environment: org, ref: main }] }
+  "sa:tf-plan-nonprd@shr-cicd-nonprd": { auth: wif, tier: nonprd, allow: [{ repos: [platform-infra, platform-tenants], environment: plan-nonprd, ref: other }, { repos: [platform-infra, platform-tenants], environment: plan-nonprd, ref: main }] }
+  "sa:tf-plan-prd@shr-cicd-prd":      { auth: wif, tier: prd,    allow: [{ repos: [platform-infra, platform-tenants], environment: plan-prd, ref: other }, { repos: [platform-infra, platform-tenants], environment: plan-prd, ref: main }] }
+  "sa:tf-nonprd@shr-cicd-nonprd":     { auth: wif, tier: nonprd, allow: [{ repos: [platform-infra, platform-tenants], environment: nonprd, ref: main }] }
+  "sa:tf-prd@shr-cicd-prd":           { auth: wif, tier: prd,    allow: [{ repos: [platform-infra, platform-tenants], environment: prd, ref: main }] }
+  "sa:deploy-nonprd@shr-cicd-nonprd": { auth: wif, tier: nonprd, allow: [{ repos: [platform-tenants], environment: nonprd, ref: main }] }
+  "sa:deploy-prd@shr-cicd-prd":       { auth: wif, tier: prd,    allow: [{ repos: [platform-tenants], environment: prd, ref: main }] }
+  "sa:ansible-nonprd@shr-cicd-nonprd": { auth: wif, tier: nonprd, allow: [{ repos: [platform-ansible], environment: nonprd, ref: main }] }
+  "sa:ansible-prd@shr-cicd-prd":      { auth: wif, tier: prd,    allow: [{ repos: [platform-ansible], environment: prd, ref: main }] }
+  # Stage 7 (K28): platform-infra also applies the memberships stack when its module / tooling changes
+  "sa:groups-mgr-nonprd@shr-cicd-nonprd": { auth: wif, tier: nonprd, allow: [{ repos: [platform-infra, platform-tenants], environment: nonprd, ref: main }] }
+  "sa:groups-mgr-prd@shr-cicd-prd":   { auth: wif, tier: prd,    allow: [{ repos: [platform-infra, platform-tenants], environment: prd, ref: main }] }
+  "sa:sqlboot-nonprd@plt-sql-nonprd-{nn}": { auth: attached, tier: nonprd, runs_as: "Cloud Run job db-bootstrap in plt-sql-nonprd-{nn}", started_by: "sa:tf-nonprd@shr-cicd-nonprd" }
+  "sa:sqlboot-prd@plt-sql-prd-{nn}":  { auth: attached, tier: prd, runs_as: "Cloud Run job db-bootstrap in plt-sql-prd-{nn}", started_by: "sa:tf-prd@shr-cicd-prd" }
+  "sa:isotest-nonprd@shr-cicd-nonprd": { auth: attached, tier: nonprd, runs_as: "Cloud Run job db-isotest in shr-cicd-nonprd", started_by: "sa:tf-nonprd@shr-cicd-nonprd" }
+  "sa:isotest-prd@shr-cicd-prd":      { auth: attached, tier: prd, runs_as: "Cloud Run job db-isotest in shr-cicd-prd", started_by: "sa:tf-prd@shr-cicd-prd" }

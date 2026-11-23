@@ -1,0 +1,15 @@
+# Network quota and limit register (Stage 4 N5, review B14 – networking part).
+# value: the limit if confirmed from Google documentation in this project; null = not confirmed (validation item).
+# usage: computed by tools/network/quotas.py from the Stage 4 plans at the capacity-model upper bound.
+schema_version: "1.0"
+alert_threshold: 0.8                      # alert at 80 % of a known limit (Cloud Monitoring quota metrics, D10 channels)
+quotas:
+  shared_vpc_service_projects_per_host: { value: null, owner: platform-network, validation: T-N1, note: "Q20 – request an increase before onboarding beyond the default" }
+  secondary_ranges_per_subnet:          { value: 30,   owner: platform-network, note: "VPC limit used by NW01" }
+  gke_cell_subnets_per_vpc:             { value: null, owner: platform-network, validation: T-N3 }
+  cloud_sql_instances_per_psa_range:    { value: 12800, owner: platform-db, note: "/16 = 256 x /24, about 50 instances per /24 (Cloud SQL sizing table)" }
+  cloud_run_ips_per_tier:               { value: 65536, owner: platform-network, note: "Direct VPC egress /16; about 2 IPs per instance" }
+  nat_static_ips_per_region:            { value: null, owner: platform-network, validation: T-N12 }
+  host_rules_per_url_map:               { value: null, owner: platform-network, validation: T-L1, note: "review B7 – one URL map per product per environment" }
+  records_per_public_zone:              { value: null, owner: platform-network, validation: T-N10 }
+  rules_per_network_firewall_policy:    { value: null, owner: platform-network, validation: T-N9 }

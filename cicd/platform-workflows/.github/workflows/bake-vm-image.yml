@@ -1,0 +1,39 @@
+# Stage 7 – MIG products: bake a VM image in shr-build with Packer + the Ansible bake playbook (A-H-2, T-AN1).
+# Image name <product>-<X-Y-Z>, family <product>, only in shr-build (D5 compute.trustedImageProjects).
+name: bake-vm-image
+on:
+  workflow_call:
+    inputs:
+      product: { type: string, required: true }
+      artifact_url: { type: string, required: true }   # digest-pinned application artifact
+permissions:
+  contents: read
+jobs:
+  bake:
+    runs-on: [self-hosted, build]
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Release tags only
+        run: '[[ "$GITHUB_REF" == refs/tags/v* ]] || { echo "::error::VM images are baked from release tags"; exit 1; }'
+      - uses: example-org/platform-workflows/.github/actions/workspace@v1
+        with:
+          app-id: ${{ vars.PLATFORM_READER_APP_ID }}
+          private-key: ${{ secrets.PLATFORM_READER_APP_KEY }}
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: builder@shr-build.iam.gserviceaccount.com
+      - uses: hashicorp/setup-packer@v3
+        with: { version: "1.11.2" }
+      - name: Packer build (Ansible provisioner, OS Login over IAP inside shr-build)
+        working-directory: platform/ansible
+        env:
+          PKR_VAR_product: ${{ inputs.product }}
+          PKR_VAR_version: ${{ github.ref_name }}
+          PKR_VAR_artifact_url: ${{ inputs.artifact_url }}
+        run: |
+          pip install ansible-core==2.17.5
+          packer init packer
+          packer build -color=false packer

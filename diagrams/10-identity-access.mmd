@@ -1,0 +1,63 @@
+%% 10 - Identity and access: humans, pipelines, workloads
+%% Authentication = who you are (IdP, OIDC token, Workload Identity). Authorisation = what you may do (IAM, RBAC, DB grants).
+%% Revised in Stage 2 review: A2 (groups for fleet grants), A5 (WIF conditions, build identity).
+%% Final reconciliation: hybrid groups model (ADR-009 rev. 2) - groups for identical non-data permissions, individual SAs.
+flowchart LR
+  subgraph HUM["Human identities"]
+    direction TB
+    IDP["Corporate IdP<br/>(Okta / Entra ID: to be confirmed)<br/>MFA enforced"]
+    CI_ID["Cloud Identity<br/>SAML SSO + group sync<br/>(or Workforce Identity Federation)"]
+    G1["grp-hum-platform-admins"]
+    G2["grp-hum-platform-nonprd-operators"]
+    G3["grp-hum-product-payroll-dev<br/>grp-hum-product-crm-dev"]
+    G4["grp-hum-cust-abc-support-prd / -nonprd<br/>grp-hum-cust-xyz-support-prd / -nonprd"]
+    G5["grp-hum-platform-prd-operators<br/>grp-hum-dba-prd-ro (IAM group DB auth)"]
+    BG["Break-glass accounts (2)<br/>hardware keys, sealed, alert on use"]
+  end
+
+  subgraph CICD["Pipeline identities"]
+    direction TB
+    GH["GitHub Actions OIDC token<br/>claims: repo, ref, environment"]
+    WIF["WIF pool in bootstrap-seed<br/>provider condition: repository_id allowlist<br/>prod binding: environment = prd AND ref = main"]
+    DN["deploy-nonprd@shr-cicd-nonprd"]
+    DP["deploy-prd@shr-cicd-prd<br/>only from environment prd<br/>on protected main branch"]
+    BLDR["builder@shr-build<br/>only identity that writes release artifacts"]
+  end
+
+  subgraph PAMB["Just-in-time elevation"]
+    PAM["Privileged Access Manager<br/>entitlement prod-support-write<br/>max 4h, approval + justification"]
+  end
+
+  subgraph SCOPES["Where access is granted (folder / project / resource)"]
+    direction TB
+    S_ORG["Organization"]
+    S_NONPRD["fldr-tenants/nonprd + fldr-platform/nonprd"]
+    S_PRD["fldr-tenants/prd + fldr-platform/prd"]
+    S_TEN["Single-tenant resources<br/>buckets, secrets, databases,<br/>log view abc, dashboard abc"]
+  end
+
+  subgraph WL["Workload identities (one per customer-product-env)"]
+    direction TB
+    K["GKE KSA payroll in ns abc-payroll-prd"] --> GSA["abc-payroll-prd@t-abc-prd"]
+    CR["Cloud Run crm-prd"] --> CRSA["abc-crm-prd@t-abc-prd"]
+    VM["MIG mig-ledger-prd"] --> VMSA["abc-ledger-prd@t-abc-prd"]
+    WG["grp-wl-sqlconn-prd-01<br/>(connect permission only,<br/>no data access)"]
+  end
+
+  IDP --> CI_ID --> G1 & G2 & G3 & G4 & G5
+  G1 -- "org admin roles (few people)" --> S_ORG
+  G2 -- "editor-equivalent via CI only,<br/>viewer for humans" --> S_NONPRD
+  G2 -- "viewer" --> S_PRD
+  G3 -- "deploy via PR, logs + metrics viewer" --> S_NONPRD
+  G4 -- "viewer on own customer only" --> S_TEN
+  G5 -- "viewer + eligible for PAM" --> S_PRD
+  G5 --> PAM -- "temporary grant" --> S_PRD
+  BG -. "emergency only" .-> S_ORG
+
+  GH --> WIF --> DN
+  WIF --> DP
+  WIF --> BLDR
+  DN -- "create and deploy" --> S_NONPRD
+  DP -- "create and deploy" --> S_PRD
+  GSA -- "own bucket, secrets, database only" --> S_TEN
+  GSA -. "member of" .-> WG

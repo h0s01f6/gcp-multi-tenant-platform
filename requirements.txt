@@ -1,0 +1,4 @@
+# Python tooling (tools/, scripts/, tests/). Versions as used for the local test runs; pin by hash in CI (T-CI1).
+PyYAML==6.0.3
+jsonschema==4.26.0
+pytest==9.1.1

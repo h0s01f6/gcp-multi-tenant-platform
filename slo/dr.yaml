@@ -1,0 +1,58 @@
+# Stage 8 – availability, backup and disaster recovery (Stage 2 §6.6 made concrete). Checked by tools/slo/dr.py
+# (BC01-BC06) against the Terraform modules, the capacity model and the pipeline. Nothing has been failed over or
+# restored in Google Cloud yet (T-DR1..T-DR5).
+schema_version: "1.0"
+
+availability: { prd: 0.999, nonprd: 0.99 }     # A8; the prd number is also the SLO goal (slo/slos.yaml)
+
+# RPO / RTO per failure class (prd). minutes; 0 = no data loss.
+failure_classes:
+  pod:              { rpo_min: 0,  rto_min: 1,   mechanism: "probes + restart; >= 3 replicas, PDB (Stage 6)", automated: true }
+  node:             { rpo_min: 0,  rto_min: 5,   mechanism: "Autopilot replaces the node; PDB keeps quorum", automated: true }
+  cloudrun_instance: { rpo_min: 0, rto_min: 1,   mechanism: "Cloud Run replaces the instance; min instances 1", automated: true }
+  mig_vm:           { rpo_min: 0,  rto_min: 10,  mechanism: "MIG autohealing (health check, initial delay 300 s)", automated: true }
+  zone:             { rpo_min: 0,  rto_min: 5,   mechanism: "regional GKE / Cloud Run / MIG; Cloud SQL HA failover (REGIONAL)", automated: true }
+  bad_release:      { rpo_min: 0,  rto_min: 15,  mechanism: "helm --atomic rollback / Cloud Run traffic revert / MIG previous template (Stage 7)", automated: true }
+  data_corruption:  { rpo_min: 5,  rto_min: 240, mechanism: "PITR clone of the pool -> copy the customer's database back (runbook R-1)", automated: false }
+  accidental_deletion: { rpo_min: 5, rto_min: 240, mechanism: "deletion protection (2 flags) + retained backups; restore to a new instance (runbook R-2)", automated: false }
+  region:           { rpo_min: 15, rto_min: 240, mechanism: "pilot-light: promote cross-region replicas, deploy to DR cells, switch DNS (runbook R-3)", automated: false, requires: regional_dr }
+
+# What the region class falls back to while regional DR is not activated (Q10): rebuild in asia-south2 from the
+# Terraform code and restore the latest backups.
+region_without_dr: { rpo_min: 1440, rto_min: 2880 }
+
+backups:
+  prd: { automated: daily, retained: 30, pitr_days: 7, ha: REGIONAL, on_demand_before_release: true }
+  uat: { automated: daily, retained: 7,  pitr_days: 7, ha: REGIONAL }
+  stg: { automated: daily, retained: 7,  pitr_days: 7, ha: ZONAL }
+  dev: { automated: daily, retained: 7,  pitr_days: 7, ha: ZONAL }
+
+regional_dr:
+  enabled: false              # activation = business decision (Q10); cost shown separately (cost-estimate.md, tier dr)
+  region: asia-south2
+  region_short: as2
+  replica_lag_alert_s: 300    # PA-SQL-REPLICA-LAG; must stay well below the region RPO
+  prerequisites:              # all must hold before `enabled: true` (BC04)
+    - "network/ip-plan.yaml region asia-south2 status active (N1)"
+    - "security/org-policies.yaml gcp.resourceLocations allows in:asia-south2-locations (D5)"
+    - "security/data-protection.yaml keys for the DR replicas in asia-south2 (D9)"
+    - "registry/platform/inventory.yaml DR cells gke-prd-as2-NN (pilot-light, empty)"
+
+# Restore-time model (BC03): a single-customer recovery clones the whole pool, so the largest prd pool must restore
+# within the corruption RTO. Pool size = effective tenants per pool x tenant size grown for 3 years (capacity model).
+restore:
+  clone_gb_per_hour: 600      # assumption A-S8-4 (validate with a timed PITR clone, T-DR2)
+  fixed_overhead_min: 45      # create instance, flags, IAM, verify, copy one database back
+region_failover_steps_min:    # runbook R-3 critical path (BC05)
+  declare_and_approve: 20
+  promote_replicas: 60        # in parallel batches of 20 (~10 min each) for the largest tier
+  apply_dr_cluster_config: 30
+  deploy_releases: 60         # pipeline (capacity model: fleet patch time per product with 20 parallel deploys)
+  switch_dns_and_lb: 20
+  verify_smoke_tests: 20
+
+drills:
+  - { id: D-1, what: "restore one customer database from PITR clone (R-1)", cadence: quarterly, env: uat }
+  - { id: D-2, what: "zone failure: Cloud SQL HA failover + GKE zonal drain", cadence: half-yearly, env: uat }
+  - { id: D-3, what: "regional failover game day (R-3) incl. failback", cadence: yearly, env: prd, requires: regional_dr }
+  - { id: D-4, what: "bad release rollback on every runtime (Stage 7)", cadence: quarterly, env: stg }

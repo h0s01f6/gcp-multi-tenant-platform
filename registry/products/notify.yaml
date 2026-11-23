@@ -1,0 +1,9 @@
+# Illustrative Shared product
+schema_version: "2.1"
+product: notify
+runtime: cloudrun
+deployment_model: shared
+owner_group: grp-hum-product-notify-dev
+database: { engine: mysql, major_version: "8.4", pool_group: g3, approx_tables: 40 }
+supported_versions: [1.4.x]
+version: 1.4.2

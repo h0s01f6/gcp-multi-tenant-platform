@@ -1,0 +1,70 @@
+# Stage 7 – build, scan, push and sign a product container image in shr-build (ADR-010, D9).
+#   main          -> snapshot repository, tag sha-<commit>        (dev only; nonprd Binary Authorization is dry-run)
+#   tag vX.Y.Z    -> release repository, tag X.Y.Z (immutable)     (the only images stg/uat/prd can run)
+# Gate: no CRITICAL vulnerability with a fix and no HIGH older than the allowed window (Artifact Analysis);
+# only then the builder signs the digest with the attestor key (HSM) -> attestation for built-by-shr-build.
+name: build-image
+on:
+  workflow_call:
+    inputs:
+      image: { type: string, required: true }            # product slug = image name
+      context: { type: string, default: "." }
+    outputs:
+      digest: { description: "image digest", value: "${{ jobs.build.outputs.digest }}" }
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: [self-hosted, build]
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+    env:
+      REGISTRY: asia-south1-docker.pkg.dev/shr-artifacts
+      ATTESTOR: projects/shr-build/attestors/built-by-shr-build
+      KEY: projects/shr-build/locations/asia-south1/keyRings/kr-build-as1/cryptoKeys/attestor-signing/cryptoKeyVersions/1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: builder@shr-build.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Choose repository and tag
+        id: ref
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "repo=release" >> "$GITHUB_OUTPUT"; echo "tag=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          elif [[ "$GITHUB_REF" == refs/heads/main ]]; then
+            echo "repo=snapshot" >> "$GITHUB_OUTPUT"; echo "tag=sha-${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::images are built from main or release tags only"; exit 1
+          fi
+      - id: push
+        name: Build and push
+        run: |
+          gcloud auth configure-docker asia-south1-docker.pkg.dev --quiet
+          img="$REGISTRY/${{ steps.ref.outputs.repo }}/${{ inputs.image }}"
+          docker build --pull --label org.opencontainers.image.revision="$GITHUB_SHA" -t "$img:${{ steps.ref.outputs.tag }}" "${{ inputs.context }}"
+          docker push "$img:${{ steps.ref.outputs.tag }}"
+          digest=$(gcloud artifacts docker images describe "$img:${{ steps.ref.outputs.tag }}" --format='value(image_summary.digest)')
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "ref=$img@$digest" >> "$GITHUB_OUTPUT"
+      - name: Vulnerability gate (Artifact Analysis)
+        run: |
+          for i in $(seq 1 30); do
+            st=$(gcloud artifacts docker images describe "${{ steps.push.outputs.ref }}" --show-package-vulnerability --format='value(discovery_summary.discovery[0].discovery.analysisStatus)')
+            [ "$st" = FINISHED_SUCCESS ] && break; sleep 20
+          done
+          [ "$st" = FINISHED_SUCCESS ] || { echo "::error::scan not finished ($st)"; exit 1; }
+          crit=$(gcloud artifacts docker images describe "${{ steps.push.outputs.ref }}" --show-package-vulnerability --format=json \
+                 | jq '[.package_vulnerability_summary.vulnerabilities.CRITICAL[]? | select(.vulnerability.fixAvailable == true)] | length')
+          [ "$crit" -eq 0 ] || { echo "::error::$crit fixable CRITICAL vulnerabilities"; exit 1; }
+      - name: Sign (Binary Authorization attestation)
+        run: |
+          gcloud container binauthz attestations sign-and-create \
+            --artifact-url="${{ steps.push.outputs.ref }}" --attestor="$ATTESTOR" --keyversion="$KEY"
+      - name: Summary
+        run: echo "- ${{ inputs.image }} ${{ steps.ref.outputs.tag }} -> ${{ steps.push.outputs.digest }} (signed)" >> "$GITHUB_STEP_SUMMARY"

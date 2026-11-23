@@ -1,0 +1,53 @@
+# Firewall design (Stage 4 N3). Input for tools/network/firewall.py, which expands it per tier and checks it.
+# Status: PROPOSED; generator and checks locally tested; nothing created in GCP.
+#
+# Evaluation order (AFTER_CLASSIC_FIREWALL, the default): hierarchical policy (org, then tier folders, by the VM's
+# project ancestry) -> VPC firewall rules -> global network firewall policy of the VPC.
+# - No platform-defined VPC (classic) firewall rules: a classic "allow" would end evaluation before the network
+#   policy's default-deny egress. Only GKE-managed classic rules exist (created by GKE itself).
+# - Hierarchical rules cannot target network tags; network firewall policies use secure tags; Cloud Run cannot be
+#   targeted by secure tags or service identity, so Cloud Run egress is matched by its subnet range (K26).
+schema_version: "1.0"
+
+google_ranges:
+  iap: [35.235.240.0/20]
+  lb_health_checks: [35.191.0.0/16, 130.211.0.0/22]
+  pga_vip: [199.36.153.8/30]                 # private.googleapis.com (restricted VIP once VPC-SC is enforced, K6)
+
+app_port: 8080                               # serving port of all workloads (A-N3-1; named "http" in charts)
+cloudsql_port: 3307                          # Cloud SQL connectors / Auth Proxy
+
+hierarchical:
+  fw-org:
+    attach: [org]
+    rules:
+      - { priority: 1000, direction: INGRESS, action: goto_next, src: "@iap", ports: ["tcp:22"], why: "IAP TCP forwarding; the VPC policy decides the target" }
+      - { priority: 1010, direction: INGRESS, action: goto_next, src: "@lb_health_checks", ports: ["tcp"], why: "Google front ends and health checks" }
+      - { priority: 1020, direction: INGRESS, action: goto_next, src: [10.0.0.0/8], ports: [all], why: "internal traffic: decided by tier folder policy and VPC policy" }
+      - { priority: 65000, direction: INGRESS, action: deny, src: [0.0.0.0/0], ports: [all], why: "nothing else from anywhere" }
+  fw-tier-prd:
+    attach: [fldr-tenants/prd, fldr-platform/prd]
+    rules:
+      - { priority: 900, direction: INGRESS, action: deny, src: "@tier:nonprd", ports: [all], why: "no traffic from non-prod" }
+      - { priority: 901, direction: EGRESS, action: deny, dst: "@tier:nonprd", ports: [all], why: "no traffic to non-prod" }
+  fw-tier-nonprd:
+    attach: [fldr-tenants/nonprd, fldr-platform/nonprd]
+    rules:
+      - { priority: 900, direction: INGRESS, action: deny, src: "@tier:prd", ports: [all], why: "no traffic from prod" }
+      - { priority: 901, direction: EGRESS, action: deny, dst: "@tier:prd", ports: [all], why: "no traffic to prod" }
+
+secure_tags:                                  # created in each host project, purpose GCE_FIREWALL, bound to the VPC
+  wl: [mig, gke-node]                         # MIG VMs carry wl=mig + app=<product>; GKE nodes wl=gke-node
+  app: "@products"
+
+network_policy:                               # one global network firewall policy per VPC: fwp-<tier>
+  rules:
+    - { priority: 1000, direction: INGRESS, action: allow, src: "@iap", target_tags: ["wl=mig"], ports: ["tcp:22"], why: "Ansible / break-fix SSH through IAP + OS Login" }
+    - { priority: 1010, direction: INGRESS, action: allow, src: "@lb_health_checks", target_tags: ["wl=mig"], ports: ["tcp:@app_port"], why: "LB and health checks to MIG backends" }
+    - { priority: 1020, direction: INGRESS, action: allow, src: "@lb_health_checks", target_tags: ["wl=gke-node"], ports: ["tcp:@app_port"], why: "container-native LB to Pods" }
+    - { priority: 1100, direction: INGRESS, action: deny, src: "@subnet:mig", target_tags: ["wl=mig"], ports: [all], why: "no VM-to-VM east-west between MIG VMs" }
+    - { priority: 2000, direction: EGRESS, action: allow, dst: "@psa", ports: ["tcp:@cloudsql_port"], why: "Cloud SQL private IP" }
+    - { priority: 2010, direction: EGRESS, action: allow, dst: "@pga_vip", ports: ["tcp:443"], why: "Google APIs via Private Google Access" }
+    - { priority: 2020, direction: EGRESS, action: allow, dst: "@gke_ranges", target_tags: ["wl=gke-node"], ports: [all], why: "intra-cluster traffic (Pod isolation is enforced by NetworkPolicy, D8)" }
+    - { priority: 3000, direction: EGRESS, action: allow, dst_fqdn: "@egress", why: "per-product internet allow-list via Cloud NAT (generated, one rule per product)" }
+    - { priority: 65000, direction: EGRESS, action: deny, dst: [0.0.0.0/0], ports: [all], why: "default deny egress" }

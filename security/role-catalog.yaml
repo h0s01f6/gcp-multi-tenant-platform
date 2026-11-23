@@ -1,0 +1,94 @@
+# Classification of every IAM / Kubernetes / MySQL role used in the access matrix (Stage 3 D3).
+# class: read | connect | write | admin | data
+#   read    – metadata, metrics, logs, configuration (no customer data, no change)
+#   connect – may attempt a connection (no data on its own)
+#   write   – can change workloads / configuration
+#   admin   – can change IAM, create projects, or act as another identity
+#   data    – can read or change customer data
+schema_version: "1.0"
+roles:
+  # --- Google Cloud read ---
+  roles/browser:                        { class: read }
+  roles/resourcemanager.organizationViewer: { class: read }
+  roles/resourcemanager.folderViewer:   { class: read }
+  roles/iam.securityReviewer:           { class: read }
+  roles/cloudasset.viewer:              { class: read }
+  roles/securitycenter.adminViewer:     { class: read }
+  roles/monitoring.viewer:              { class: read }
+  roles/logging.viewer:                 { class: read }
+  roles/errorreporting.viewer:          { class: read }
+  roles/container.viewer:               { class: read }
+  roles/run.viewer:                     { class: read }
+  roles/compute.viewer:                 { class: read }
+  roles/compute.networkViewer:          { class: read }
+  roles/cloudsql.viewer:                { class: read }
+  roles/artifactregistry.reader:        { class: read }
+  roles/orgpolicy.policyViewer:         { class: read }
+  roles/secretmanager.viewer:           { class: read }    # secret metadata only, no values
+  roles/cloudkms.viewer:                { class: read }
+  # --- connect ---
+  roles/cloudsql.client:                { class: connect }
+  roles/cloudsql.instanceUser:          { class: connect }
+  roles/compute.networkUser:            { class: connect }
+  roles/iap.tunnelResourceAccessor:     { class: connect }
+  # --- write ---
+  roles/container.developer:            { class: write }
+  roles/run.developer:                  { class: write }
+  roles/compute.instanceAdmin.v1:       { class: write }
+  roles/artifactregistry.writer:        { class: write }
+  roles/containeranalysis.notes.attacher: { class: write }
+  roles/cloudkms.signerVerifier:        { class: write }
+  roles/containeranalysis.occurrences.editor: { class: write }
+  roles/run.invoker:                    { class: write }   # here: execute Cloud Run jobs
+  roles/secretmanager.secretVersionAdder: { class: write } # adds secret versions; cannot read values
+  # --- admin ---
+  roles/resourcemanager.organizationAdmin: { class: admin }
+  roles/resourcemanager.projectCreator: { class: admin }
+  roles/resourcemanager.projectIamAdmin: { class: admin }
+  roles/resourcemanager.folderAdmin:    { class: admin }
+  roles/billing.user:                   { class: admin }
+  roles/iam.serviceAccountAdmin:        { class: admin }
+  roles/iam.serviceAccountUser:         { class: admin }
+  roles/iam.serviceAccountTokenCreator: { class: admin }
+  roles/compute.xpnAdmin:               { class: admin }
+  roles/compute.osAdminLogin:           { class: admin }
+  roles/container.admin:                { class: admin }
+  roles/cloudsql.admin:                 { class: admin }
+  roles/storage.admin:                  { class: admin }
+  roles/secretmanager.admin:            { class: admin }
+  roles/cloudkms.admin:                 { class: admin }
+  roles/orgpolicy.policyAdmin:          { class: admin }
+  roles/iam.securityAdmin:              { class: admin }
+  roles/privilegedaccessmanager.admin:  { class: admin }
+  roles/compute.orgFirewallPolicyAdmin: { class: admin }
+  roles/compute.networkAdmin:           { class: admin }
+  roles/compute.securityAdmin:          { class: admin }
+  roles/compute.loadBalancerAdmin:      { class: admin }
+  roles/dns.admin:                      { class: admin }
+  roles/resourcemanager.tagAdmin:       { class: admin }
+  roles/servicenetworking.networksAdmin: { class: admin }
+  roles/binaryauthorization.policyEditor: { class: admin }
+  roles/certificatemanager.owner:       { class: admin }
+  cloudidentity/groups-admin:           { class: admin }   # Cloud Identity Groups Admin (create groups)
+  roles/logging.configWriter:           { class: admin }
+  roles/monitoring.editor:              { class: write }
+  roles/monitoring.admin:               { class: admin }   # S8: metrics scopes, SLOs, alert policies
+  cloudidentity/groups-reader:          { class: read }    # S7: Cloud Identity Groups Reader admin role (drift export)
+  cloudidentity/group-manager:          { class: admin }   # Cloud Identity group MANAGER role on specific groups
+  # --- data ---
+  roles/storage.objectViewer:           { class: data }
+  roles/storage.objectAdmin:            { class: data }
+  roles/secretmanager.secretAccessor:   { class: data }
+  roles/logging.privateLogViewer:       { class: data }
+  # --- Kubernetes RBAC (ClusterRoles bound per namespace) ---
+  k8s/view:                             { class: read }
+  k8s/edit:                             { class: write }
+  # --- MySQL roles granted to IAM group users (mechanism 2) ---
+  mysql/r_platform_dba_ro:              { class: read, note: "PROCESS + SELECT on performance_schema/sys; sees other sessions' SQL text – approved for DBAs only" }
+  mysql/r_platform_dba_admin:           { class: admin, note: "cloudsqlsuperuser-equivalent for incident work" }
+  mysql/cloudsqlsuperuser:              { class: admin }
+# legacy basic roles are forbidden everywhere (AC02)
+forbidden:
+  - roles/owner
+  - roles/editor
+  - roles/viewer

@@ -1,0 +1,88 @@
+%% 08 - Worked example: ABC and XYZ, Payroll (GKE) and CRM (Cloud Run), all four environments
+%% Versions are illustrative. Each box is owned by exactly one customer unless marked SHARED.
+%% Revised in Stage 2 review: one GKE cluster per environment (ADR-008), pool project names, group IAM.
+%% Final reconciliation: MySQL 8.4 pools, SA IDs include the customer (M1).
+flowchart TB
+  subgraph NP["NON-PROD tier"]
+    direction LR
+    subgraph GKEN["SHARED: plt-gke-nonprd (one cluster per environment)"]
+      direction TB
+      CDEV["gke-dev-as1-01<br/>abc-payroll-dev v2.1.0<br/>xyz-payroll-dev v2.0.2"]
+      CSTG["gke-stg-as1-01<br/>abc-payroll-stg v2.0.3<br/>xyz-payroll-stg v1.5.4"]
+      CUAT["gke-uat-as1-01<br/>abc-payroll-uat v2.0.3<br/>xyz-payroll-uat v1.5.4"]
+    end
+    subgraph TAN["t-abc-nonprd"]
+      direction TB
+      RA_N["Cloud Run<br/>crm-dev v3.2.0<br/>crm-stg v3.1.1<br/>crm-uat v3.1.1"]
+      SA_AN["SAs abc-payroll-dev/stg/uat,<br/>abc-crm-dev/stg/uat (+ -mig)"]
+      BK_AN["Buckets abc-payroll-ENV-data,<br/>abc-crm-ENV-files,<br/>abc-nonprd-masked-ingest"]
+      SM_AN["Secrets payroll-ENV-*, crm-ENV-*<br/>KMS kr-abc-nonprd-as1"]
+    end
+    subgraph TXN["t-xyz-nonprd"]
+      direction TB
+      RX_N["Cloud Run<br/>crm-dev v3.1.1<br/>crm-stg v3.0.5<br/>crm-uat v3.0.5"]
+      SA_XN["SAs xyz-payroll-dev/stg/uat,<br/>xyz-crm-dev/stg/uat (+ -mig)"]
+      BK_XN["Buckets xyz-PRODUCT-ENV-*,<br/>xyz-nonprd-masked-ingest"]
+      SM_XN["Secrets + KMS kr-xyz-nonprd-as1"]
+    end
+    subgraph SQLN["SHARED: plt-sql-nonprd-01 (MySQL 8.4)"]
+      direction TB
+      DEV["sql-dev-01 (zonal)<br/>abc_payroll, abc_crm,<br/>xyz_payroll, xyz_crm"]
+      STG["sql-stg-01 (zonal)<br/>same four databases"]
+      UAT["sql-uat-01 (HA, Q15)<br/>same four databases"]
+    end
+  end
+
+  subgraph PR["PROD tier"]
+    direction LR
+    subgraph GKEP["SHARED: plt-gke-prd / gke-prd-as1-01"]
+      direction TB
+      PA["abc-payroll-prd  v2.0.2"]
+      PX["xyz-payroll-prd  v1.5.3"]
+    end
+    subgraph TAP["t-abc-prd"]
+      direction TB
+      RA_P["Cloud Run crm-prd v3.1.0"]
+      SA_AP["SAs abc-payroll-prd, abc-crm-prd (+ -mig),<br/>masker-prd"]
+      BK_AP["Buckets abc-payroll-prd-data,<br/>abc-crm-prd-files, abc-prd-exports"]
+      SM_AP["Secrets + KMS kr-abc-prd-as1"]
+    end
+    subgraph TXP["t-xyz-prd"]
+      direction TB
+      RX_P["Cloud Run crm-prd v3.0.5"]
+      SA_XP["SAs xyz-payroll-prd, xyz-crm-prd (+ -mig),<br/>masker-prd"]
+      BK_XP["Buckets xyz-payroll-prd-data,<br/>xyz-crm-prd-files, xyz-prd-exports"]
+      SM_XP["Secrets + KMS kr-xyz-prd-as1"]
+    end
+    subgraph SQLP["SHARED: plt-sql-prd-01 (MySQL 8.4)"]
+      direction TB
+      PPAY["sql-prd-payroll-01 (HA)<br/>abc_payroll, xyz_payroll"]
+      PCRM["sql-prd-crm-01 (HA)<br/>abc_crm, xyz_crm"]
+    end
+  end
+
+  CDEV -- "Workload Identity (ABC ns)" --> SA_AN
+  CDEV -- "Workload Identity (XYZ ns)" --> SA_XN
+  RA_N --- SA_AN
+  RX_N --- SA_XN
+  SA_AN -- "grants on abc_* only" --> SQLN
+  SA_XN -- "grants on xyz_* only" --> SQLN
+  PA -- "Workload Identity" --> SA_AP
+  PX -- "Workload Identity" --> SA_XP
+  RA_P --- SA_AP
+  RX_P --- SA_XP
+  SA_AP -- "abc_* only" --> SQLP
+  SA_XP -- "xyz_* only" --> SQLP
+
+  SA_AP == "masker-prd: one-way,<br/>write-only to masked-ingest" ==> BK_AN
+  SA_XP == "masker-prd: one-way" ==> BK_XN
+
+  SA_AN -. "DENIED: no IAM on t-xyz-*" .-x BK_XN
+  SA_AN -. "DENIED: non-prod has no prod access" .-x BK_AP
+
+  classDef abc fill:#fff3cd,stroke:#b8860b,color:#000
+  classDef xyz fill:#d4edda,stroke:#2e7d32,color:#000
+  classDef shared fill:#eeeeee,stroke:#555,color:#000
+  class RA_N,SA_AN,BK_AN,SM_AN,PA,RA_P,SA_AP,BK_AP,SM_AP abc
+  class RX_N,SA_XN,BK_XN,SM_XN,PX,RX_P,SA_XP,BK_XP,SM_XP xyz
+  class DEV,STG,UAT,PPAY,PCRM,CDEV,CSTG,CUAT shared

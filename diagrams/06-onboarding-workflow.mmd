@@ -1,0 +1,44 @@
+%% 06 - New customer subscribes to a product: request to handover
+%% Example: new customer "def" subscribes to Payroll (GKE). Versions pinned per environment.
+%% Revised in Stage 2 review: per-env placement (A1, A7), groups (A2), hostname policy (A6).
+%% Final reconciliation: MySQL roles, customer-unique SAs (M1), isolation test ISO-01..10 as a gate.
+sequenceDiagram
+  autonumber
+  actor REQ as Authorised requester<br/>(customer onboarding team)
+  participant REG as GitHub platform-tenants<br/>(tenant registry)
+  participant VAL as CI: validate job<br/>(nonprod runner)
+  actor APR as Approvers<br/>(CODEOWNERS)
+  participant TFN as Terraform apply<br/>(tf-nonprd, deploy-nonprd)
+  participant DBJ as DB bootstrap job<br/>(Cloud Run job per tier in plt-sql-*)
+  participant DEP as Deploy step<br/>(Helm / Cloud Run / MIG)
+  participant MON as Monitoring<br/>(plt-obs-*)
+  participant TFP as Prod pipeline<br/>(tf-prd, deploy-prd, protected env)
+
+  REQ->>REG: PR adds tenants/def.yaml (tier, products, versions per env, owners)
+  REG->>VAL: trigger on PR
+  VAL->>VAL: schema check, naming rules, product exists in catalogue
+  VAL->>VAL: version exists in Artifact Registry and is not blocked by scan
+  VAL->>VAL: placement per environment: GKE cell and SQL pool with headroom (customer affinity)
+  VAL->>VAL: hostnames and resource names derived from tenant slug only
+  VAL->>REG: comment terraform plan for t-def-nonprd and t-def-prd
+  APR->>REG: review plan and approve (platform team, plus product owner)
+  REG->>TFN: merge to main triggers non-prod apply
+  TFN->>TFN: project factory creates t-def-nonprd (labels, tags, Shared VPC attach, budgets)
+  TFN->>TFN: SAs def-payroll-dev/stg/uat (+ -mig), buckets, secrets placeholders, KMS keyring
+  TFN->>TFN: add workload SAs to grp-wl-sqlconn-nonprd-NN of their pool project (connect only)
+  TFN->>TFN: namespaces on gke-dev/stg/uat cells with RBAC, quota, NetworkPolicy first
+  TFN->>TFN: MySQL databases def_payroll on the placed sql-dev/stg/uat pools + IAM SA accounts (app, mig)
+  TFN->>DBJ: per-database roles, escaped grants, default roles, MAX_USER_CONNECTIONS
+  DBJ->>DBJ: SHOW GRANTS equals registry, then isolation test ISO-01..10 (gate)
+  TFN->>MON: alert policies, dashboards, uptime checks labelled tenant=def
+  TFN->>DEP: deploy Dev with version from def.yaml
+  DEP->>DEP: helm upgrade --install def-payroll-dev (chart and image pinned)
+  DEP->>MON: smoke tests + health checks
+  MON-->>REG: Dev healthy, status posted on PR or ticket
+  Note over REG,DEP: Promotion = new PR that sets stg (then uat) version.<br/>Each promotion repeats validate, plan, approve, deploy, verify.
+  REQ->>REG: PR sets prd version (must equal a version that passed UAT for def)
+  REG->>TFP: approval in GitHub protected environment prd (2 approvers, change window)
+  TFP->>TFP: create t-def-prd, SAs, buckets, keys, namespace def-payroll-prd, database def_payroll on its prod pool (+ hardening test)
+  TFP->>DEP: deploy Prod (progressive rollout)
+  DEP->>MON: health checks, SLO burn alerts armed
+  MON-->>REQ: handover: URLs, dashboard links, access groups, runbook link

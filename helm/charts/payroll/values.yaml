@@ -1,0 +1,73 @@
+# Defaults for every payroll release. Layering at deploy time (Stage 7 pipeline):
+#   1. this file  2. helm/environments/<env>.yaml  3. generated release values (tools/iac/helmvalues.py, contract
+#   interfaces/helm-release.schema.json: Terraform outputs + registry). Customers cannot override anything except
+#   `config` (their subscription config in the tenant file).
+tenant: ""
+product: payroll
+env: ""
+
+image:
+  repository: ""          # <region>-docker.pkg.dev/shr-artifacts/release/payroll (org stack output)
+  digest: ""              # resolved from the registry version by the pipeline – never a tag
+  version: ""             # registry version (label only)
+
+serviceAccount:
+  name: payroll           # KSA created by Terraform (D8), annotated with the tenant GSA
+  migrationName: payroll-migrate
+
+service:
+  port: 80
+  containerPort: 8080     # A-N3-1
+
+replicas: 2
+resources:
+  cpu: 500m
+  memory: 1Gi
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPU: 70
+pdb:
+  enabled: true
+  minAvailable: 1
+
+probes:
+  readinessPath: /readyz
+  livenessPath: /healthz
+
+route:
+  gateway:
+    name: ""
+    namespace: gateway-infra
+  hostnames: []
+
+database:
+  enabled: true
+  port: 3306
+  instanceConnectionName: ""
+  name: ""
+  user: ""
+  migrationUser: ""
+
+cloudSqlProxy:
+  image:
+    repository: asia-south1-docker.pkg.dev/shr-artifacts/release/platform/cloud-sql-proxy
+    digest: ""            # mirrored into the release repository by the build pipeline (D8 allowed images)
+  resources:
+    cpu: 250m
+    memory: 256Mi
+
+migration:
+  enabled: true
+  command: ["/app/migrate", "up"]
+  backoffLimit: 0
+  timeoutSeconds: 1800
+
+config: {}                # customer configuration (registry subscription `config`)
+secrets: {}               # name -> Secret Manager resource name (values are read by the app with Workload Identity)
+buckets: {}               # purpose -> bucket name
+
+isolation:
+  dedicatedNodes: false   # true for the enhanced / dedicated isolation tiers (ADR-004)
+  key: platform.example.com/tenant
